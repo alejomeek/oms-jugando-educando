@@ -45,12 +45,16 @@ export interface CustomerInfo {
 
 export interface ShippingAddress {
   street: string;
+  comment?: string;       // Complemento: apto, piso, referencia
+  neighborhood?: string;  // Barrio
   city: string;
   state: string;
   country: string;
   zipCode: string;
   receiverName?: string;
   receiverPhone?: string;
+  latitude?: number;      // Coordenadas geográficas (ML)
+  longitude?: number;
   notes?: string;
 }
 

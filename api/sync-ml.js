@@ -67,12 +67,16 @@ async function fetchMLShipmentAddress(accessToken, shipmentId) {
         if (!addr) return null;
         return {
             street: [addr.street_name, addr.street_number].filter(Boolean).join(' '),
+            comment: addr.comment || undefined,
+            neighborhood: addr.neighborhood?.name || undefined,
             city: addr.city?.name || '',
             state: addr.state?.name || '',
             country: addr.country?.name || addr.country_id || '',
             zipCode: addr.zip_code || '',
             receiverName: addr.receiver_name || undefined,
             receiverPhone: addr.receiver_phone || undefined,
+            latitude: addr.latitude || undefined,
+            longitude: addr.longitude || undefined,
         };
     } catch {
         return null;
