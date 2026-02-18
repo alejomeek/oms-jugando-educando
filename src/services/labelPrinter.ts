@@ -6,7 +6,7 @@ export function printWixLabel(order: Order): void {
     return;
   }
 
-  const { customer, shipping_address, items, external_id, total_amount, currency } = order;
+  const { customer, shipping_address, items, order_id, total_amount, currency } = order;
 
   const customerName = customer.firstName && customer.lastName
     ? `${customer.firstName} ${customer.lastName}`
@@ -14,12 +14,12 @@ export function printWixLabel(order: Order): void {
 
   const address = shipping_address
     ? [
-        shipping_address.receiverName || customerName,
-        shipping_address.street,
-        `${shipping_address.city}, ${shipping_address.state}`,
-        shipping_address.zipCode,
-        shipping_address.country,
-      ].filter(Boolean).join('\n')
+      shipping_address.receiverName || customerName,
+      shipping_address.street,
+      `${shipping_address.city}, ${shipping_address.state}`,
+      shipping_address.zipCode,
+      shipping_address.country,
+    ].filter(Boolean).join('\n')
     : 'Direccion no disponible';
 
   const itemLines = items
@@ -32,7 +32,7 @@ export function printWixLabel(order: Order): void {
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Etiqueta de Envio - Pedido #${escapeHtml(external_id)}</title>
+  <title>Etiqueta de Envio - Pedido #${escapeHtml(order_id)}</title>
   <style>
     @media print { body { margin: 0; } .no-print { display: none; } }
     body { font-family: 'Courier New', monospace; font-size: 12px; padding: 20px; max-width: 400px; }
@@ -58,7 +58,7 @@ export function printWixLabel(order: Order): void {
     <div class="store-name">JUGANDO Y EDUCANDO</div>
     <div class="label-title">ETIQUETA DE ENVIO</div>
     <div class="section-title">N DE PEDIDO</div>
-    <div class="order-id">#${escapeHtml(external_id)}</div>
+    <div class="order-id">#${escapeHtml(order_id)}</div>
     <div class="section-title">DESTINATARIO</div>
     <div class="address">${escapeHtml(address)}</div>
     <div class="section-title">ARTICULOS</div>

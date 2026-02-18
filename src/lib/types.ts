@@ -11,7 +11,7 @@ export type OrderStatus = 'nuevo' | 'preparando' | 'listo' | 'enviado' | 'cancel
 
 export interface Order {
   id: string;
-  external_id: string;
+  order_id: string;
   channel: OrderChannel;
   pack_id?: string | null;
   shipping_id?: string | null;
@@ -29,6 +29,8 @@ export interface Order {
   payment_info?: PaymentInfo | null;
   tags?: string[];
   notes?: string | null;
+  // Presente solo en packs de ML agrupados (no viene de la DB)
+  subOrders?: Order[];
 }
 
 export interface CustomerInfo {
@@ -167,14 +169,41 @@ export interface WixOrder {
     };
   };
   shippingInfo?: {
-    shipmentDetails?: {
-      address?: {
-        addressLine1?: string;
-        city?: string;
-        subdivision?: string;
-        country?: string;
-        postalCode?: string;
+    logistics?: {
+      shippingDestination?: {
+        address?: {
+          addressLine?: string;
+          addressLine2?: string;
+          city?: string;
+          subdivisionFullname?: string;
+          subdivision?: string;
+          countryFullname?: string;
+          country?: string;
+          postalCode?: string;
+        };
+        contactDetails?: {
+          firstName?: string;
+          lastName?: string;
+          phone?: string;
+        };
       };
+    };
+  };
+  recipientInfo?: {
+    address?: {
+      addressLine?: string;
+      addressLine2?: string;
+      city?: string;
+      subdivisionFullname?: string;
+      subdivision?: string;
+      countryFullname?: string;
+      country?: string;
+      postalCode?: string;
+    };
+    contactDetails?: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
     };
   };
   lineItems: Array<{

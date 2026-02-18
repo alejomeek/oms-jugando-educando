@@ -8,7 +8,7 @@
 
 function normalizeWixOrder(wixOrder) {
     return {
-        external_id: wixOrder.number,
+        order_id: wixOrder.number,
         channel: 'wix',
         pack_id: null,
         shipping_id: null,

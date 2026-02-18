@@ -71,7 +71,7 @@ export function useAutoSync(config: AutoSyncConfig) {
 
         if (syncedOrders.length > 0) {
           await supabase.from('orders').upsert(syncedOrders, {
-            onConflict: 'channel,external_id',
+            onConflict: 'channel,order_id',
             ignoreDuplicates: false,
           });
         }

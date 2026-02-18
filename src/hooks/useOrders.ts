@@ -30,10 +30,10 @@ export function useOrders(filters?: OrderFilters) {
         query = query.eq('channel', filters.channel);
       }
 
-      // Aplicar búsqueda por external_id o datos del customer
+      // Busca por order_id (nuevo nombre) o external_id (nombre anterior, fallback hasta migrar DB)
       if (filters?.search) {
         query = query.or(
-          `external_id.ilike.%${filters.search}%,customer->>nickname.ilike.%${filters.search}%,customer->>email.ilike.%${filters.search}%`
+          `order_id.ilike.%${filters.search}%,external_id.ilike.%${filters.search}%,customer->>nickname.ilike.%${filters.search}%,customer->>email.ilike.%${filters.search}%`
         );
       }
 
@@ -44,10 +44,49 @@ export function useOrders(filters?: OrderFilters) {
         throw new Error(`Error al obtener órdenes: ${error.message}`);
       }
 
-      return data as Order[];
+      return groupPackOrders(data as Order[]);
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
+}
+
+/**
+ * Agrupa las órdenes de ML que comparten pack_id en una sola fila.
+ * Las órdenes sin pack_id y las de Wix pasan sin cambios.
+ */
+function groupPackOrders(orders: Order[]): Order[] {
+  const result: Order[] = [];
+  const packMap = new Map<string, Order>();
+
+  for (const order of orders) {
+    // Wix y ML sin pack_id → pasan directo
+    if (!order.pack_id || order.channel !== 'mercadolibre') {
+      result.push(order);
+      continue;
+    }
+
+    const existing = packMap.get(order.pack_id);
+    if (!existing) {
+      // Primera orden del pack: crear entrada agrupada
+      const packed: Order = {
+        ...order,
+        id: order.pack_id,           // clave única en React
+        order_id: order.pack_id,     // lo que se muestra en la tabla
+        total_amount: order.total_amount,
+        items: [...order.items],
+        subOrders: [order],
+      };
+      packMap.set(order.pack_id, packed);
+      result.push(packed);
+    } else {
+      // Orden adicional del mismo pack: acumular
+      existing.total_amount += order.total_amount;
+      existing.items = [...existing.items, ...order.items];
+      existing.subOrders = [...(existing.subOrders ?? []), order];
+    }
+  }
+
+  return result;
 }
 
 /**

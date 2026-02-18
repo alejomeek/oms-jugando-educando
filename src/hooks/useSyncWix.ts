@@ -69,7 +69,7 @@ export function useSyncWix() {
       const { error, count } = await supabase
         .from('orders')
         .upsert(normalizedOrders, {
-          onConflict: 'channel,external_id',
+          onConflict: 'channel,order_id',
           ignoreDuplicates: false, // Actualizar si ya existe
         });
 

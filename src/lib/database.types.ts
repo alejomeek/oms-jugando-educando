@@ -19,7 +19,7 @@ export interface Database {
       orders: {
         Row: {
           id: string
-          external_id: string
+          order_id: string
           channel: string
           pack_id: string | null
           shipping_id: string | null
@@ -40,7 +40,7 @@ export interface Database {
         }
         Insert: {
           id?: string
-          external_id: string
+          order_id: string
           channel: string
           pack_id?: string | null
           shipping_id?: string | null
@@ -61,7 +61,7 @@ export interface Database {
         }
         Update: {
           id?: string
-          external_id?: string
+          order_id?: string
           channel?: string
           pack_id?: string | null
           shipping_id?: string | null

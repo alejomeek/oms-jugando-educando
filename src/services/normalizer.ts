@@ -15,7 +15,7 @@ export function normalizeMLOrder(
   mlOrder: MLOrder
 ): Omit<Order, 'id' | 'created_at' | 'updated_at'> {
   return {
-    external_id: mlOrder.id.toString(),
+    order_id: mlOrder.id.toString(),
     channel: 'mercadolibre',
     pack_id: mlOrder.pack_id?.toString() || null,
     shipping_id: mlOrder.shipping?.id?.toString() || null,
@@ -46,12 +46,12 @@ export function normalizeMLOrder(
     })),
     payment_info: mlOrder.payments?.[0]
       ? {
-          method: mlOrder.payments[0].payment_method_id,
-          status: mlOrder.payments[0].status,
-          installments: mlOrder.payments[0].installments,
-          paidAmount: mlOrder.payments[0].total_paid_amount,
-          paymentDate: mlOrder.payments[0].date_approved,
-        }
+        method: mlOrder.payments[0].payment_method_id,
+        status: mlOrder.payments[0].status,
+        installments: mlOrder.payments[0].installments,
+        paidAmount: mlOrder.payments[0].total_paid_amount,
+        paymentDate: mlOrder.payments[0].date_approved,
+      }
       : null,
     tags: mlOrder.tags || [],
     notes: null,
@@ -73,7 +73,7 @@ export function normalizeWixOrder(
   wixOrder: WixOrder
 ): Omit<Order, 'id' | 'created_at' | 'updated_at'> {
   return {
-    external_id: wixOrder.number,
+    order_id: wixOrder.number,
     channel: 'wix',
     pack_id: null,
     shipping_id: null,
@@ -91,15 +91,23 @@ export function normalizeWixOrder(
       lastName: wixOrder.billingInfo?.contactDetails?.lastName,
       phone: wixOrder.billingInfo?.contactDetails?.phone,
     },
-    shipping_address: wixOrder.shippingInfo?.shipmentDetails?.address
-      ? {
-          street: wixOrder.shippingInfo.shipmentDetails.address.addressLine1 || '',
-          city: wixOrder.shippingInfo.shipmentDetails.address.city || '',
-          state: wixOrder.shippingInfo.shipmentDetails.address.subdivision || '',
-          country: wixOrder.shippingInfo.shipmentDetails.address.country || '',
-          zipCode: wixOrder.shippingInfo.shipmentDetails.address.postalCode || '',
-        }
-      : null,
+    // La dirección de envío viene en shippingInfo.logistics.shippingDestination
+    // con fallback a recipientInfo (ambos presentes en la API real)
+    shipping_address: (() => {
+      const dest = wixOrder.shippingInfo?.logistics?.shippingDestination;
+      const addr = dest?.address ?? wixOrder.recipientInfo?.address;
+      const contact = dest?.contactDetails ?? wixOrder.recipientInfo?.contactDetails;
+      if (!addr) return null;
+      return {
+        street: [addr.addressLine, addr.addressLine2].filter(Boolean).join(', '),
+        city: addr.city || '',
+        state: addr.subdivisionFullname || addr.subdivision || '',
+        country: addr.countryFullname || addr.country || '',
+        zipCode: addr.postalCode || '',
+        receiverName: contact ? `${contact.firstName ?? ''} ${contact.lastName ?? ''}`.trim() : undefined,
+        receiverPhone: contact?.phone,
+      };
+    })(),
     items: wixOrder.lineItems.map((item) => ({
       sku: item.sku || item.id,
       title:

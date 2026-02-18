@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/select';
 import { OrderStatusBadge } from './OrderStatusBadge';
 import { ChannelBadge } from './ChannelBadge';
-import { PackIndicator } from './PackIndicator';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { printWixLabel } from '@/services/labelPrinter';
 import type { Order, OrderStatus } from '@/lib/types';
@@ -44,9 +43,17 @@ export function OrderDetailModal({
 
   if (!order) return null;
 
+  const isPack = (order.subOrders?.length ?? 0) > 1;
+  const displayId = order.pack_id ?? order.order_id ?? (order as any).external_id;
+
   const handleStatusUpdate = () => {
     if (selectedStatus && selectedStatus !== order.status) {
-      onStatusChange(order.id, selectedStatus as OrderStatus);
+      // Si es pack, actualizar todas las sub-órdenes
+      if (isPack && order.subOrders) {
+        order.subOrders.forEach(sub => onStatusChange(sub.id, selectedStatus as OrderStatus));
+      } else {
+        onStatusChange(order.id, selectedStatus as OrderStatus);
+      }
       onClose();
     }
   };
@@ -66,17 +73,17 @@ export function OrderDetailModal({
         <SheetHeader className="pb-0">
           <div className="flex items-center gap-3">
             <SheetTitle className="text-lg">
-              Pedido #{order.external_id}
+              {isPack ? 'Pack' : 'Pedido'} #{displayId}
             </SheetTitle>
             <ChannelBadge channel={order.channel} />
+            {isPack && (
+              <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                {order.subOrders!.length} órdenes
+              </span>
+            )}
           </div>
           <SheetDescription>
             {formatDate(order.order_date, "dd 'de' MMMM yyyy, HH:mm")}
-            {order.pack_id && (
-              <span className="ml-2">
-                <PackIndicator packId={order.pack_id} />
-              </span>
-            )}
           </SheetDescription>
         </SheetHeader>
 
@@ -157,58 +164,41 @@ export function OrderDetailModal({
 
           <Separator />
 
-          {/* Products */}
+          {/* Products — pack view (sub-orders) or normal */}
           <section>
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Productos ({order.items.length})
             </h3>
-            <div className="space-y-3">
-              {order.items.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex gap-3 rounded-lg border p-3"
-                >
-                  {item.imageUrl ? (
-                    <img
-                      src={item.imageUrl}
-                      alt={item.title}
-                      className="size-16 rounded-md object-cover"
-                    />
-                  ) : (
-                    <div className="flex size-16 items-center justify-center rounded-md bg-muted">
-                      <ImageOff className="size-6 text-muted-foreground/50" />
+
+            {isPack ? (
+              // Pack: mostrar cada sub-orden como sección
+              <div className="space-y-4">
+                {order.subOrders!.map((sub) => (
+                  <div key={sub.id} className="rounded-lg border overflow-hidden">
+                    <div className="bg-muted/40 px-3 py-2 flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        Orden #{sub.order_id ?? (sub as any).external_id}
+                      </span>
+                      <span className="text-xs font-semibold">
+                        {formatCurrency(sub.total_amount, sub.currency)}
+                      </span>
                     </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate font-medium text-sm">{item.title}</p>
-                    <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>
-                    {item.variationAttributes && item.variationAttributes.length > 0 && (
-                      <div className="mt-1.5 flex flex-wrap gap-1">
-                        {item.variationAttributes.map((attr, i) => (
-                          <span
-                            key={i}
-                            className="rounded border bg-muted/50 px-1.5 py-0.5 text-xs"
-                          >
-                            {attr.name}: {attr.value}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <div className="mt-2 flex items-center gap-3 text-xs">
-                      <span className="text-muted-foreground">
-                        Cant: <span className="font-semibold text-foreground">{item.quantity}</span>
-                      </span>
-                      <span className="text-muted-foreground">
-                        Precio: <span className="font-semibold text-foreground">{formatCurrency(item.unitPrice, item.currency)}</span>
-                      </span>
-                      <span className="font-bold">
-                        {formatCurrency(item.fullPrice * item.quantity, item.currency)}
-                      </span>
+                    <div className="divide-y">
+                      {sub.items.map((item, i) => (
+                        <ProductRow key={i} item={item} currency={sub.currency} />
+                      ))}
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              // Orden normal
+              <div className="space-y-3">
+                {order.items.map((item, index) => (
+                  <ProductRow key={index} item={item} currency={order.currency} />
+                ))}
+              </div>
+            )}
           </section>
 
           <Separator />
@@ -223,7 +213,7 @@ export function OrderDetailModal({
                 <span className="text-muted-foreground">Subtotal items:</span>
                 <span className="font-medium">{formatCurrency(itemsSubtotal, order.currency)}</span>
               </div>
-              {order.paid_amount && order.paid_amount !== order.total_amount && (
+              {!isPack && order.paid_amount && order.paid_amount !== order.total_amount && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Monto pagado:</span>
                   <span className="font-medium">{formatCurrency(order.paid_amount, order.currency)}</span>
@@ -231,7 +221,7 @@ export function OrderDetailModal({
               )}
               <Separator />
               <div className="flex justify-between pt-1">
-                <span className="text-base font-semibold">Total:</span>
+                <span className="text-base font-semibold">Total{isPack ? ' pack' : ''}:</span>
                 <span className="text-base font-bold text-primary">
                   {formatCurrency(order.total_amount, order.currency)}
                 </span>
@@ -273,7 +263,7 @@ export function OrderDetailModal({
 
           <Separator />
 
-          {/* Actions: label buttons */}
+          {/* Actions */}
           <div className="flex gap-2">
             {mlLabelUrl && (
               <Button variant="outline" size="sm" asChild>
@@ -283,13 +273,8 @@ export function OrderDetailModal({
                 </a>
               </Button>
             )}
-
             {order.channel === 'wix' && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => printWixLabel(order)}
-              >
+              <Button variant="outline" size="sm" onClick={() => printWixLabel(order)}>
                 <Printer className="size-4" />
                 Imprimir Etiqueta
               </Button>
@@ -301,7 +286,7 @@ export function OrderDetailModal({
           {/* Change status */}
           <section>
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Cambiar estado
+              Cambiar estado{isPack ? ' (todas las órdenes del pack)' : ''}
             </h3>
             <div className="flex items-end gap-3">
               <div className="flex-1">
@@ -332,6 +317,51 @@ export function OrderDetailModal({
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function ProductRow({ item, currency }: { item: Order['items'][0]; currency: string }) {
+  return (
+    <div className="flex gap-3 p-3">
+      {item.imageUrl ? (
+        <img
+          src={item.imageUrl}
+          alt={item.title}
+          className="size-16 rounded-md object-cover"
+        />
+      ) : (
+        <div className="flex size-16 items-center justify-center rounded-md bg-muted">
+          <ImageOff className="size-6 text-muted-foreground/50" />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="truncate font-medium text-sm">{item.title}</p>
+        <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>
+        {item.variationAttributes && item.variationAttributes.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {item.variationAttributes.map((attr, i) => (
+              <span
+                key={i}
+                className="rounded border bg-muted/50 px-1.5 py-0.5 text-xs"
+              >
+                {attr.name}: {attr.value}
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="mt-2 flex items-center gap-3 text-xs">
+          <span className="text-muted-foreground">
+            Cant: <span className="font-semibold text-foreground">{item.quantity}</span>
+          </span>
+          <span className="text-muted-foreground">
+            Precio: <span className="font-semibold text-foreground">{formatCurrency(item.unitPrice, currency)}</span>
+          </span>
+          <span className="font-bold">
+            {formatCurrency(item.fullPrice * item.quantity, currency)}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }
 

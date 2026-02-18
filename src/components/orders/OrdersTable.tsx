@@ -10,7 +10,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { OrderStatusBadge } from './OrderStatusBadge';
 import { ChannelBadge } from './ChannelBadge';
-import { PackIndicator } from './PackIndicator';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import type { Order } from '@/lib/types';
 
@@ -93,7 +92,7 @@ export function OrdersTable({
             order.customer.source === 'mercadolibre'
               ? order.customer.nickname
               : order.customer.email ||
-                `${order.customer.firstName} ${order.customer.lastName}`;
+              `${order.customer.firstName} ${order.customer.lastName}`;
 
           return (
             <TableRow
@@ -102,12 +101,9 @@ export function OrdersTable({
               onClick={() => onOrderClick(order)}
             >
               <TableCell className="font-mono text-xs">
-                {order.external_id}
-                {order.pack_id && (
-                  <div className="mt-1">
-                    <PackIndicator packId={order.pack_id} />
-                  </div>
-                )}
+                {order.channel === 'mercadolibre'
+                  ? (order.pack_id ?? order.order_id ?? (order as any).external_id)
+                  : (order.order_id ?? (order as any).external_id)}
               </TableCell>
               <TableCell className="max-w-[180px] truncate font-medium">
                 {customerName}

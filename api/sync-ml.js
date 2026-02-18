@@ -8,7 +8,7 @@
 
 function normalizeMLOrder(mlOrder) {
     return {
-        external_id: mlOrder.id.toString(),
+        order_id: mlOrder.id.toString(),
         channel: 'mercadolibre',
         pack_id: mlOrder.pack_id?.toString() || null,
         shipping_id: mlOrder.shipping?.id?.toString() || null,
@@ -49,6 +49,34 @@ function normalizeMLOrder(mlOrder) {
         tags: mlOrder.tags || [],
         notes: null,
     };
+}
+
+/**
+ * Obtiene la dirección de entrega de un envío de ML.
+ * Endpoint: GET /shipments/{id}
+ */
+async function fetchMLShipmentAddress(accessToken, shipmentId) {
+    try {
+        const response = await fetch(
+            `https://api.mercadolibre.com/shipments/${shipmentId}`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+        if (!response.ok) return null;
+        const data = await response.json();
+        const addr = data.receiver_address;
+        if (!addr) return null;
+        return {
+            street: [addr.street_name, addr.street_number].filter(Boolean).join(' '),
+            city: addr.city?.name || '',
+            state: addr.state?.name || '',
+            country: addr.country?.name || addr.country_id || '',
+            zipCode: addr.zip_code || '',
+            receiverName: addr.receiver_name || undefined,
+            receiverPhone: addr.receiver_phone || undefined,
+        };
+    } catch {
+        return null;
+    }
 }
 
 async function fetchMLOrders(accessToken, sellerId, limit, offset) {
@@ -146,7 +174,19 @@ export default async function handler(req, res) {
         const orders = data.results || [];
         console.log(`✅ [ML] ${orders.length} órdenes obtenidas`);
 
-        const normalizedOrders = orders.map(normalizeMLOrder);
+        // Normalizar y enriquecer con dirección de envío en paralelo
+        const normalizedOrders = await Promise.all(
+            orders.map(async (order) => {
+                const normalized = normalizeMLOrder(order);
+                if (normalized.shipping_id) {
+                    normalized.shipping_address = await fetchMLShipmentAddress(
+                        accessToken,
+                        normalized.shipping_id
+                    );
+                }
+                return normalized;
+            })
+        );
 
         return res.json({
             success: true,
