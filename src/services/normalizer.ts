@@ -80,8 +80,8 @@ export function normalizeWixOrder(
     status: 'nuevo',
     order_date: wixOrder._createdDate,
     closed_date: wixOrder._updatedDate || null,
-    total_amount: wixOrder.priceSummary.total,
-    paid_amount: wixOrder.priceSummary.total,
+    total_amount: parseFloat(wixOrder.priceSummary.total.amount),
+    paid_amount: parseFloat(wixOrder.priceSummary.total.amount),
     currency: wixOrder.currency,
     customer: {
       source: 'wix',
@@ -109,14 +109,14 @@ export function normalizeWixOrder(
       };
     })(),
     items: wixOrder.lineItems.map((item) => ({
-      sku: item.sku || item.id,
+      sku: item.physicalProperties?.sku || item.sku || item.id,
       title:
         item.productName?.translated ||
         item.productName?.original ||
         'Sin nombre',
       quantity: item.quantity,
-      unitPrice: item.price,
-      fullPrice: item.totalPrice,
+      unitPrice: parseFloat(item.price.amount),
+      fullPrice: parseFloat(item.totalPriceAfterTax?.amount ?? item.price.amount),
       currency: wixOrder.currency,
       imageUrl: item.image?.url,
     })),

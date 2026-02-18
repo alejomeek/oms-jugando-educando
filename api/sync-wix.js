@@ -26,15 +26,21 @@ function normalizeWixOrder(wixOrder) {
             lastName: wixOrder.billingInfo?.contactDetails?.lastName,
             phone: wixOrder.billingInfo?.contactDetails?.phone,
         },
-        shipping_address: wixOrder.shippingInfo?.shipmentDetails?.address
-            ? {
-                street: wixOrder.shippingInfo.shipmentDetails.address.addressLine1 || '',
-                city: wixOrder.shippingInfo.shipmentDetails.address.city || '',
-                state: wixOrder.shippingInfo.shipmentDetails.address.subdivision || '',
-                country: wixOrder.shippingInfo.shipmentDetails.address.country || '',
-                zipCode: wixOrder.shippingInfo.shipmentDetails.address.postalCode || '',
-            }
-            : null,
+        shipping_address: (() => {
+            const dest = wixOrder.shippingInfo?.logistics?.shippingDestination;
+            const addr = dest?.address ?? wixOrder.recipientInfo?.address;
+            const contact = dest?.contactDetails ?? wixOrder.recipientInfo?.contactDetails;
+            if (!addr) return null;
+            return {
+                street: [addr.addressLine, addr.addressLine2].filter(Boolean).join(', '),
+                city: addr.city || '',
+                state: addr.subdivisionFullname || addr.subdivision || '',
+                country: addr.countryFullname || addr.country || '',
+                zipCode: addr.postalCode || '',
+                receiverName: contact ? `${contact.firstName ?? ''} ${contact.lastName ?? ''}`.trim() : undefined,
+                receiverPhone: contact?.phone,
+            };
+        })(),
         items: wixOrder.lineItems.map((item) => ({
             sku: item.physicalProperties?.sku || item.sku || item.id,
             title:
@@ -43,7 +49,7 @@ function normalizeWixOrder(wixOrder) {
                 'Sin nombre',
             quantity: item.quantity,
             unitPrice: parseFloat(item.price?.amount || item.price || 0),
-            fullPrice: parseFloat(item.totalPrice?.amount || item.totalPrice || 0),
+            fullPrice: parseFloat(item.totalPriceAfterTax?.amount || item.totalPrice?.amount || item.price?.amount || 0),
             currency: wixOrder.currency,
             imageUrl: item.image?.url,
         })),

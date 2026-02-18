@@ -214,16 +214,21 @@ export interface WixOrder {
       translated?: string;
     };
     quantity: number;
-    price: number;
-    totalPrice: number;
+    price: { amount: string };
+    priceBeforeDiscounts?: { amount: string };
+    totalPriceAfterTax?: { amount: string };
     image?: {
       url: string;
     };
+    physicalProperties?: {
+      sku?: string;
+    };
   }>;
   priceSummary: {
-    subtotal: number;
-    shipping: number;
-    tax: number;
-    total: number;
+    subtotal: { amount: string };
+    shipping: { amount: string };
+    tax: { amount: string };
+    total: { amount: string };
+    totalPrice?: { amount: string };
   };
 }
