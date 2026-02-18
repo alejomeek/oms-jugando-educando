@@ -105,6 +105,10 @@ export default async function handler(req, res) {
                         limit,
                         cursor: cursor || undefined,
                     },
+                    // Solo importar órdenes pagadas
+                    filter: {
+                        paymentStatus: 'PAID',
+                    },
                 },
             }),
         });
