@@ -1,53 +1,1553 @@
-{
-    "_id": "wix-order-12345",
-    "number": "1001",
-    "_createdDate": "2024-01-15T14:20:00.000Z",
-    "_updatedDate": "2024-01-15T14:25:00.000Z",
-    "currency": "COP",
+[
+  {
+    "id": "48ae681d-9bd9-49e9-a686-4da95c6bf8b3",
+    "number": "18715",
+    "createdDate": "2026-02-17T21:52:27.520Z",
+    "updatedDate": "2026-02-18T15:52:17.830Z",
+    "lineItems": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "productName": {
+          "original": "Libro Spidey Y Su Superequipo Linterna Niños",
+          "translated": "Libro Spidey Y Su Superequipo Linterna Niños"
+        },
+        "catalogReference": {
+          "catalogItemId": "9eca5003-8466-e8c3-ec21-c180ec21c06b",
+          "appId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+          "options": {
+            "options": {},
+            "variantId": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "quantity": 1,
+        "totalDiscount": {
+          "amount": "0.00",
+          "formattedAmount": "0,00$"
+        },
+        "descriptionLines": [],
+        "image": {
+          "id": "3f86e4_5ad7f6888abf42a096f0aafb2c16735f~mv2.jpg",
+          "url": "https://static.wixstatic.com/media/3f86e4_5ad7f6888abf42a096f0aafb2c16735f~mv2.jpg/v1/fit/w_1500,h_1499,q_90/file.jpg",
+          "height": 1499,
+          "width": 1500
+        },
+        "physicalProperties": {
+          "sku": "27926",
+          "shippable": true
+        },
+        "itemType": {
+          "preset": "PHYSICAL"
+        },
+        "price": {
+          "amount": "108900.00",
+          "formattedAmount": "108.900,00$"
+        },
+        "priceBeforeDiscounts": {
+          "amount": "108900.00",
+          "formattedAmount": "108.900,00$"
+        },
+        "priceBeforeDiscountsAndTax": {
+          "amount": "91512.61",
+          "formattedAmount": "91.512,61$"
+        },
+        "totalPriceBeforeTax": {
+          "amount": "91512.61",
+          "formattedAmount": "91.512,61$"
+        },
+        "totalPriceAfterTax": {
+          "amount": "108900.00",
+          "formattedAmount": "108.900,00$"
+        },
+        "paymentOption": "FULL_PAYMENT_ONLINE",
+        "taxDetails": {
+          "taxableAmount": {
+            "amount": "91512.61",
+            "formattedAmount": "91.512,61$"
+          },
+          "taxRate": "0.1900",
+          "totalTax": {
+            "amount": "17387.39",
+            "formattedAmount": "17.387,39$"
+          },
+          "exemptAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          }
+        },
+        "taxInfo": {
+          "taxAmount": {
+            "amount": "17387.39",
+            "formattedAmount": "17.387,39$"
+          },
+          "taxableAmount": {
+            "amount": "91512.61",
+            "formattedAmount": "91.512,61$"
+          },
+          "taxRate": "0.1900",
+          "taxIncludedInPrice": true,
+          "taxBreakdown": [
+            {
+              "jurisdiction": "",
+              "rate": "0.190000",
+              "taxAmount": {
+                "amount": "17387.39",
+                "formattedAmount": "17.387,39$"
+              },
+              "taxType": "",
+              "taxName": "",
+              "jurisdictionType": "UNDEFINED",
+              "taxableAmount": {
+                "amount": "91512.61",
+                "formattedAmount": "91.512,61$"
+              },
+              "exemptAmount": {
+                "amount": "0.00",
+                "formattedAmount": "0,00$"
+              }
+            }
+          ],
+          "exemptAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          }
+        },
+        "locations": [],
+        "lineItemPrice": {
+          "amount": "108900.00",
+          "formattedAmount": "108.900,00$"
+        },
+        "customLineItem": false,
+        "rootCatalogItemId": "9eca5003-8466-e8c3-ec21-c180ec21c06b",
+        "taxableAddress": {
+          "addressType": "SHIPPING"
+        },
+        "inventoryAppId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+        "priceUndetermined": false,
+        "fixedQuantity": false,
+        "modifierGroups": []
+      }
+    ],
+    "buyerInfo": {
+      "contactId": "7d132517-46db-41ae-9359-47d6dde86ea3",
+      "email": "diegronge12@hotmail.com",
+      "visitorId": "4dab6383-6302-4cb0-ad82-7e93453f5f56"
+    },
     "paymentStatus": "PAID",
     "fulfillmentStatus": "NOT_FULFILLED",
-    "buyerInfo": {
-        "id": "wix-buyer-789",
-        "email": "cliente@ejemplo.com"
+    "buyerLanguage": "es",
+    "weightUnit": "KG",
+    "currency": "COP",
+    "taxIncludedInPrices": true,
+    "siteLanguage": "es",
+    "priceSummary": {
+      "subtotal": {
+        "amount": "91512.61",
+        "formattedAmount": "91.512,61$"
+      },
+      "shipping": {
+        "amount": "8900.00",
+        "formattedAmount": "8.900,00$"
+      },
+      "tax": {
+        "amount": "17387.39",
+        "formattedAmount": "17.387,39$"
+      },
+      "discount": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalPrice": {
+        "amount": "117800.00",
+        "formattedAmount": "117.800,00$"
+      },
+      "total": {
+        "amount": "117800.00",
+        "formattedAmount": "117.800,00$"
+      },
+      "totalWithGiftCard": {
+        "amount": "117800.00",
+        "formattedAmount": "117.800,00$"
+      },
+      "totalWithoutGiftCard": {
+        "amount": "117800.00",
+        "formattedAmount": "117.800,00$"
+      },
+      "totalAdditionalFees": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      }
     },
     "billingInfo": {
-        "contactDetails": {
-            "firstName": "Juan",
-            "lastName": "Pérez",
-            "phone": "+57 300 123 4567"
-        }
+      "address": {
+        "country": "CO",
+        "subdivision": "CO-DC",
+        "city": "Bogota",
+        "postalCode": "110111",
+        "addressLine": "Cr 15 4-60sur",
+        "addressLine2": "Casa",
+        "countryFullname": "Colombia",
+        "subdivisionFullname": "Distrito Capital de Bogotá"
+      },
+      "contactDetails": {
+        "firstName": "Diego alejandro",
+        "lastName": "Hernandez otalora",
+        "phone": "3208986070"
+      }
     },
     "shippingInfo": {
-        "shipmentDetails": {
-            "address": {
-                "addressLine1": "Calle 123 #45-67",
-                "city": "Bogotá",
-                "subdivision": "Cundinamarca",
-                "country": "CO",
-                "postalCode": "110111"
-            }
+      "carrierId": "45c44b27-ca7b-4891-8c0d-1747d588b835",
+      "code": "4be95d64-3f0c-f90a-eb60-c6e489991be3",
+      "title": "Envío Estándar",
+      "logistics": {
+        "deliveryTime": "1-2 días",
+        "shippingDestination": {
+          "address": {
+            "country": "CO",
+            "subdivision": "CO-DC",
+            "city": "Bogota",
+            "postalCode": "110111",
+            "addressLine": "Cr 15 4-60sur",
+            "addressLine2": "Casa",
+            "countryFullname": "Colombia",
+            "subdivisionFullname": "Distrito Capital de Bogotá"
+          },
+          "contactDetails": {
+            "firstName": "Diego alejandro",
+            "lastName": "Hernandez otalora",
+            "phone": "3208986070"
+          }
         }
+      },
+      "cost": {
+        "price": {
+          "amount": "8900.00",
+          "formattedAmount": "8.900,00$"
+        },
+        "totalPriceBeforeTax": {
+          "amount": "8900.00",
+          "formattedAmount": "8.900,00$"
+        },
+        "totalPriceAfterTax": {
+          "amount": "8900.00",
+          "formattedAmount": "8.900,00$"
+        },
+        "taxDetails": {
+          "taxableAmount": {
+            "amount": "8900.00",
+            "formattedAmount": "8.900,00$"
+          },
+          "taxRate": "0.0000",
+          "totalTax": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          },
+          "exemptAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          }
+        },
+        "taxInfo": {
+          "taxAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          },
+          "taxableAmount": {
+            "amount": "8900.00",
+            "formattedAmount": "8.900,00$"
+          },
+          "taxRate": "0.0000",
+          "taxIncludedInPrice": true,
+          "taxBreakdown": [],
+          "exemptAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          }
+        }
+      },
+      "region": {
+        "name": "Bogotá"
+      }
     },
-    "lineItems": [
-        {
-            "id": "line-item-1",
-            "sku": "JE-002",
-            "productName": {
-                "original": "Rompecabezas Educativo",
-                "translated": "Rompecabezas Educativo"
-            },
-            "quantity": 2,
-            "price": 45000,
-            "totalPrice": 90000,
-            "image": {
-                "url": "https://example.com/image.jpg"
-            }
-        }
+    "status": "APPROVED",
+    "archived": false,
+    "taxSummary": {
+      "totalTax": {
+        "amount": "17387.39",
+        "formattedAmount": "17.387,39$"
+      },
+      "manualTaxRate": "0"
+    },
+    "taxInfo": {
+      "totalTax": {
+        "amount": "17387.39",
+        "formattedAmount": "17.387,39$"
+      },
+      "taxBreakdown": [],
+      "manualTaxRate": "0",
+      "totalExempt": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      }
+    },
+    "appliedDiscounts": [],
+    "activities": [
+      {
+        "id": "1b81d7e9-f5ec-4300-bddb-675832279461",
+        "createdDate": "2026-02-17T21:52:27.514Z",
+        "type": "ORDER_PLACED",
+        "activityType": "ORDER_PLACED"
+      },
+      {
+        "id": "36d32c61-a352-4058-b42d-9a66b4b55a11",
+        "createdDate": "2026-02-17T21:55:26.784Z",
+        "type": "ORDER_PAID",
+        "activityType": "ORDER_PAID"
+      }
     ],
+    "attributionSource": "UNSPECIFIED",
+    "createdBy": {},
+    "channelInfo": {
+      "type": "WEB"
+    },
+    "seenByAHuman": true,
+    "checkoutId": "ca727402-5570-4771-89c9-d3029c8b78ac",
+    "customFields": [
+      {
+        "value": "1013648963",
+        "title": "Número de cédula",
+        "translatedTitle": "Número de cédula"
+      }
+    ],
+    "isInternalOrderCreate": false,
+    "payNow": {
+      "subtotal": {
+        "amount": "91512.61",
+        "formattedAmount": "91.512,61$"
+      },
+      "shipping": {
+        "amount": "8900.00",
+        "formattedAmount": "8.900,00$"
+      },
+      "tax": {
+        "amount": "17387.39",
+        "formattedAmount": "17.387,39$"
+      },
+      "discount": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalPrice": {
+        "amount": "117800.00",
+        "formattedAmount": "117.800,00$"
+      },
+      "total": {
+        "amount": "117800.00",
+        "formattedAmount": "117.800,00$"
+      },
+      "totalWithGiftCard": {
+        "amount": "117800.00",
+        "formattedAmount": "117.800,00$"
+      },
+      "totalWithoutGiftCard": {
+        "amount": "117800.00",
+        "formattedAmount": "117.800,00$"
+      },
+      "totalAdditionalFees": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      }
+    },
+    "balanceSummary": {
+      "balance": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "paid": {
+        "amount": "117800.0",
+        "formattedAmount": "117.800,00$"
+      },
+      "refunded": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "authorized": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "pendingRefund": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "pending": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "chargeback": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "chargebackReversal": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "platformFees": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "totalMinusPlatformFees": {
+        "amount": "117800.00",
+        "formattedAmount": "117.800,00$"
+      }
+    },
+    "additionalFees": [],
+    "purchaseFlowId": "3f740258-3e5e-496e-ac3e-dfcab1757b87",
+    "recipientInfo": {
+      "address": {
+        "country": "CO",
+        "subdivision": "CO-DC",
+        "city": "Bogota",
+        "postalCode": "110111",
+        "addressLine": "Cr 15 4-60sur",
+        "addressLine2": "Casa",
+        "countryFullname": "Colombia",
+        "subdivisionFullname": "Distrito Capital de Bogotá"
+      },
+      "contactDetails": {
+        "firstName": "Diego alejandro",
+        "lastName": "Hernandez otalora",
+        "phone": "3208986070"
+      }
+    },
+    "purchasedDate": "2026-02-17T21:52:27.513Z",
+    "payAfterFreeTrial": {
+      "subtotal": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "shipping": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "tax": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "discount": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalPrice": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "total": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalWithGiftCard": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalWithoutGiftCard": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalAdditionalFees": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      }
+    },
+    "settings": {
+      "editableByEveryone": true
+    },
+    "forms": []
+  },
+  {
+    "id": "e3711e0b-99f4-4329-99ea-62987ee3126f",
+    "number": "18714",
+    "createdDate": "2026-02-17T16:15:18.832Z",
+    "updatedDate": "2026-02-17T20:56:36.664Z",
+    "lineItems": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "productName": {
+          "original": "Pista Mi Primer Taller De Carros Para Niños",
+          "translated": "Pista Mi Primer Taller De Carros Para Niños"
+        },
+        "catalogReference": {
+          "catalogItemId": "e03089eb-648f-c688-e434-1cc106ecea16",
+          "appId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+          "options": {
+            "options": {},
+            "variantId": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "quantity": 1,
+        "totalDiscount": {
+          "amount": "0.00",
+          "formattedAmount": "0,00$"
+        },
+        "descriptionLines": [],
+        "image": {
+          "id": "3f86e4_757da5de3e7547afbc525d8ab4414484~mv2.jpg",
+          "url": "https://static.wixstatic.com/media/3f86e4_757da5de3e7547afbc525d8ab4414484~mv2.jpg/v1/fit/w_1500,h_1080,q_90/file.jpg",
+          "height": 1080,
+          "width": 1500
+        },
+        "physicalProperties": {
+          "sku": "26540",
+          "shippable": true
+        },
+        "itemType": {
+          "preset": "PHYSICAL"
+        },
+        "price": {
+          "amount": "116910.00",
+          "formattedAmount": "116.910,00$"
+        },
+        "priceBeforeDiscounts": {
+          "amount": "116910.00",
+          "formattedAmount": "116.910,00$"
+        },
+        "priceBeforeDiscountsAndTax": {
+          "amount": "98243.70",
+          "formattedAmount": "98.243,70$"
+        },
+        "totalPriceBeforeTax": {
+          "amount": "98243.70",
+          "formattedAmount": "98.243,70$"
+        },
+        "totalPriceAfterTax": {
+          "amount": "116910.00",
+          "formattedAmount": "116.910,00$"
+        },
+        "paymentOption": "FULL_PAYMENT_ONLINE",
+        "taxDetails": {
+          "taxableAmount": {
+            "amount": "98243.70",
+            "formattedAmount": "98.243,70$"
+          },
+          "taxRate": "0.1900",
+          "totalTax": {
+            "amount": "18666.30",
+            "formattedAmount": "18.666,30$"
+          },
+          "exemptAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          }
+        },
+        "taxInfo": {
+          "taxAmount": {
+            "amount": "18666.30",
+            "formattedAmount": "18.666,30$"
+          },
+          "taxableAmount": {
+            "amount": "98243.70",
+            "formattedAmount": "98.243,70$"
+          },
+          "taxRate": "0.1900",
+          "taxIncludedInPrice": true,
+          "taxBreakdown": [
+            {
+              "jurisdiction": "",
+              "rate": "0.190000",
+              "taxAmount": {
+                "amount": "18666.30",
+                "formattedAmount": "18.666,30$"
+              },
+              "taxType": "",
+              "taxName": "",
+              "jurisdictionType": "UNDEFINED",
+              "taxableAmount": {
+                "amount": "98243.70",
+                "formattedAmount": "98.243,70$"
+              },
+              "exemptAmount": {
+                "amount": "0.00",
+                "formattedAmount": "0,00$"
+              }
+            }
+          ],
+          "exemptAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          }
+        },
+        "locations": [],
+        "lineItemPrice": {
+          "amount": "116910.00",
+          "formattedAmount": "116.910,00$"
+        },
+        "customLineItem": false,
+        "rootCatalogItemId": "e03089eb-648f-c688-e434-1cc106ecea16",
+        "taxableAddress": {
+          "addressType": "SHIPPING"
+        },
+        "inventoryAppId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+        "priceUndetermined": false,
+        "fixedQuantity": false,
+        "modifierGroups": []
+      }
+    ],
+    "buyerInfo": {
+      "contactId": "fe1b4469-7367-4dad-a8ab-76caa00f4c43",
+      "email": "fjnrmax@gmail.com",
+      "visitorId": "09974faa-94ec-4887-b6a1-811510f22df2"
+    },
+    "paymentStatus": "NOT_PAID",
+    "fulfillmentStatus": "NOT_FULFILLED",
+    "buyerLanguage": "es",
+    "weightUnit": "KG",
+    "currency": "COP",
+    "taxIncludedInPrices": true,
+    "siteLanguage": "es",
     "priceSummary": {
-        "subtotal": 90000,
-        "shipping": 10000,
-        "tax": 0,
-        "total": 100000
-    }
-}
+      "subtotal": {
+        "amount": "98243.70",
+        "formattedAmount": "98.243,70$"
+      },
+      "shipping": {
+        "amount": "10900.00",
+        "formattedAmount": "10.900,00$"
+      },
+      "tax": {
+        "amount": "18666.30",
+        "formattedAmount": "18.666,30$"
+      },
+      "discount": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalPrice": {
+        "amount": "127810.00",
+        "formattedAmount": "127.810,00$"
+      },
+      "total": {
+        "amount": "127810.00",
+        "formattedAmount": "127.810,00$"
+      },
+      "totalWithGiftCard": {
+        "amount": "127810.00",
+        "formattedAmount": "127.810,00$"
+      },
+      "totalWithoutGiftCard": {
+        "amount": "127810.00",
+        "formattedAmount": "127.810,00$"
+      },
+      "totalAdditionalFees": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      }
+    },
+    "billingInfo": {
+      "address": {
+        "country": "CO",
+        "subdivision": "CO-DC",
+        "city": "Bogotá",
+        "postalCode": "110231",
+        "addressLine": "Cra. 2a #66-52",
+        "addressLine2": "apto 512 recibe Julian Pinto",
+        "countryFullname": "Colombia",
+        "subdivisionFullname": "Distrito Capital de Bogotá"
+      },
+      "contactDetails": {
+        "firstName": "(M.D)(C.E) francisco ",
+        "lastName": "niño",
+        "phone": "3017873187"
+      }
+    },
+    "shippingInfo": {
+      "carrierId": "45c44b27-ca7b-4891-8c0d-1747d588b835",
+      "code": "6a3e1723-cbb6-32ea-f0fb-3c497371d446",
+      "title": "Envío Express",
+      "logistics": {
+        "deliveryTime": "Mismo día, pedidos antes 4pm",
+        "shippingDestination": {
+          "address": {
+            "country": "CO",
+            "subdivision": "CO-DC",
+            "city": "Bogotá",
+            "postalCode": "110231",
+            "addressLine": "Cra. 2a #66-52",
+            "addressLine2": "apto 512 recibe Julian Pinto",
+            "countryFullname": "Colombia",
+            "subdivisionFullname": "Distrito Capital de Bogotá"
+          },
+          "contactDetails": {
+            "firstName": "(M.D)(C.E) francisco ",
+            "lastName": "niño",
+            "phone": "3017873187"
+          }
+        }
+      },
+      "cost": {
+        "price": {
+          "amount": "10900.00",
+          "formattedAmount": "10.900,00$"
+        },
+        "totalPriceBeforeTax": {
+          "amount": "10900.00",
+          "formattedAmount": "10.900,00$"
+        },
+        "totalPriceAfterTax": {
+          "amount": "10900.00",
+          "formattedAmount": "10.900,00$"
+        },
+        "taxDetails": {
+          "taxableAmount": {
+            "amount": "10900.00",
+            "formattedAmount": "10.900,00$"
+          },
+          "taxRate": "0.0000",
+          "totalTax": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          },
+          "exemptAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          }
+        },
+        "taxInfo": {
+          "taxAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          },
+          "taxableAmount": {
+            "amount": "10900.00",
+            "formattedAmount": "10.900,00$"
+          },
+          "taxRate": "0.0000",
+          "taxIncludedInPrice": true,
+          "taxBreakdown": [],
+          "exemptAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          }
+        }
+      },
+      "region": {
+        "name": "Bogotá"
+      }
+    },
+    "buyerNote": "*EMPACAR EN PAPEL DE REGALO*",
+    "status": "APPROVED",
+    "archived": false,
+    "taxSummary": {
+      "totalTax": {
+        "amount": "18666.30",
+        "formattedAmount": "18.666,30$"
+      },
+      "manualTaxRate": "0"
+    },
+    "taxInfo": {
+      "totalTax": {
+        "amount": "18666.30",
+        "formattedAmount": "18.666,30$"
+      },
+      "taxBreakdown": [],
+      "manualTaxRate": "0",
+      "totalExempt": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      }
+    },
+    "appliedDiscounts": [],
+    "activities": [
+      {
+        "id": "91f2684a-0ee0-4f4c-8178-26eeba7841ec",
+        "createdDate": "2026-02-17T16:15:18.824Z",
+        "type": "ORDER_PLACED",
+        "activityType": "ORDER_PLACED"
+      },
+      {
+        "id": "cd4201cc-48c8-4728-8cf0-ed34753f5461",
+        "authorEmail": "jugandoyeducando@hotmail.com",
+        "createdDate": "2026-02-17T20:56:36.661Z",
+        "merchantComment": {
+          "message": "FEB-11010 17/02/2026 SANCHEZ$ 127.810 BC"
+        },
+        "type": "MERCHANT_COMMENT",
+        "activityType": "MERCHANT_COMMENT"
+      }
+    ],
+    "attributionSource": "UNSPECIFIED",
+    "createdBy": {},
+    "channelInfo": {
+      "type": "WEB"
+    },
+    "seenByAHuman": true,
+    "checkoutId": "ca727402-85cf-40ba-b8f6-7a0d99a6c2b9",
+    "customFields": [
+      {
+        "value": "1018406341",
+        "title": "Número de cédula",
+        "translatedTitle": "Número de cédula"
+      }
+    ],
+    "cartId": "ca727402-85cf-40ba-b8f6-7a0d99a6c2b9",
+    "isInternalOrderCreate": false,
+    "payNow": {
+      "subtotal": {
+        "amount": "98243.70",
+        "formattedAmount": "98.243,70$"
+      },
+      "shipping": {
+        "amount": "10900.00",
+        "formattedAmount": "10.900,00$"
+      },
+      "tax": {
+        "amount": "18666.30",
+        "formattedAmount": "18.666,30$"
+      },
+      "discount": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalPrice": {
+        "amount": "127810.00",
+        "formattedAmount": "127.810,00$"
+      },
+      "total": {
+        "amount": "127810.00",
+        "formattedAmount": "127.810,00$"
+      },
+      "totalWithGiftCard": {
+        "amount": "127810.00",
+        "formattedAmount": "127.810,00$"
+      },
+      "totalWithoutGiftCard": {
+        "amount": "127810.00",
+        "formattedAmount": "127.810,00$"
+      },
+      "totalAdditionalFees": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      }
+    },
+    "balanceSummary": {
+      "balance": {
+        "amount": "127810.00",
+        "formattedAmount": "127.810,00$"
+      },
+      "paid": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "refunded": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "authorized": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "pendingRefund": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "pending": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "chargeback": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "chargebackReversal": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "platformFees": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "totalMinusPlatformFees": {
+        "amount": "127810.00",
+        "formattedAmount": "127.810,00$"
+      }
+    },
+    "additionalFees": [],
+    "purchaseFlowId": "0416fdac-44b7-4973-8008-1be12bd674ce",
+    "recipientInfo": {
+      "address": {
+        "country": "CO",
+        "subdivision": "CO-DC",
+        "city": "Bogotá",
+        "postalCode": "110231",
+        "addressLine": "Cra. 2a #66-52",
+        "addressLine2": "apto 512 recibe Julian Pinto",
+        "countryFullname": "Colombia",
+        "subdivisionFullname": "Distrito Capital de Bogotá"
+      },
+      "contactDetails": {
+        "firstName": "(M.D)(C.E) francisco ",
+        "lastName": "niño",
+        "phone": "3017873187"
+      }
+    },
+    "purchasedDate": "2026-02-17T16:15:18.824Z",
+    "payAfterFreeTrial": {
+      "subtotal": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "shipping": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "tax": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "discount": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalPrice": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "total": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalWithGiftCard": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalWithoutGiftCard": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalAdditionalFees": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      }
+    },
+    "settings": {
+      "editableByEveryone": true
+    },
+    "forms": []
+  },
+  {
+    "id": "68c04e46-aa41-4a0f-8484-b304b72b50d9",
+    "number": "18713",
+    "createdDate": "2026-02-17T02:39:35.808Z",
+    "updatedDate": "2026-02-18T15:41:58.729Z",
+    "lineItems": [
+      {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "productName": {
+          "original": "Juego de Construccion Magnetico 64 Piezas",
+          "translated": "Juego de Construccion Magnetico 64 Piezas"
+        },
+        "catalogReference": {
+          "catalogItemId": "370d4f8b-931b-95cf-54ef-bf47c9d54430",
+          "appId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+          "options": {
+            "options": {},
+            "variantId": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "quantity": 1,
+        "totalDiscount": {
+          "amount": "0.00",
+          "formattedAmount": "0,00$"
+        },
+        "descriptionLines": [],
+        "image": {
+          "id": "7909ff_e0191daf3c284d398ab0d19203c5cbf0~mv2.png",
+          "url": "https://static.wixstatic.com/media/7909ff_e0191daf3c284d398ab0d19203c5cbf0~mv2.png/v1/fit/w_1500,h_1469,q_90/file.png",
+          "height": 1469,
+          "width": 1500
+        },
+        "physicalProperties": {
+          "sku": "23964",
+          "shippable": true
+        },
+        "itemType": {
+          "preset": "PHYSICAL"
+        },
+        "price": {
+          "amount": "149900.00",
+          "formattedAmount": "149.900,00$"
+        },
+        "priceBeforeDiscounts": {
+          "amount": "149900.00",
+          "formattedAmount": "149.900,00$"
+        },
+        "priceBeforeDiscountsAndTax": {
+          "amount": "125966.39",
+          "formattedAmount": "125.966,39$"
+        },
+        "totalPriceBeforeTax": {
+          "amount": "125966.39",
+          "formattedAmount": "125.966,39$"
+        },
+        "totalPriceAfterTax": {
+          "amount": "149900.00",
+          "formattedAmount": "149.900,00$"
+        },
+        "paymentOption": "FULL_PAYMENT_ONLINE",
+        "taxDetails": {
+          "taxableAmount": {
+            "amount": "125966.39",
+            "formattedAmount": "125.966,39$"
+          },
+          "taxRate": "0.1900",
+          "totalTax": {
+            "amount": "23933.61",
+            "formattedAmount": "23.933,61$"
+          },
+          "exemptAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          }
+        },
+        "taxInfo": {
+          "taxAmount": {
+            "amount": "23933.61",
+            "formattedAmount": "23.933,61$"
+          },
+          "taxableAmount": {
+            "amount": "125966.39",
+            "formattedAmount": "125.966,39$"
+          },
+          "taxRate": "0.1900",
+          "taxIncludedInPrice": true,
+          "taxBreakdown": [
+            {
+              "jurisdiction": "",
+              "rate": "0.190000",
+              "taxAmount": {
+                "amount": "23933.61",
+                "formattedAmount": "23.933,61$"
+              },
+              "taxType": "",
+              "taxName": "",
+              "jurisdictionType": "UNDEFINED",
+              "taxableAmount": {
+                "amount": "125966.39",
+                "formattedAmount": "125.966,39$"
+              },
+              "exemptAmount": {
+                "amount": "0.00",
+                "formattedAmount": "0,00$"
+              }
+            }
+          ],
+          "exemptAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          }
+        },
+        "locations": [],
+        "lineItemPrice": {
+          "amount": "149900.00",
+          "formattedAmount": "149.900,00$"
+        },
+        "customLineItem": false,
+        "rootCatalogItemId": "370d4f8b-931b-95cf-54ef-bf47c9d54430",
+        "taxableAddress": {
+          "addressType": "SHIPPING"
+        },
+        "inventoryAppId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+        "priceUndetermined": false,
+        "fixedQuantity": false,
+        "modifierGroups": []
+      },
+      {
+        "id": "00000000-0000-0000-0000-000000000002",
+        "productName": {
+          "original": "Juego Stickers De Uñas Galletas Para Niños",
+          "translated": "Juego Stickers De Uñas Galletas Para Niños"
+        },
+        "catalogReference": {
+          "catalogItemId": "b085fe88-6678-d414-f303-6c8d3d960b0e",
+          "appId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+          "options": {
+            "options": {},
+            "variantId": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "quantity": 1,
+        "totalDiscount": {
+          "amount": "0.00",
+          "formattedAmount": "0,00$"
+        },
+        "descriptionLines": [],
+        "image": {
+          "id": "3f86e4_e0e2df3f2ebf486a84ca0525b989b914~mv2.jpg",
+          "url": "https://static.wixstatic.com/media/3f86e4_e0e2df3f2ebf486a84ca0525b989b914~mv2.jpg/v1/fit/w_667,h_874,q_90/file.jpg",
+          "height": 874,
+          "width": 667
+        },
+        "physicalProperties": {
+          "sku": "26971",
+          "shippable": true
+        },
+        "itemType": {
+          "preset": "PHYSICAL"
+        },
+        "price": {
+          "amount": "9900.00",
+          "formattedAmount": "9.900,00$"
+        },
+        "priceBeforeDiscounts": {
+          "amount": "9900.00",
+          "formattedAmount": "9.900,00$"
+        },
+        "priceBeforeDiscountsAndTax": {
+          "amount": "8319.33",
+          "formattedAmount": "8.319,33$"
+        },
+        "totalPriceBeforeTax": {
+          "amount": "8319.33",
+          "formattedAmount": "8.319,33$"
+        },
+        "totalPriceAfterTax": {
+          "amount": "9900.00",
+          "formattedAmount": "9.900,00$"
+        },
+        "paymentOption": "FULL_PAYMENT_ONLINE",
+        "taxDetails": {
+          "taxableAmount": {
+            "amount": "8319.33",
+            "formattedAmount": "8.319,33$"
+          },
+          "taxRate": "0.1900",
+          "totalTax": {
+            "amount": "1580.67",
+            "formattedAmount": "1.580,67$"
+          },
+          "exemptAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          }
+        },
+        "taxInfo": {
+          "taxAmount": {
+            "amount": "1580.67",
+            "formattedAmount": "1.580,67$"
+          },
+          "taxableAmount": {
+            "amount": "8319.33",
+            "formattedAmount": "8.319,33$"
+          },
+          "taxRate": "0.1900",
+          "taxIncludedInPrice": true,
+          "taxBreakdown": [
+            {
+              "jurisdiction": "",
+              "rate": "0.190000",
+              "taxAmount": {
+                "amount": "1580.67",
+                "formattedAmount": "1.580,67$"
+              },
+              "taxType": "",
+              "taxName": "",
+              "jurisdictionType": "UNDEFINED",
+              "taxableAmount": {
+                "amount": "8319.33",
+                "formattedAmount": "8.319,33$"
+              },
+              "exemptAmount": {
+                "amount": "0.00",
+                "formattedAmount": "0,00$"
+              }
+            }
+          ],
+          "exemptAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          }
+        },
+        "locations": [],
+        "lineItemPrice": {
+          "amount": "9900.00",
+          "formattedAmount": "9.900,00$"
+        },
+        "customLineItem": false,
+        "rootCatalogItemId": "b085fe88-6678-d414-f303-6c8d3d960b0e",
+        "taxableAddress": {
+          "addressType": "SHIPPING"
+        },
+        "inventoryAppId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+        "priceUndetermined": false,
+        "fixedQuantity": false,
+        "modifierGroups": []
+      }
+    ],
+    "buyerInfo": {
+      "contactId": "2e1ad273-caab-4988-8fce-8366247507b4",
+      "email": "radrisierra@gmail.com",
+      "visitorId": "3f6b7e08-82c7-4a13-9930-5447aa38db63"
+    },
+    "paymentStatus": "PAID",
+    "fulfillmentStatus": "FULFILLED",
+    "buyerLanguage": "es",
+    "weightUnit": "KG",
+    "currency": "COP",
+    "taxIncludedInPrices": true,
+    "siteLanguage": "es",
+    "priceSummary": {
+      "subtotal": {
+        "amount": "134285.72",
+        "formattedAmount": "134.285,72$"
+      },
+      "shipping": {
+        "amount": "8900.00",
+        "formattedAmount": "8.900,00$"
+      },
+      "tax": {
+        "amount": "25514.28",
+        "formattedAmount": "25.514,28$"
+      },
+      "discount": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalPrice": {
+        "amount": "168700.00",
+        "formattedAmount": "168.700,00$"
+      },
+      "total": {
+        "amount": "168700.00",
+        "formattedAmount": "168.700,00$"
+      },
+      "totalWithGiftCard": {
+        "amount": "168700.00",
+        "formattedAmount": "168.700,00$"
+      },
+      "totalWithoutGiftCard": {
+        "amount": "168700.00",
+        "formattedAmount": "168.700,00$"
+      },
+      "totalAdditionalFees": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      }
+    },
+    "billingInfo": {
+      "address": {
+        "country": "CO",
+        "subdivision": "CO-DC",
+        "city": "Bogotá",
+        "postalCode": "110221",
+        "addressLine": "Calle 112#15B-17 apto 203",
+        "countryFullname": "Colombia",
+        "subdivisionFullname": "Distrito Capital de Bogotá"
+      },
+      "contactDetails": {
+        "firstName": "Adriana",
+        "lastName": "Sierra",
+        "phone": "3013478261"
+      }
+    },
+    "shippingInfo": {
+      "carrierId": "45c44b27-ca7b-4891-8c0d-1747d588b835",
+      "code": "4be95d64-3f0c-f90a-eb60-c6e489991be3",
+      "title": "Envío Estándar",
+      "logistics": {
+        "deliveryTime": "1-2 días",
+        "shippingDestination": {
+          "address": {
+            "country": "CO",
+            "subdivision": "CO-DC",
+            "city": "Bogotá",
+            "postalCode": "110221",
+            "addressLine": "Calle 112#15B-17 apto 203",
+            "countryFullname": "Colombia",
+            "subdivisionFullname": "Distrito Capital de Bogotá"
+          },
+          "contactDetails": {
+            "firstName": "Adriana",
+            "lastName": "Sierra",
+            "phone": "3013478261"
+          }
+        }
+      },
+      "cost": {
+        "price": {
+          "amount": "8900.00",
+          "formattedAmount": "8.900,00$"
+        },
+        "totalPriceBeforeTax": {
+          "amount": "8900.00",
+          "formattedAmount": "8.900,00$"
+        },
+        "totalPriceAfterTax": {
+          "amount": "8900.00",
+          "formattedAmount": "8.900,00$"
+        },
+        "taxDetails": {
+          "taxableAmount": {
+            "amount": "8900.00",
+            "formattedAmount": "8.900,00$"
+          },
+          "taxRate": "0.0000",
+          "totalTax": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          },
+          "exemptAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          }
+        },
+        "taxInfo": {
+          "taxAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          },
+          "taxableAmount": {
+            "amount": "8900.00",
+            "formattedAmount": "8.900,00$"
+          },
+          "taxRate": "0.0000",
+          "taxIncludedInPrice": true,
+          "taxBreakdown": [],
+          "exemptAmount": {
+            "amount": "0.00",
+            "formattedAmount": "0,00$"
+          }
+        }
+      },
+      "region": {
+        "name": "Bogotá"
+      }
+    },
+    "status": "APPROVED",
+    "archived": false,
+    "taxSummary": {
+      "totalTax": {
+        "amount": "25514.28",
+        "formattedAmount": "25.514,28$"
+      },
+      "manualTaxRate": "0"
+    },
+    "taxInfo": {
+      "totalTax": {
+        "amount": "25514.28",
+        "formattedAmount": "25.514,28$"
+      },
+      "taxBreakdown": [],
+      "manualTaxRate": "0",
+      "totalExempt": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      }
+    },
+    "appliedDiscounts": [],
+    "activities": [
+      {
+        "id": "b2de588e-c15f-4731-b7e8-382b8baab359",
+        "createdDate": "2026-02-17T02:39:35.802Z",
+        "type": "ORDER_PLACED",
+        "activityType": "ORDER_PLACED"
+      },
+      {
+        "id": "872b96b6-5994-42f3-a7e3-51ec9e889d1e",
+        "createdDate": "2026-02-17T02:40:32.857Z",
+        "paymentPending": {
+          "paymentId": "01830342-e7ab-4970-93d8-9126155cc34a",
+          "regular": {
+            "amount": {
+              "amount": "168700.0",
+              "formattedAmount": "168.700,00$"
+            }
+          }
+        },
+        "type": "PAYMENT_PENDING",
+        "activityType": "PAYMENT_PENDING"
+      },
+      {
+        "id": "93e5cd35-345a-43b1-86c8-049ed3ff7040",
+        "createdDate": "2026-02-17T02:41:27.927Z",
+        "type": "ORDER_PENDING",
+        "activityType": "ORDER_PENDING"
+      },
+      {
+        "id": "527e30ae-5546-4292-be45-6dd304b50346",
+        "createdDate": "2026-02-17T02:41:30.497Z",
+        "type": "ORDER_PAID",
+        "activityType": "ORDER_PAID"
+      },
+      {
+        "id": "f4477296-5b76-4d0e-8b8c-4935e0757ea6",
+        "authorEmail": "jugandoyeducando@hotmail.com",
+        "createdDate": "2026-02-17T15:14:15.527Z",
+        "merchantComment": {
+          "message": "FEB-11009-17/02/2026-SANCHEZ-$168.700"
+        },
+        "type": "MERCHANT_COMMENT",
+        "activityType": "MERCHANT_COMMENT"
+      },
+      {
+        "id": "031c783f-c470-4ba8-a3e1-32a2b509f4a5",
+        "createdDate": "2026-02-18T15:41:58.726Z",
+        "type": "SHIPPING_CONFIRMATION_EMAIL_SENT",
+        "activityType": "SHIPPING_CONFIRMATION_EMAIL_SENT"
+      }
+    ],
+    "attributionSource": "UNSPECIFIED",
+    "createdBy": {},
+    "channelInfo": {
+      "type": "WEB"
+    },
+    "seenByAHuman": true,
+    "checkoutId": "ca727402-fdf9-42cf-af69-54ddd28f3c0e",
+    "customFields": [
+      {
+        "value": "52385750",
+        "title": "Número de cédula",
+        "translatedTitle": "Número de cédula"
+      }
+    ],
+    "cartId": "ca727402-fdf9-42cf-af69-54ddd28f3c0e",
+    "isInternalOrderCreate": false,
+    "payNow": {
+      "subtotal": {
+        "amount": "134285.72",
+        "formattedAmount": "134.285,72$"
+      },
+      "shipping": {
+        "amount": "8900.00",
+        "formattedAmount": "8.900,00$"
+      },
+      "tax": {
+        "amount": "25514.28",
+        "formattedAmount": "25.514,28$"
+      },
+      "discount": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalPrice": {
+        "amount": "168700.00",
+        "formattedAmount": "168.700,00$"
+      },
+      "total": {
+        "amount": "168700.00",
+        "formattedAmount": "168.700,00$"
+      },
+      "totalWithGiftCard": {
+        "amount": "168700.00",
+        "formattedAmount": "168.700,00$"
+      },
+      "totalWithoutGiftCard": {
+        "amount": "168700.00",
+        "formattedAmount": "168.700,00$"
+      },
+      "totalAdditionalFees": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      }
+    },
+    "balanceSummary": {
+      "balance": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "paid": {
+        "amount": "168700.0",
+        "formattedAmount": "168.700,00$"
+      },
+      "refunded": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "authorized": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "pendingRefund": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "pending": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "chargeback": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "chargebackReversal": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "platformFees": {
+        "amount": "0",
+        "formattedAmount": "0,00$"
+      },
+      "totalMinusPlatformFees": {
+        "amount": "168700.00",
+        "formattedAmount": "168.700,00$"
+      }
+    },
+    "additionalFees": [],
+    "purchaseFlowId": "48bf9110-3e72-467e-802b-019d75588329",
+    "recipientInfo": {
+      "address": {
+        "country": "CO",
+        "subdivision": "CO-DC",
+        "city": "Bogotá",
+        "postalCode": "110221",
+        "addressLine": "Calle 112#15B-17 apto 203",
+        "countryFullname": "Colombia",
+        "subdivisionFullname": "Distrito Capital de Bogotá"
+      },
+      "contactDetails": {
+        "firstName": "Adriana",
+        "lastName": "Sierra",
+        "phone": "3013478261"
+      }
+    },
+    "purchasedDate": "2026-02-17T02:39:35.802Z",
+    "payAfterFreeTrial": {
+      "subtotal": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "shipping": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "tax": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "discount": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalPrice": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "total": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalWithGiftCard": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalWithoutGiftCard": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      },
+      "totalAdditionalFees": {
+        "amount": "0.00",
+        "formattedAmount": "0,00$"
+      }
+    },
+    "settings": {
+      "editableByEveryone": true
+    },
+    "forms": []
+  }
+]
