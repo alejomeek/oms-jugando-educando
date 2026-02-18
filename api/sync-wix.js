@@ -1,9 +1,6 @@
 /**
  * Vercel Serverless Function: Sincronizar órdenes de Wix
- * Reemplaza el endpoint POST /api/sync-wix del servidor Express local
  */
-
-import axios from 'axios';
 
 // ============================================
 // UTILIDADES
@@ -39,7 +36,7 @@ function normalizeWixOrder(wixOrder) {
             }
             : null,
         items: wixOrder.lineItems.map((item) => ({
-            sku: item.sku || item.id,
+            sku: item.physicalProperties?.sku || item.sku || item.id,
             title:
                 item.productName?.translated ||
                 item.productName?.original ||
@@ -84,34 +81,36 @@ export default async function handler(req, res) {
 
         // Validar config
         if (!config?.apiKey || !config?.siteId) {
-            return res.status(400).json({
-                error: 'Faltan credenciales de Wix',
-            });
+            return res.status(400).json({ error: 'Faltan credenciales de Wix' });
         }
 
         console.log(`📡 [WIX] Obteniendo órdenes (limit: ${limit})...`);
 
-        const response = await axios.post(
-            'https://www.wixapis.com/ecom/v1/orders/search',
-            {
+        const response = await fetch('https://www.wixapis.com/ecom/v1/orders/search', {
+            method: 'POST',
+            headers: {
+                Authorization: config.apiKey,
+                'wix-site-id': config.siteId,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
                 search: {
                     cursorPaging: {
                         limit,
                         cursor: cursor || undefined,
                     },
                 },
-            },
-            {
-                headers: {
-                    Authorization: config.apiKey,
-                    'wix-site-id': config.siteId,
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
+            }),
+        });
 
-        const orders = response.data.orders || [];
-        const nextCursor = response.data.pagingMetadata?.cursor;
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Error de Wix API (${response.status}): ${errorData.message || response.statusText}`);
+        }
+
+        const data = await response.json();
+        const orders = data.orders || [];
+        const nextCursor = data.pagingMetadata?.cursor;
 
         console.log(`✅ [WIX] ${orders.length} órdenes obtenidas`);
 
@@ -131,7 +130,6 @@ export default async function handler(req, res) {
         return res.status(500).json({
             error: 'Error al sincronizar Wix',
             message: error.message,
-            details: error.response?.data || null,
         });
     }
 }

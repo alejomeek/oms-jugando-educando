@@ -1,9 +1,6 @@
 /**
  * Vercel Serverless Function: Sincronizar órdenes de Mercado Libre
- * Reemplaza el endpoint POST /api/sync-ml del servidor Express local
  */
-
-import axios from 'axios';
 
 // ============================================
 // UTILIDADES
@@ -54,26 +51,44 @@ function normalizeMLOrder(mlOrder) {
     };
 }
 
+async function fetchMLOrders(accessToken, sellerId, limit, offset) {
+    const params = new URLSearchParams({
+        seller: sellerId,
+        sort: 'date_desc',
+        limit: String(limit),
+        offset: String(offset),
+    });
+
+    const response = await fetch(
+        `https://api.mercadolibre.com/orders/search?${params}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+
+    return { response, data: await response.json() };
+}
+
 async function refreshMLToken(config) {
-    const response = await axios.post(
-        'https://api.mercadolibre.com/oauth/token',
-        new URLSearchParams({
+    const response = await fetch('https://api.mercadolibre.com/oauth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
             grant_type: 'refresh_token',
             client_id: config.clientId,
             client_secret: config.clientSecret,
             refresh_token: config.refreshToken,
         }),
-        {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-        }
-    );
+    });
 
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Error al refrescar token ML: ${errorData.message || response.statusText}`);
+    }
+
+    const data = await response.json();
     return {
-        accessToken: response.data.access_token,
-        refreshToken: response.data.refresh_token,
-        expiresIn: response.data.expires_in,
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        expiresIn: data.expires_in,
     };
 }
 
@@ -87,7 +102,7 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    // CORS para producción
+    // CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -103,79 +118,42 @@ export default async function handler(req, res) {
 
         // Validar config
         if (!config?.accessToken || !config?.sellerId) {
-            return res.status(400).json({
-                error: 'Faltan credenciales de Mercado Libre',
-            });
+            return res.status(400).json({ error: 'Faltan credenciales de Mercado Libre' });
         }
 
         let accessToken = config.accessToken;
         let newTokens = null;
 
-        // Intentar fetch de órdenes
-        try {
-            console.log(`📡 [ML] Obteniendo órdenes (limit: ${limit}, offset: ${offset})...`);
+        console.log(`📡 [ML] Obteniendo órdenes (limit: ${limit}, offset: ${offset})...`);
 
-            const response = await axios.get('https://api.mercadolibre.com/orders/search', {
-                params: {
-                    seller: config.sellerId,
-                    sort: 'date_desc',
-                    limit,
-                    offset,
-                },
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            });
+        // Primer intento
+        let { response, data } = await fetchMLOrders(accessToken, config.sellerId, limit, offset);
 
-            const orders = response.data.results || [];
-            console.log(`✅ [ML] ${orders.length} órdenes obtenidas`);
+        // Si es 401, refrescar token y reintentar
+        if (response.status === 401) {
+            console.log('⚠️  [ML] Token expirado, intentando refresh...');
+            newTokens = await refreshMLToken(config);
+            accessToken = newTokens.accessToken;
 
-            const normalizedOrders = orders.map(normalizeMLOrder);
-
-            return res.json({
-                success: true,
-                orders: normalizedOrders,
-                total: orders.length,
-                newTokens: null,
-            });
-
-        } catch (error) {
-            // Si es 401, intentar refresh del token
-            if (error.response?.status === 401) {
-                console.log('⚠️  [ML] Token expirado, intentando refresh...');
-
-                newTokens = await refreshMLToken(config);
-                accessToken = newTokens.accessToken;
-
-                console.log('📡 [ML] Reintentando con nuevo token...');
-
-                const response = await axios.get('https://api.mercadolibre.com/orders/search', {
-                    params: {
-                        seller: config.sellerId,
-                        sort: 'date_desc',
-                        limit,
-                        offset,
-                    },
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                });
-
-                const orders = response.data.results || [];
-                console.log(`✅ [ML] ${orders.length} órdenes obtenidas con nuevo token`);
-
-                const normalizedOrders = orders.map(normalizeMLOrder);
-
-                return res.json({
-                    success: true,
-                    orders: normalizedOrders,
-                    total: orders.length,
-                    newTokens,
-                });
-            }
-
-            throw error;
+            console.log('📡 [ML] Reintentando con nuevo token...');
+            ({ response, data } = await fetchMLOrders(accessToken, config.sellerId, limit, offset));
         }
+
+        if (!response.ok) {
+            throw new Error(`Error de ML API: ${data.message || response.statusText}`);
+        }
+
+        const orders = data.results || [];
+        console.log(`✅ [ML] ${orders.length} órdenes obtenidas`);
+
+        const normalizedOrders = orders.map(normalizeMLOrder);
+
+        return res.json({
+            success: true,
+            orders: normalizedOrders,
+            total: orders.length,
+            newTokens,
+        });
 
     } catch (error) {
         console.error('❌ [ML] Error en sincronización:', error.message);
@@ -183,7 +161,6 @@ export default async function handler(req, res) {
         return res.status(500).json({
             error: 'Error al sincronizar Mercado Libre',
             message: error.message,
-            details: error.response?.data || null,
         });
     }
 }
