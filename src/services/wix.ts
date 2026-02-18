@@ -1,4 +1,3 @@
-import axios from 'axios';
 import type { WixOrder } from '@/lib/types';
 
 /**
@@ -36,50 +35,42 @@ export async function fetchWixOrders(
   limit: number = 50,
   cursor?: string | null
 ): Promise<WixOrdersResponse> {
-  try {
-    const response = await axios.post(
-      'https://www.wixapis.com/ecom/v1/orders/search',
-      {
-        search: {
-          cursorPaging: {
-            limit,
-            cursor: cursor || undefined,
-          },
+  const response = await fetch('https://www.wixapis.com/ecom/v1/orders/search', {
+    method: 'POST',
+    headers: {
+      Authorization: config.apiKey,
+      'wix-site-id': config.siteId,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      search: {
+        cursorPaging: {
+          limit,
+          cursor: cursor || undefined,
         },
       },
-      {
-        headers: {
-          Authorization: config.apiKey,
-          'wix-site-id': config.siteId,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    }),
+  });
 
-    return {
-      orders: response.data.orders || [],
-      nextCursor: response.data.pagingMetadata?.cursor,
-    };
-  } catch (error: any) {
-    console.error('Error fetching Wix orders:', error.response?.data || error.message);
+  if (response.status === 401) {
+    throw new Error('API key de Wix inválido o expirado. Verifica tu configuración.');
+  }
 
-    // Manejo específico de errores de Wix
-    if (error.response?.status === 401) {
-      throw new Error(
-        'API key de Wix inválido o expirado. Verifica tu configuración.'
-      );
-    }
+  if (response.status === 500) {
+    throw new Error('Error del servidor de Wix. Intenta nuevamente en unos segundos.');
+  }
 
-    if (error.response?.status === 500) {
-      throw new Error(
-        'Error del servidor de Wix. Intenta nuevamente en unos segundos.'
-      );
-    }
-
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      `Error al obtener órdenes de Wix: ${
-        error.response?.data?.message || error.message
-      }`
+      `Error al obtener órdenes de Wix: ${errorData.message || response.statusText}`
     );
   }
+
+  const data = await response.json();
+
+  return {
+    orders: data.orders || [],
+    nextCursor: data.pagingMetadata?.cursor,
+  };
 }

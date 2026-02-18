@@ -1,9 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabase';
-import axios from 'axios';
-// Mantener imports originales por si se necesitan
-// import { fetchMLOrders, type MLConfig } from '@/services/mercadolibre';
-// import { normalizeMLOrder } from '@/services/normalizer';
 
 interface MLConfig {
   accessToken: string;
@@ -56,17 +52,24 @@ export function useSyncML() {
       console.log('Iniciando sincronización de Mercado Libre...');
 
       // 2. Llamar a la Serverless Function (relativo: funciona en Vercel y local)
-      const response = await axios.post('/api/sync-ml', {
-        config,
-        limit: 50,
-        offset: 0,
+      const response = await fetch('/api/sync-ml', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config, limit: 50, offset: 0 }),
       });
 
-      if (!response.data.success) {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error HTTP ${response.status} al sincronizar con Mercado Libre`);
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
         throw new Error('Error al sincronizar con Mercado Libre');
       }
 
-      const { orders: normalizedOrders, newTokens } = response.data;
+      const { orders: normalizedOrders, newTokens } = data;
 
       console.log(`Obtenidas ${normalizedOrders.length} órdenes de Mercado Libre`);
 
@@ -99,7 +102,7 @@ export function useSyncML() {
 
       return {
         inserted: count || 0,
-        updated: 0, // Supabase no retorna cuántas fueron updates vs inserts
+        updated: 0,
         total: normalizedOrders.length,
       };
     },
@@ -110,7 +113,7 @@ export function useSyncML() {
     },
     onError: (error) => {
       console.error('Error en sincronización ML:', error);
-      if (axios.isAxiosError(error) && error.code === 'ERR_NETWORK') {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
         console.error('⚠️  No se pudo conectar a /api/sync-ml.');
       }
     },

@@ -1,4 +1,3 @@
-import axios from 'axios';
 import type { MLOrder } from '@/lib/types';
 
 /**
@@ -29,43 +28,35 @@ export async function fetchMLOrders(
   limit: number = 50,
   offset: number = 0
 ): Promise<MLOrder[]> {
-  try {
-    const response = await axios.get('https://api.mercadolibre.com/orders/search', {
-      params: {
-        seller: config.sellerId,
-        sort: 'date_desc',
-        limit,
-        offset,
-      },
-      headers: {
-        Authorization: `Bearer ${config.accessToken}`,
-      },
-    });
+  const params = new URLSearchParams({
+    seller: config.sellerId,
+    sort: 'date_desc',
+    limit: String(limit),
+    offset: String(offset),
+  });
 
-    return response.data.results || [];
-  } catch (error: any) {
-    // Si es 401, intentar refresh del token
-    if (error.response?.status === 401) {
-      console.log('Token expirado, intentando refresh...');
-      const newToken = await refreshMLToken(config);
+  const response = await fetch(
+    `https://api.mercadolibre.com/orders/search?${params}`,
+    { headers: { Authorization: `Bearer ${config.accessToken}` } }
+  );
 
-      // Reintentar con nuevo token
-      console.log('Reintentando request con nuevo token...');
-      return fetchMLOrders(
-        { ...config, accessToken: newToken },
-        limit,
-        offset
-      );
-    }
+  // Si es 401, intentar refresh del token
+  if (response.status === 401) {
+    console.log('Token expirado, intentando refresh...');
+    const newToken = await refreshMLToken(config);
+    console.log('Reintentando request con nuevo token...');
+    return fetchMLOrders({ ...config, accessToken: newToken }, limit, offset);
+  }
 
-    // Para otros errores, re-throw
-    console.error('Error fetching ML orders:', error.response?.data || error.message);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      `Error al obtener órdenes de Mercado Libre: ${
-        error.response?.data?.message || error.message
-      }`
+      `Error al obtener órdenes de Mercado Libre: ${errorData.message || response.statusText}`
     );
   }
+
+  const data = await response.json();
+  return data.results || [];
 }
 
 /**
@@ -76,48 +67,34 @@ export async function fetchMLOrders(
  *
  * @example
  * const newAccessToken = await refreshMLToken(config);
- * // Actualizar token en localStorage o estado global
  */
 export async function refreshMLToken(config: MLConfig): Promise<string> {
-  try {
-    const response = await axios.post(
-      'https://api.mercadolibre.com/oauth/token',
-      new URLSearchParams({
-        grant_type: 'refresh_token',
-        client_id: config.clientId,
-        client_secret: config.clientSecret,
-        refresh_token: config.refreshToken,
-      }),
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      }
-    );
+  const response = await fetch('https://api.mercadolibre.com/oauth/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      refresh_token: config.refreshToken,
+    }),
+  });
 
-    const newAccessToken = response.data.access_token;
-    const newRefreshToken = response.data.refresh_token;
-
-    console.log('Token refreshed successfully');
-
-    // TODO: Guardar nuevos tokens en localStorage o estado global
-    // localStorage.setItem('ml_access_token', newAccessToken);
-    // localStorage.setItem('ml_refresh_token', newRefreshToken);
-
-    // Por ahora, solo logueamos que se debe actualizar
-    console.warn('IMPORTANTE: Actualizar tokens en el storage:', {
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-      expiresIn: response.data.expires_in,
-    });
-
-    return newAccessToken;
-  } catch (error: any) {
-    console.error('Error refreshing ML token:', error.response?.data || error.message);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      `Error al refrescar token de Mercado Libre: ${
-        error.response?.data?.message || error.message
-      }. Verifica tus credenciales.`
+      `Error al refrescar token de Mercado Libre: ${errorData.message || response.statusText}. Verifica tus credenciales.`
     );
   }
+
+  const data = await response.json();
+
+  console.log('Token refreshed successfully');
+  console.warn('IMPORTANTE: Actualizar tokens en el storage:', {
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    expiresIn: data.expires_in,
+  });
+
+  return data.access_token;
 }

@@ -1,9 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabase';
-import axios from 'axios';
-// Mantener imports originales por si se necesitan
-// import { fetchWixOrders, type WixConfig } from '@/services/wix';
-// import { normalizeWixOrder } from '@/services/normalizer';
 
 interface WixConfig {
   apiKey: string;
@@ -44,17 +40,24 @@ export function useSyncWix() {
       console.log('Iniciando sincronización de Wix...');
 
       // 2. Llamar a la Serverless Function (relativo: funciona en Vercel y local)
-      const response = await axios.post('/api/sync-wix', {
-        config,
-        limit: 50,
-        cursor: null,
+      const response = await fetch('/api/sync-wix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config, limit: 50, cursor: null }),
       });
 
-      if (!response.data.success) {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error HTTP ${response.status} al sincronizar con Wix`);
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
         throw new Error('Error al sincronizar con Wix');
       }
 
-      const { orders: normalizedOrders, nextCursor, hasMore } = response.data;
+      const { orders: normalizedOrders, nextCursor, hasMore } = data;
 
       console.log(`Obtenidas ${normalizedOrders.length} órdenes de Wix`);
 
@@ -79,9 +82,9 @@ export function useSyncWix() {
 
       return {
         inserted: count || 0,
-        updated: 0, // Supabase no retorna cuántas fueron updates vs inserts
+        updated: 0,
         total: normalizedOrders.length,
-        hasMore: hasMore, // Indica si hay más páginas disponibles
+        hasMore,
         nextCursor,
       };
     },
@@ -92,7 +95,7 @@ export function useSyncWix() {
     },
     onError: (error) => {
       console.error('Error en sincronización Wix:', error);
-      if (axios.isAxiosError(error) && error.code === 'ERR_NETWORK') {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
         console.error('⚠️  No se pudo conectar a /api/sync-wix.');
       }
     },
