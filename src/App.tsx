@@ -1,25 +1,32 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { Dashboard } from '@/pages/Dashboard';
+import { Analytics } from '@/pages/Analytics';
 
-// Configuración de React Query
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false, // Evitar refetch al cambiar de tab
-      retry: 1, // Solo 1 retry en caso de error
-      staleTime: 5 * 60 * 1000, // 5 minutos
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000,
     },
   },
 });
 
-/**
- * Componente principal de la aplicación OMS
- * Configura React Query y renderiza el Dashboard
- */
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Dashboard />
+      <BrowserRouter>
+        <AppLayout>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/analytics" element={<Analytics />} />
+          </Routes>
+        </AppLayout>
+      </BrowserRouter>
+      <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );
 }

@@ -142,3 +142,16 @@ CREATE POLICY "Allow all access to history"
 -- de Supabase o ejecuta estos comandos en psql local:
 -- \dt (para ver tablas)
 -- \di (para ver índices)
+
+-- ============================================
+-- ANALYTICS SUPPORT — run these if not exists
+-- ============================================
+
+-- Index para agrupar por fecha y canal (analytics diarios/semanales)
+CREATE INDEX IF NOT EXISTS idx_orders_order_date_channel ON orders(order_date DESC, channel);
+
+-- Index compuesto para filtros por canal y status
+CREATE INDEX IF NOT EXISTS idx_orders_channel_status ON orders(channel, status);
+
+-- Index para queries de revenue
+CREATE INDEX IF NOT EXISTS idx_orders_total_amount ON orders(total_amount);

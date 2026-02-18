@@ -1,20 +1,19 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import { useOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
 import { useSyncML } from '@/hooks/useSyncML';
 import { useSyncWix } from '@/hooks/useSyncWix';
-import { Button } from '@/components/ui/Button';
+import { useAutoSync } from '@/hooks/useAutoSync';
+import { useAutoSyncSettings } from '@/hooks/useAutoSyncSettings';
+import { TopBar } from '@/components/layout/TopBar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { OrderStats } from '@/components/orders/OrderStats';
 import { OrderFilters } from '@/components/orders/OrderFilters';
 import { OrdersTable } from '@/components/orders/OrdersTable';
 import { OrderDetailModal } from '@/components/orders/OrderDetailModal';
 import type { Order, OrderFilters as OrderFiltersType, OrderStatus } from '@/lib/types';
 
-/**
- * Dashboard principal del OMS
- * Centraliza la gestión de pedidos de todos los canales e-commerce
- */
 export function Dashboard() {
-  // Estado local
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filters, setFilters] = useState<OrderFiltersType>({
     search: '',
@@ -22,19 +21,44 @@ export function Dashboard() {
     channel: null,
   });
 
-  // Hooks de datos
   const { data: orders = [], isLoading, error } = useOrders(filters);
   const { mutate: syncML, isPending: isSyncingML } = useSyncML();
   const { mutate: syncWix, isPending: isSyncingWix } = useSyncWix();
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateOrderStatus();
 
-  // Handlers
+  const { settings: autoSyncSettings, updateSettings: updateAutoSyncSettings } = useAutoSyncSettings();
+
+  const onSyncComplete = useCallback((_channel: 'mercadolibre' | 'wix', newOrderCount: number) => {
+    if (newOrderCount > 0) {
+      toast.success(`${newOrderCount} nuevos pedidos!`, {
+        description: 'Sincronizacion automatica completada',
+      });
+    }
+  }, []);
+
+  const onSyncError = useCallback((_channel: 'mercadolibre' | 'wix', err: Error) => {
+    toast.error('Error al sincronizar', { description: err.message });
+  }, []);
+
+  useAutoSync({
+    enabled: autoSyncSettings.enabled,
+    intervalMinutes: autoSyncSettings.intervalMinutes,
+    onSyncComplete,
+    onSyncError,
+  });
+
   const handleSyncML = () => {
-    syncML();
+    syncML(undefined, {
+      onSuccess: () => toast.success('Sincronizacion ML completada'),
+      onError: (err) => toast.error('Error al sincronizar ML', { description: err.message }),
+    });
   };
 
   const handleSyncWix = () => {
-    syncWix();
+    syncWix(undefined, {
+      onSuccess: () => toast.success('Sincronizacion Wix completada'),
+      onError: (err) => toast.error('Error al sincronizar Wix', { description: err.message }),
+    });
   };
 
   const handleOrderClick = (order: Order) => {
@@ -50,101 +74,104 @@ export function Dashboard() {
       { orderId, newStatus },
       {
         onSuccess: () => {
-          console.log('Estado actualizado exitosamente');
+          toast.success('Estado actualizado exitosamente');
         },
         onError: (error) => {
-          console.error('Error al actualizar estado:', error);
-          alert('Error al actualizar el estado. Por favor intenta nuevamente.');
+          toast.error('Error al actualizar estado', { description: error.message });
         },
       }
     );
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        {/* HEADER */}
-        <header className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                OMS - Gestión de Pedidos
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Didácticos Jugando y Educando
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                variant="primary"
-                loading={isSyncingML}
-                onClick={handleSyncML}
-                disabled={isSyncingML}
-              >
-                Sincronizar Mercado Libre
-              </Button>
-              <Button
-                variant="secondary"
-                loading={isSyncingWix}
-                onClick={handleSyncWix}
-                disabled={isSyncingWix}
-              >
-                Sincronizar Wix
-              </Button>
-            </div>
-          </div>
-        </header>
+    <>
+      <TopBar
+        title="Dashboard"
+        subtitle="Gestion de Pedidos"
+        onSyncML={handleSyncML}
+        onSyncWix={handleSyncWix}
+        isSyncingML={isSyncingML}
+        isSyncingWix={isSyncingWix}
+      />
 
-        {/* Mensaje de error general */}
+      <div className="space-y-6 p-6">
+        {/* Auto-sync settings */}
+        <div className="flex flex-wrap items-center gap-4 rounded-lg border bg-card p-3 text-sm">
+          <label className="flex cursor-pointer items-center gap-2">
+            <input
+              type="checkbox"
+              checked={autoSyncSettings.enabled}
+              onChange={(e) => updateAutoSyncSettings({ enabled: e.target.checked })}
+              className="size-4 rounded border-input text-primary focus:ring-primary"
+            />
+            <span className="font-medium">Sincronizacion automatica</span>
+          </label>
+          {autoSyncSettings.enabled && (
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">Cada</span>
+              <input
+                type="number"
+                min={1}
+                max={60}
+                value={autoSyncSettings.intervalMinutes}
+                onChange={(e) => updateAutoSyncSettings({ intervalMinutes: Math.max(1, Number(e.target.value)) })}
+                className="w-16 rounded-md border border-input bg-background px-2 py-1 text-sm focus:ring-1 focus:ring-primary"
+              />
+              <span className="text-muted-foreground">minutos</span>
+            </div>
+          )}
+          {autoSyncSettings.enabled && (
+            <span className="flex items-center gap-1 text-xs font-medium text-green-600">
+              <span className="size-2 animate-pulse rounded-full bg-green-500" />
+              Auto-sync activo
+            </span>
+          )}
+        </div>
+
+        {/* Error */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800 font-medium">Error al cargar órdenes</p>
-            <p className="text-red-600 text-sm mt-1">
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+            <p className="font-medium text-destructive">Error al cargar pedidos</p>
+            <p className="mt-1 text-sm text-destructive/80">
               {error instanceof Error ? error.message : 'Error desconocido'}
             </p>
           </div>
         )}
 
-        {/* STATS */}
-        <section className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Estadísticas
-          </h2>
-          <OrderStats orders={orders} />
-        </section>
+        {/* Stats */}
+        <OrderStats orders={orders} />
 
-        {/* FILTERS */}
-        <section className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Filtros</h2>
-          <OrderFilters filters={filters} onFiltersChange={setFilters} />
-        </section>
+        {/* Filters + Table */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle>Pedidos ({orders.length})</CardTitle>
+              {isUpdatingStatus && (
+                <span className="animate-pulse text-sm text-primary">
+                  Actualizando estado...
+                </span>
+              )}
+            </div>
+            <div className="pt-3">
+              <OrderFilters filters={filters} onFiltersChange={setFilters} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <OrdersTable
+              orders={orders}
+              onOrderClick={handleOrderClick}
+              isLoading={isLoading}
+            />
+          </CardContent>
+        </Card>
 
-        {/* TABLE */}
-        <section className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Órdenes ({orders.length})
-            </h2>
-            {isUpdatingStatus && (
-              <span className="text-sm text-blue-600 animate-pulse">
-                Actualizando estado...
-              </span>
-            )}
-          </div>
-          <OrdersTable
-            orders={orders}
-            onOrderClick={handleOrderClick}
-            isLoading={isLoading}
-          />
-        </section>
-
-        {/* MODAL */}
+        {/* Detail Panel */}
         <OrderDetailModal
           order={selectedOrder}
           onClose={handleCloseModal}
           onStatusChange={handleStatusChange}
         />
       </div>
-    </div>
+    </>
   );
 }

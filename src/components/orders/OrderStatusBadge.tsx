@@ -1,24 +1,41 @@
-import { Badge } from '@/components/ui/Badge';
-import { ORDER_STATUSES } from '@/lib/constants';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import type { OrderStatus } from '@/lib/types';
 
 export interface OrderStatusBadgeProps {
   status: OrderStatus;
+  className?: string;
 }
 
-/**
- * Badge que muestra el estado de una orden con color correspondiente
- *
- * @example
- * <OrderStatusBadge status="nuevo" />
- * <OrderStatusBadge status="preparando" />
- */
-export function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
-  const statusInfo = ORDER_STATUSES[status];
+const statusConfig: Record<OrderStatus, { label: string; className: string }> = {
+  nuevo: {
+    label: 'Nuevo',
+    className: 'bg-blue-100 text-blue-700 border-blue-200',
+  },
+  preparando: {
+    label: 'Preparando',
+    className: 'bg-amber-100 text-amber-700 border-amber-200',
+  },
+  listo: {
+    label: 'Listo',
+    className: 'bg-purple-100 text-purple-700 border-purple-200',
+  },
+  enviado: {
+    label: 'Enviado',
+    className: 'bg-green-100 text-green-700 border-green-200',
+  },
+  cancelado: {
+    label: 'Cancelado',
+    className: 'bg-red-100 text-red-700 border-red-200',
+  },
+};
+
+export function OrderStatusBadge({ status, className }: OrderStatusBadgeProps) {
+  const config = statusConfig[status];
 
   return (
-    <Badge color={statusInfo.color}>
-      {statusInfo.label}
+    <Badge variant="outline" className={cn(config.className, className)}>
+      {config.label}
     </Badge>
   );
 }

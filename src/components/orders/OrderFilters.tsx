@@ -1,37 +1,36 @@
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { Button } from '@/components/ui/Button';
-import { ORDER_STATUSES, CHANNELS } from '@/lib/constants';
-import type { OrderFilters } from '@/lib/types';
+import { Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import type { OrderFilters as OrderFiltersType } from '@/lib/types';
 
 export interface OrderFiltersProps {
-  filters: OrderFilters;
-  onFiltersChange: (filters: OrderFilters) => void;
+  filters: OrderFiltersType;
+  onFiltersChange: (filters: OrderFiltersType) => void;
 }
 
-/**
- * Componente de filtros para órdenes
- * Incluye: búsqueda por texto, filtro por canal, filtro por estado, botón limpiar
- *
- * @example
- * <OrderFilters filters={filters} onFiltersChange={setFilters} />
- */
 export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
-  const handleSearchChange = (search: string) => {
-    onFiltersChange({ ...filters, search });
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onFiltersChange({ ...filters, search: e.target.value });
   };
 
   const handleChannelChange = (channel: string) => {
     onFiltersChange({
       ...filters,
-      channel: channel === '' ? null : (channel as 'mercadolibre' | 'wix'),
+      channel: channel === 'all' ? null : (channel as 'mercadolibre' | 'wix'),
     });
   };
 
   const handleStatusChange = (status: string) => {
     onFiltersChange({
       ...filters,
-      status: status === '' ? null : (status as any),
+      status: status === 'all' ? null : (status as any),
     });
   };
 
@@ -41,58 +40,54 @@ export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
 
   const hasActiveFilters = filters.search || filters.status || filters.channel;
 
-  // Opciones para Select de canal
-  const channelOptions = [
-    { value: '', label: 'Todos los canales' },
-    { value: 'mercadolibre', label: CHANNELS.mercadolibre.label },
-    { value: 'wix', label: CHANNELS.wix.label },
-  ];
-
-  // Opciones para Select de estado
-  const statusOptions = [
-    { value: '', label: 'Todos los estados' },
-    { value: 'nuevo', label: ORDER_STATUSES.nuevo.label },
-    { value: 'preparando', label: ORDER_STATUSES.preparando.label },
-    { value: 'listo', label: ORDER_STATUSES.listo.label },
-    { value: 'enviado', label: ORDER_STATUSES.enviado.label },
-    { value: 'cancelado', label: ORDER_STATUSES.cancelado.label },
-  ];
-
   return (
-    <div className="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 rounded-lg">
-      <div className="flex-1">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="relative flex-1">
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          label="Buscar"
           value={filters.search || ''}
           onChange={handleSearchChange}
-          placeholder="ID de orden, cliente, email..."
+          placeholder="Buscar por ID, cliente, email..."
+          className="pl-9"
         />
       </div>
 
-      <div className="w-full md:w-48">
-        <Select
-          label="Canal"
-          value={filters.channel || ''}
-          onChange={handleChannelChange}
-          options={channelOptions}
-        />
-      </div>
+      <Select
+        value={filters.channel || 'all'}
+        onValueChange={handleChannelChange}
+      >
+        <SelectTrigger className="w-full sm:w-44">
+          <SelectValue placeholder="Todos los canales" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Todos los canales</SelectItem>
+          <SelectItem value="mercadolibre">Mercado Libre</SelectItem>
+          <SelectItem value="wix">Wix</SelectItem>
+        </SelectContent>
+      </Select>
 
-      <div className="w-full md:w-48">
-        <Select
-          label="Estado"
-          value={filters.status || ''}
-          onChange={handleStatusChange}
-          options={statusOptions}
-        />
-      </div>
+      <Select
+        value={filters.status || 'all'}
+        onValueChange={handleStatusChange}
+      >
+        <SelectTrigger className="w-full sm:w-44">
+          <SelectValue placeholder="Todos los estados" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Todos los estados</SelectItem>
+          <SelectItem value="nuevo">Nuevo</SelectItem>
+          <SelectItem value="preparando">Preparando</SelectItem>
+          <SelectItem value="listo">Listo</SelectItem>
+          <SelectItem value="enviado">Enviado</SelectItem>
+          <SelectItem value="cancelado">Cancelado</SelectItem>
+        </SelectContent>
+      </Select>
 
       {hasActiveFilters && (
-        <div className="flex items-end">
-          <Button variant="outline" onClick={handleClearFilters}>
-            Limpiar filtros
-          </Button>
-        </div>
+        <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+          <X className="size-4" />
+          Limpiar
+        </Button>
       )}
     </div>
   );
