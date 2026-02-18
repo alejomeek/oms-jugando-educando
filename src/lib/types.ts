@@ -1,0 +1,200 @@
+// ============================================
+// ENUMS Y CONSTANTES
+// ============================================
+
+export type OrderChannel = 'mercadolibre' | 'wix';
+export type OrderStatus = 'nuevo' | 'preparando' | 'listo' | 'enviado' | 'cancelado';
+
+// ============================================
+// INTERFACES PRINCIPALES
+// ============================================
+
+export interface Order {
+  id: string;
+  external_id: string;
+  channel: OrderChannel;
+  pack_id?: string | null;
+  shipping_id?: string | null;
+  status: OrderStatus;
+  order_date: string;
+  closed_date?: string | null;
+  created_at: string;
+  updated_at: string;
+  total_amount: number;
+  paid_amount?: number;
+  currency: string;
+  customer: CustomerInfo;
+  shipping_address?: ShippingAddress | null;
+  items: OrderItem[];
+  payment_info?: PaymentInfo | null;
+  tags?: string[];
+  notes?: string | null;
+}
+
+export interface CustomerInfo {
+  source: 'mercadolibre' | 'wix';
+  id: string;
+  nickname?: string;           // ML
+  email?: string;              // Wix
+  firstName?: string;          // Wix
+  lastName?: string;           // Wix
+  phone?: string;              // Wix
+}
+
+export interface ShippingAddress {
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  zipCode: string;
+  receiverName?: string;
+  receiverPhone?: string;
+  notes?: string;
+}
+
+export interface OrderItem {
+  sku: string;
+  title: string;
+  quantity: number;
+  unitPrice: number;
+  fullPrice: number;
+  currency: string;
+  imageUrl?: string;
+  variationAttributes?: Array<{
+    name: string;
+    value: string;
+  }>;
+}
+
+export interface PaymentInfo {
+  method?: string;
+  status?: string;
+  installments?: number;
+  paidAmount?: number;
+  paymentDate?: string;
+}
+
+export interface OrderStatusHistory {
+  id: string;
+  order_id: string;
+  old_status?: string;
+  new_status: string;
+  changed_by?: string;
+  changed_at: string;
+  notes?: string;
+}
+
+// ============================================
+// FILTROS Y QUERIES
+// ============================================
+
+export interface OrderFilters {
+  status?: OrderStatus | null;
+  channel?: OrderChannel | null;
+  search?: string;
+}
+
+export interface OrderStats {
+  nuevo: number;
+  preparando: number;
+  listo: number;
+  enviado: number;
+  total: number;
+}
+
+// ============================================
+// API RESPONSES (RAW)
+// ============================================
+
+// Mercado Libre
+export interface MLOrder {
+  id: number;
+  pack_id?: number | null;
+  shipping?: { id: number };
+  date_created: string;
+  date_closed: string;
+  total_amount: number;
+  paid_amount: number;
+  currency_id: string;
+  buyer: {
+    id: number;
+    nickname: string;
+  };
+  order_items: Array<{
+    item: {
+      id: string;
+      title: string;
+      seller_sku: string;
+      variation_attributes?: Array<{
+        name: string;
+        value_name: string;
+      }>;
+    };
+    quantity: number;
+    unit_price: number;
+    full_unit_price: number;
+    currency_id: string;
+  }>;
+  payments?: Array<{
+    payment_method_id: string;
+    status: string;
+    installments: number;
+    total_paid_amount: number;
+    date_approved: string;
+  }>;
+  tags?: string[];
+  status: string;
+}
+
+// Wix
+export interface WixOrder {
+  _id: string;
+  number: string;
+  _createdDate: string;
+  _updatedDate: string;
+  currency: string;
+  paymentStatus: string;
+  fulfillmentStatus: string;
+  buyerInfo: {
+    id: string;
+    email: string;
+  };
+  billingInfo?: {
+    contactDetails?: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+    };
+  };
+  shippingInfo?: {
+    shipmentDetails?: {
+      address?: {
+        addressLine1?: string;
+        city?: string;
+        subdivision?: string;
+        country?: string;
+        postalCode?: string;
+      };
+    };
+  };
+  lineItems: Array<{
+    id: string;
+    sku?: string;
+    productName?: {
+      original: string;
+      translated?: string;
+    };
+    quantity: number;
+    price: number;
+    totalPrice: number;
+    image?: {
+      url: string;
+    };
+  }>;
+  priceSummary: {
+    subtotal: number;
+    shipping: number;
+    tax: number;
+    total: number;
+  };
+}

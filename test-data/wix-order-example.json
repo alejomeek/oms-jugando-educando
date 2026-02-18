@@ -1,0 +1,53 @@
+{
+    "_id": "wix-order-12345",
+    "number": "1001",
+    "_createdDate": "2024-01-15T14:20:00.000Z",
+    "_updatedDate": "2024-01-15T14:25:00.000Z",
+    "currency": "COP",
+    "paymentStatus": "PAID",
+    "fulfillmentStatus": "NOT_FULFILLED",
+    "buyerInfo": {
+        "id": "wix-buyer-789",
+        "email": "cliente@ejemplo.com"
+    },
+    "billingInfo": {
+        "contactDetails": {
+            "firstName": "Juan",
+            "lastName": "Pérez",
+            "phone": "+57 300 123 4567"
+        }
+    },
+    "shippingInfo": {
+        "shipmentDetails": {
+            "address": {
+                "addressLine1": "Calle 123 #45-67",
+                "city": "Bogotá",
+                "subdivision": "Cundinamarca",
+                "country": "CO",
+                "postalCode": "110111"
+            }
+        }
+    },
+    "lineItems": [
+        {
+            "id": "line-item-1",
+            "sku": "JE-002",
+            "productName": {
+                "original": "Rompecabezas Educativo",
+                "translated": "Rompecabezas Educativo"
+            },
+            "quantity": 2,
+            "price": 45000,
+            "totalPrice": 90000,
+            "image": {
+                "url": "https://example.com/image.jpg"
+            }
+        }
+    ],
+    "priceSummary": {
+        "subtotal": 90000,
+        "shipping": 10000,
+        "tax": 0,
+        "total": 100000
+    }
+}
