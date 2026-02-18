@@ -30,10 +30,9 @@ export function useOrders(filters?: OrderFilters) {
         query = query.eq('channel', filters.channel);
       }
 
-      // Busca por order_id (nuevo nombre) o external_id (nombre anterior, fallback hasta migrar DB)
       if (filters?.search) {
         query = query.or(
-          `order_id.ilike.%${filters.search}%,external_id.ilike.%${filters.search}%,customer->>nickname.ilike.%${filters.search}%,customer->>email.ilike.%${filters.search}%`
+          `order_id.ilike.%${filters.search}%,customer->>nickname.ilike.%${filters.search}%,customer->>email.ilike.%${filters.search}%`
         );
       }
 
