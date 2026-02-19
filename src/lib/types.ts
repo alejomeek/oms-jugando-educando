@@ -98,6 +98,13 @@ export interface OrderFilters {
   status?: OrderStatus | null;
   channel?: OrderChannel | null;
   search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  count: number;
 }
 
 export interface OrderStats {
@@ -106,6 +113,8 @@ export interface OrderStats {
   listo: number;
   enviado: number;
   total: number;
+  mercadolibre: number;
+  wix: number;
 }
 
 // ============================================

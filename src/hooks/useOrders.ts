@@ -1,31 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabase';
-import type { Order, OrderFilters, OrderStatus } from '@/lib/types';
+import type { Order, OrderFilters, OrderStatus, PaginatedResponse } from '@/lib/types';
 
 /**
- * Hook para obtener órdenes de Supabase con filtros
+ * Hook to fetch paginated orders from Supabase with filters.
  *
- * @param filters - Filtros opcionales (status, channel, search)
- * @returns Query de React Query con data, isLoading, error
- *
- * @example
- * const { data: orders, isLoading } = useOrders({ status: 'nuevo', channel: 'mercadolibre' });
+ * @param filters - Pagination and search filters
+ * @returns React Query result with { data: Order[], count: number }
  */
 export function useOrders(filters?: OrderFilters) {
-  return useQuery({
-    queryKey: ['orders', filters],
+  return useQuery<PaginatedResponse<Order>>({
+    queryKey: ['orders', filters], // Key includes page/filters so it re-fetches on change
     queryFn: async () => {
+      const page = filters?.page || 1;
+      const pageSize = filters?.pageSize || 50;
+
       let query = supabase
         .from('orders')
-        .select('*')
-        .order('order_date', { ascending: false });
+        .select('*', { count: 'exact' });
 
-      // Aplicar filtro de status
+      // Apply filters
       if (filters?.status) {
         query = query.eq('status', filters.status);
       }
 
-      // Aplicar filtro de channel
       if (filters?.channel) {
         query = query.eq('channel', filters.channel);
       }
@@ -36,22 +34,37 @@ export function useOrders(filters?: OrderFilters) {
         );
       }
 
-      const { data, error } = await query;
+      // Pagination & Sorting
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      // Note: Ordering by order_date DESC ensures newest first
+      query = query
+        .order('order_date', { ascending: false })
+        .range(from, to);
+
+      const { data, error, count } = await query;
 
       if (error) {
         console.error('Error fetching orders:', error);
         throw new Error(`Error al obtener órdenes: ${error.message}`);
       }
 
-      return groupPackOrders(data as Order[]);
+      // Group packs on the client side (within the current page)
+      const groupedData = groupPackOrders(data as Order[]);
+
+      return {
+        data: groupedData,
+        count: count || 0,
+      };
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    keepPreviousData: true,   // Keep showing previous page while fetching next
   });
 }
 
 /**
- * Agrupa las órdenes de ML que comparten pack_id en una sola fila.
- * Las órdenes sin pack_id y las de Wix pasan sin cambios.
+ * Agrupa las órdenes de ML que comparten pack_id en una sola fila (dentro de la página actual).
  */
 function groupPackOrders(orders: Order[]): Order[] {
   const result: Order[] = [];
@@ -99,17 +112,6 @@ interface UpdateStatusParams {
 
 /**
  * Hook para actualizar el estado de una orden
- * Actualiza la orden Y registra el cambio en order_status_history
- *
- * @returns Mutation de React Query con mutate, isPending, error
- *
- * @example
- * const { mutate: updateStatus, isPending } = useUpdateOrderStatus();
- * updateStatus({
- *   orderId: 'uuid',
- *   newStatus: 'preparando',
- *   notes: 'Comenzando preparación'
- * });
  */
 export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
@@ -157,8 +159,9 @@ export function useUpdateOrderStatus() {
       return { orderId, oldStatus, newStatus };
     },
     onSuccess: () => {
-      // Invalidar todas las queries de orders para refrescar la UI
+      // Invalidar query de 'orders' (y 'order-stats' si existiera caché allí)
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order-stats'] });
     },
     onError: (error) => {
       console.error('Error updating order status:', error);

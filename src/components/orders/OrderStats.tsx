@@ -1,22 +1,13 @@
 import { ShoppingCart, Clock, Package, Truck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import type { Order } from '@/lib/types';
+import type { OrderStats as StatsType } from '@/lib/types';
 
 export interface OrderStatsProps {
-  orders: Order[];
+  stats: StatsType;
+  isLoading?: boolean;
 }
 
-export function OrderStats({ orders }: OrderStatsProps) {
-  const stats = {
-    total: orders.length,
-    nuevo: orders.filter((o) => o.status === 'nuevo').length,
-    preparando: orders.filter((o) => o.status === 'preparando').length,
-    enviado: orders.filter((o) => o.status === 'enviado').length,
-  };
-
-  const mlCount = orders.filter((o) => o.channel === 'mercadolibre').length;
-  const wixCount = orders.filter((o) => o.channel === 'wix').length;
-
+export function OrderStats({ stats, isLoading }: OrderStatsProps) {
   const statCards = [
     {
       label: 'Total pedidos',
@@ -44,6 +35,10 @@ export function OrderStats({ orders }: OrderStatsProps) {
     },
   ];
 
+  if (isLoading) {
+    return <div className="animate-pulse h-32 bg-gray-100 rounded-lg" />;
+  }
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -68,12 +63,12 @@ export function OrderStats({ orders }: OrderStatsProps) {
         <div className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full bg-yellow-400" />
           <span className="font-medium">Mercado Libre</span>
-          <span className="text-muted-foreground">({mlCount})</span>
+          <span className="text-muted-foreground">({stats.mercadolibre})</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="size-2.5 rounded-full bg-purple-500" />
           <span className="font-medium">Wix</span>
-          <span className="text-muted-foreground">({wixCount})</span>
+          <span className="text-muted-foreground">({stats.wix})</span>
         </div>
       </div>
     </div>

@@ -1,12 +1,14 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
+import { useOrderStats } from '@/hooks/useOrderStats';
 import { useSyncML } from '@/hooks/useSyncML';
 import { useSyncWix } from '@/hooks/useSyncWix';
 import { useAutoSync } from '@/hooks/useAutoSync';
 import { useAutoSyncSettings } from '@/hooks/useAutoSyncSettings';
 import { TopBar } from '@/components/layout/TopBar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { OrderStats } from '@/components/orders/OrderStats';
 import { OrderFilters } from '@/components/orders/OrderFilters';
 import { OrdersTable } from '@/components/orders/OrdersTable';
@@ -15,13 +17,30 @@ import type { Order, OrderFilters as OrderFiltersType, OrderStatus } from '@/lib
 
 export function Dashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
+
   const [filters, setFilters] = useState<OrderFiltersType>({
     search: '',
     status: null,
     channel: null,
   });
 
-  const { data: orders = [], isLoading, error } = useOrders(filters);
+  // Reset page when filters change
+  const handleFiltersChange = (newFilters: OrderFiltersType) => {
+    setFilters(newFilters);
+    setPage(1);
+  };
+
+  // Fetch paginated orders
+  const { data: ordersData, isLoading, error } = useOrders({ ...filters, page, pageSize });
+  const orders = ordersData?.data || [];
+  const totalCount = ordersData?.count || 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  // Fetch global stats separately
+  const { data: stats, isLoading: isLoadingStats } = useOrderStats();
+
   const { mutate: syncML, isPending: isSyncingML } = useSyncML();
   const { mutate: syncWix, isPending: isSyncingWix } = useSyncWix();
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateOrderStatus();
@@ -139,13 +158,24 @@ export function Dashboard() {
         )}
 
         {/* Stats */}
-        <OrderStats orders={orders} />
+        <OrderStats
+          stats={stats || {
+            total: 0,
+            nuevo: 0,
+            preparando: 0,
+            listo: 0,
+            enviado: 0,
+            mercadolibre: 0,
+            wix: 0
+          }}
+          isLoading={isLoadingStats}
+        />
 
         {/* Filters + Table */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle>Pedidos ({orders.length})</CardTitle>
+              <CardTitle>Pedidos ({totalCount})</CardTitle>
               {isUpdatingStatus && (
                 <span className="animate-pulse text-sm text-primary">
                   Actualizando estado...
@@ -153,7 +183,7 @@ export function Dashboard() {
               )}
             </div>
             <div className="pt-3">
-              <OrderFilters filters={filters} onFiltersChange={setFilters} />
+              <OrderFilters filters={filters} onFiltersChange={handleFiltersChange} />
             </div>
           </CardHeader>
           <CardContent>
@@ -162,6 +192,33 @@ export function Dashboard() {
               onOrderClick={handleOrderClick}
               isLoading={isLoading}
             />
+
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between pt-4 border-t mt-4">
+              <div className="text-sm text-muted-foreground">
+                Página {page} de {Math.ceil(totalCount / pageSize) || 1}
+                <span className="ml-2">({totalCount} pedidos)</span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1 || isLoading}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={!ordersData || page >= totalPages || isLoading}
+                >
+                  Siguiente
+                </Button>
+              </div>
+            </div>
+
           </CardContent>
         </Card>
 
