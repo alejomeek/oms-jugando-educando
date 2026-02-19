@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Dashboard } from '@/pages/Dashboard';
 import { Analytics } from '@/pages/Analytics';
+import { Crm } from '@/pages/Crm';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,6 +24,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/crm" element={<Crm />} />
           </Routes>
         </AppLayout>
       </BrowserRouter>

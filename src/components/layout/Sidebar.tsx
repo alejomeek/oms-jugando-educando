@@ -7,6 +7,7 @@ import {
   BarChart3,
   ChevronDown,
   GraduationCap,
+  Users,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -181,12 +182,30 @@ export function Sidebar({
         {/* Analytics */}
         <div className="pt-3">
           <Button
-            variant="ghost"
-            className="w-full justify-start gap-2.5 font-medium"
+            variant={activeView === 'analytics' ? 'default' : 'ghost'}
+            className={cn(
+              'w-full justify-start gap-2.5 font-medium',
+              activeView === 'analytics' && 'bg-primary text-primary-foreground'
+            )}
             onClick={() => onNavigate?.('analytics')}
           >
             <BarChart3 className="size-4" />
             Analytics
+          </Button>
+        </div>
+
+        {/* CRM */}
+        <div className="pt-1">
+          <Button
+            variant={activeView === 'crm' ? 'default' : 'ghost'}
+            className={cn(
+              'w-full justify-start gap-2.5 font-medium',
+              activeView === 'crm' && 'bg-primary text-primary-foreground'
+            )}
+            onClick={() => onNavigate?.('crm')}
+          >
+            <Users className="size-4" />
+            CRM / Clientes
           </Button>
         </div>
       </nav>
