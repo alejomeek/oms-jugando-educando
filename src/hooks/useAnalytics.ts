@@ -36,6 +36,19 @@ export interface GeoStats {
   revenue: number;
 }
 
+export interface PaymentMethodStats {
+  method: string;       // raw key, e.g. "visa"
+  label: string;        // display name, e.g. "Visa"
+  orderCount: number;
+  revenue: number;
+}
+
+export interface InstallmentsInsight {
+  upfront: number;        // orders paid in full (installments === 1 or unknown)
+  financed: number;       // orders with installments > 1
+  financedRevenue: number;
+}
+
 export interface KeyInsight {
   label: string;        // e.g. "Ventas este mes vs mes anterior"
   value: string;        // e.g. "+23%"
@@ -61,9 +74,23 @@ export interface AnalyticsSummary {
   geoStats: GeoStats[];         // top 15 cities by orderCount
   keyInsights: KeyInsight[];    // 3-5 auto-generated insights
   byDayOfWeek: DayOfWeekStats[];
+  byPaymentMethod: PaymentMethodStats[];
+  installmentsInsight: InstallmentsInsight;
 }
 
 const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+const PAYMENT_LABELS: Record<string, string> = {
+  visa: 'Visa',
+  master: 'Mastercard',
+  debmaster: 'Débito Mastercard',
+  pse: 'PSE',
+  efecty: 'Efecty',
+  amex: 'Amex',
+  diners: 'Diners',
+  naranja: 'Naranja',
+  cabal: 'Cabal',
+};
 
 const EMPTY: AnalyticsSummary = {
   totalOrders: 0,
@@ -77,6 +104,8 @@ const EMPTY: AnalyticsSummary = {
   geoStats: [],
   keyInsights: [],
   byDayOfWeek: [],
+  byPaymentMethod: [],
+  installmentsInsight: { upfront: 0, financed: 0, financedRevenue: 0 },
 };
 
 export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date }): AnalyticsSummary {
@@ -114,6 +143,11 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
     const geoMap = new Map<string, { city: string; state: string; orderCount: number; revenue: number }>();
     // day of week (0=Sun..6=Sat) -> event count
     const dowMap = new Map<number, number>();
+    // payment method -> count + revenue (event-level)
+    const paymentMap = new Map<string, { count: number; revenue: number }>();
+    let upfrontCount = 0;
+    let financedCount = 0;
+    let financedRevenue = 0;
 
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -215,6 +249,22 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
         dowMap.set(dow, (dowMap.get(dow) || 0) + 1);
       }
 
+      // Payment method & installments — event-level only
+      if (isFirstInEvent) {
+        const method = order.payment_info?.method?.toLowerCase();
+        if (method) {
+          const p = paymentMap.get(method) || { count: 0, revenue: 0 };
+          paymentMap.set(method, { count: p.count + 1, revenue: p.revenue + amount });
+        }
+        const installments = order.payment_info?.installments ?? 1;
+        if (installments > 1) {
+          financedCount++;
+          financedRevenue += amount;
+        } else {
+          upfrontCount++;
+        }
+      }
+
       // Customer retention — count events per customer key
       if (isFirstInEvent) {
         const c = order.customer;
@@ -269,6 +319,23 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
     const geoStats: GeoStats[] = Array.from(geoMap.values())
       .sort((a, b) => b.orderCount - a.orderCount)
       .slice(0, 15);
+
+    // byPaymentMethod
+    const byPaymentMethod: PaymentMethodStats[] = Array.from(paymentMap.entries())
+      .map(([method, stats]) => ({
+        method,
+        label: PAYMENT_LABELS[method] ?? method,
+        orderCount: stats.count,
+        revenue: stats.revenue,
+      }))
+      .sort((a, b) => b.orderCount - a.orderCount);
+
+    // installmentsInsight
+    const installmentsInsight: InstallmentsInsight = {
+      upfront: upfrontCount,
+      financed: financedCount,
+      financedRevenue,
+    };
 
     // byDayOfWeek — normalize to Mon-Sun display order
     // Calculate number of unique weeks in data to get avg
@@ -375,6 +442,8 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
       geoStats,
       keyInsights,
       byDayOfWeek,
+      byPaymentMethod,
+      installmentsInsight,
     };
   }, [orders, dateRange]);
 }

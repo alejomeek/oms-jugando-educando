@@ -21,14 +21,27 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  Users,
+  Crown,
 } from 'lucide-react';
 import { useAllOrders } from '@/hooks/useAllOrders';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useCustomers } from '@/hooks/useCustomers';
+import type { CustomerProfile } from '@/hooks/useCustomers';
 import { ORDER_STATUSES } from '@/lib/constants';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
 import {
   Table,
   TableBody,
@@ -37,6 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { CustomerSheet } from '@/components/crm/CustomerSheet';
 
 type DateRangeKey = '7d' | '30d' | '90d' | 'all';
 
@@ -73,6 +87,16 @@ const STATUS_COLORS: Record<string, string> = {
   enviado: '#6B7280',
   cancelado: '#EF4444',
 };
+
+const PAYMENT_METHOD_COLORS: Record<string, string> = {
+  visa: '#1A1F71',
+  master: '#EB001B',
+  debmaster: '#F79E1B',
+  pse: '#00A5A8',
+  efecty: '#FF6B00',
+};
+
+const PAYMENT_FALLBACK_COLORS = ['#6366F1', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#9CA3AF'];
 
 function formatCOP(value: number): string {
   return formatCurrency(value, 'COP');
@@ -152,8 +176,25 @@ export function Analytics() {
   const [rangeKey, setRangeKey] = useState<DateRangeKey>('30d');
   const dateRange = useMemo(() => getDateRange(rangeKey), [rangeKey]);
 
+  const [showRepeatCustomers, setShowRepeatCustomers] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerProfile | null>(null);
+
   const { data: orders = [], isLoading, error } = useAllOrders();
   const analytics = useAnalytics(orders, dateRange);
+
+  const filteredOrders = useMemo(() => {
+    if (!dateRange) return orders;
+    return orders.filter(o => {
+      const d = new Date(o.order_date);
+      return d >= dateRange.from && d <= dateRange.to;
+    });
+  }, [orders, dateRange]);
+
+  const { customers } = useCustomers(filteredOrders);
+  const repeatCustomersList = useMemo(
+    () => customers.filter(c => c.isRepeat).sort((a, b) => b.ltv - a.ltv),
+    [customers],
+  );
 
   const channelChartData = useMemo(() => {
     if (!analytics) return [];
@@ -187,6 +228,16 @@ export function Analytics() {
   const dayOfWeekData = useMemo(() => {
     if (!analytics) return [];
     return analytics.byDayOfWeek;
+  }, [analytics]);
+
+  const paymentChartData = useMemo(() => {
+    if (!analytics) return [];
+    return analytics.byPaymentMethod.map((p, i) => ({
+      name: p.label,
+      value: p.orderCount,
+      revenue: p.revenue,
+      fill: PAYMENT_METHOD_COLORS[p.method] ?? PAYMENT_FALLBACK_COLORS[i % PAYMENT_FALLBACK_COLORS.length],
+    }));
   }, [analytics]);
 
   const mlStats = analytics?.byChannel.find((c) => c.channel === 'mercadolibre');
@@ -269,36 +320,48 @@ export function Analytics() {
             {analytics.keyInsights && analytics.keyInsights.length > 0 && (
               <div className="overflow-x-auto pb-2">
                 <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
-                  {analytics.keyInsights.map((insight, i) => (
-                    <Card key={i} className="min-w-[180px] max-w-[220px] shrink-0">
-                      <CardContent className="pt-3 pb-3">
-                        <p className="text-xs text-muted-foreground">{insight.label}</p>
-                        <div className="mt-1 flex items-center gap-1">
-                          <p
-                            className={`text-lg font-bold ${
-                              insight.trend === 'up'
-                                ? 'text-green-600'
-                                : insight.trend === 'down'
-                                ? 'text-red-600'
-                                : 'text-gray-500'
-                            }`}
-                          >
-                            {insight.value}
-                          </p>
-                          {insight.trend === 'up' ? (
-                            <TrendingUp className="size-4 text-green-600" />
-                          ) : insight.trend === 'down' ? (
-                            <TrendingDown className="size-4 text-red-600" />
-                          ) : (
-                            <Minus className="size-4 text-gray-400" />
+                  {analytics.keyInsights.map((insight, i) => {
+                    const isRepeatCard = insight.label === 'Clientes recurrentes';
+                    return (
+                      <Card
+                        key={i}
+                        className={`min-w-[180px] max-w-[220px] shrink-0 transition-all${isRepeatCard ? ' cursor-pointer hover:shadow-md hover:border-primary/40' : ''}`}
+                        onClick={isRepeatCard ? () => setShowRepeatCustomers(true) : undefined}
+                      >
+                        <CardContent className="pt-3 pb-3">
+                          <p className="text-xs text-muted-foreground">{insight.label}</p>
+                          <div className="mt-1 flex items-center gap-1">
+                            <p
+                              className={`text-lg font-bold ${
+                                insight.trend === 'up'
+                                  ? 'text-green-600'
+                                  : insight.trend === 'down'
+                                  ? 'text-red-600'
+                                  : 'text-gray-500'
+                              }`}
+                            >
+                              {insight.value}
+                            </p>
+                            {insight.trend === 'up' ? (
+                              <TrendingUp className="size-4 text-green-600" />
+                            ) : insight.trend === 'down' ? (
+                              <TrendingDown className="size-4 text-red-600" />
+                            ) : (
+                              <Minus className="size-4 text-gray-400" />
+                            )}
+                          </div>
+                          {insight.detail && (
+                            <p className="mt-0.5 text-xs text-muted-foreground">{insight.detail}</p>
                           )}
-                        </div>
-                        {insight.detail && (
-                          <p className="mt-0.5 text-xs text-muted-foreground">{insight.detail}</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
+                          {isRepeatCard && (
+                            <p className="mt-1.5 text-[10px] font-medium text-primary/70">
+                              Ver detalle →
+                            </p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -542,9 +605,185 @@ export function Analytics() {
                 </CardContent>
               </Card>
             </div>
+            {/* Row 7: Métodos de Pago */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Métodos de Pago</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {paymentChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={paymentChartData} layout="vertical" margin={{ left: 8 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" allowDecimals={false} />
+                        <YAxis
+                          type="category"
+                          dataKey="name"
+                          width={140}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <Tooltip formatter={(value) => [`${value} pedidos`, 'Pedidos']} />
+                        <Bar dataKey="value" name="Pedidos" radius={[0, 4, 4, 0]}>
+                          {paymentChartData.map((entry, index) => (
+                            <Cell key={index} fill={entry.fill} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+                      Sin datos de método de pago
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tipo de Pago</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="rounded-lg border p-4">
+                      <p className="text-sm text-muted-foreground">Pago de contado</p>
+                      <p className="mt-1 text-2xl font-bold">{analytics.installmentsInsight.upfront}</p>
+                      <p className="mt-0.5 text-sm text-muted-foreground">
+                        {analytics.totalOrders > 0
+                          ? `${Math.round((analytics.installmentsInsight.upfront / analytics.totalOrders) * 100)}% del total`
+                          : '—'}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border p-4">
+                      <p className="text-sm text-muted-foreground">Pago en cuotas</p>
+                      <p className="mt-1 text-2xl font-bold">{analytics.installmentsInsight.financed}</p>
+                      <p className="mt-0.5 text-sm text-muted-foreground">
+                        {analytics.totalOrders > 0
+                          ? `${Math.round((analytics.installmentsInsight.financed / analytics.totalOrders) * 100)}% del total`
+                          : '—'}
+                      </p>
+                    </div>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Método</TableHead>
+                        <TableHead className="text-right">Pedidos</TableHead>
+                        <TableHead className="text-right">Ingresos</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {analytics.byPaymentMethod.map((pm, i) => (
+                        <TableRow key={i}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="size-3 rounded-full"
+                                style={{
+                                  backgroundColor:
+                                    PAYMENT_METHOD_COLORS[pm.method] ??
+                                    PAYMENT_FALLBACK_COLORS[i % PAYMENT_FALLBACK_COLORS.length],
+                                }}
+                              />
+                              <span className="font-medium">{pm.label}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">{pm.orderCount}</TableCell>
+                          <TableCell className="text-right text-sm">{formatCOP(pm.revenue)}</TableCell>
+                        </TableRow>
+                      ))}
+                      {analytics.byPaymentMethod.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center text-muted-foreground">
+                            Sin datos de pago
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
           </>
         )}
       </div>
+
+      {/* Repeat customers detail sheet */}
+      <Sheet open={showRepeatCustomers} onOpenChange={setShowRepeatCustomers}>
+        <SheetContent className="flex w-full flex-col sm:max-w-lg">
+          <SheetHeader className="pb-0">
+            <div className="flex items-center gap-2">
+              <Users className="size-5 text-primary" />
+              <SheetTitle>Clientes recurrentes</SheetTitle>
+              <Badge variant="secondary" className="ml-1">
+                {repeatCustomersList.length}
+              </Badge>
+            </div>
+            <SheetDescription>
+              Clientes que compraron más de una vez en el período seleccionado
+            </SheetDescription>
+          </SheetHeader>
+
+          <ScrollArea className="flex-1 overflow-auto">
+            <div className="space-y-2 px-4 pb-6 pt-3">
+              {repeatCustomersList.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <Users className="mb-2 size-10 text-muted-foreground/40" />
+                  <p className="text-sm">Sin clientes recurrentes en este período</p>
+                </div>
+              ) : (
+                repeatCustomersList.map((customer) => (
+                  <button
+                    key={customer.key}
+                    className="flex w-full items-center gap-3 rounded-lg border bg-card px-3 py-2.5 text-left transition-colors hover:bg-muted/50"
+                    onClick={() => setSelectedCustomer(customer)}
+                  >
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                      {customer.displayName.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="truncate text-sm font-medium">
+                          {customer.displayName}
+                        </span>
+                        {customer.channel === 'mercadolibre' ? (
+                          <Badge className="border-yellow-200 bg-yellow-100 px-1 py-0 text-[10px] text-yellow-800 hover:bg-yellow-100">
+                            ML
+                          </Badge>
+                        ) : (
+                          <Badge className="border-teal-200 bg-teal-100 px-1 py-0 text-[10px] text-teal-800 hover:bg-teal-100">
+                            Wix
+                          </Badge>
+                        )}
+                        {customer.isVip && (
+                          <Badge className="gap-0.5 border-amber-200 bg-amber-100 px-1 py-0 text-[10px] text-amber-800 hover:bg-amber-100">
+                            <Crown className="size-2.5" />
+                            VIP
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {customer.orderCount} pedidos · {formatCurrency(customer.ltv, 'COP')} LTV
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-xs text-muted-foreground">
+                      {formatDate(customer.lastOrderDate, 'dd MMM')}
+                    </p>
+                  </button>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+
+      {/* Individual customer detail */}
+      {selectedCustomer && (
+        <CustomerSheet
+          customer={selectedCustomer}
+          onClose={() => setSelectedCustomer(null)}
+        />
+      )}
     </>
   );
 }
