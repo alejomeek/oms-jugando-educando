@@ -150,8 +150,6 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
     let financedCount = 0;
     let financedRevenue = 0;
 
-    const now = new Date();
-
     // Customer event map for retention insight
     const customerOrders = new Map<string, number>();
 
