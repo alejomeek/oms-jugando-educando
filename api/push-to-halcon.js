@@ -53,12 +53,14 @@ export default async function handler(req, res) {
             : customer.nickname || customer.email || 'Sin nombre');
 
     const celular = shipping.receiverPhone || '';
-
-    const direccion = shipping.comment
-        ? `${shipping.street || ''}, ${shipping.comment}`
-        : shipping.street || '';
-
     const ciudad = shipping.city || '';
+    const referencia = shipping.comment || '';
+
+    // Wix: comment va dentro de direccion (pedidos_wix no tiene campo referencia)
+    // ML:  comment va como referencia separada (pedidos_flex sí tiene ese campo)
+    const direccion = isWix && referencia
+        ? `${shipping.street || ''}, ${referencia}`
+        : shipping.street || '';
 
     const origen = isWix ? 'wix' : 'mercadolibre';
     // Wix: numero_envio = "WIX-{order_id}"
@@ -69,7 +71,7 @@ export default async function handler(req, res) {
         : (order.shipping_id || order.order_id);
     const numero_pedido_wix = order.order_id;
 
-    const pedido = { origen, numero_envio, numero_pedido_wix, destinatario, celular, direccion, ciudad };
+    const pedido = { origen, numero_envio, numero_pedido_wix, destinatario, celular, direccion, ciudad, referencia };
 
     try {
         const halconRes = await fetch(halconUrl, {
