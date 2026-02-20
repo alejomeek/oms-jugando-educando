@@ -37,6 +37,7 @@ export interface Database {
           payment_info: Json | null
           tags: string[] | null
           notes: string | null
+          halcon_serial: number | null
         }
         Insert: {
           id?: string
@@ -58,6 +59,7 @@ export interface Database {
           payment_info?: Json | null
           tags?: string[] | null
           notes?: string | null
+          halcon_serial?: number | null
         }
         Update: {
           id?: string
@@ -79,6 +81,7 @@ export interface Database {
           payment_info?: Json | null
           tags?: string[] | null
           notes?: string | null
+          halcon_serial?: number | null
         }
       }
       order_status_history: {

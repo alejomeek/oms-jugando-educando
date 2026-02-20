@@ -89,6 +89,11 @@ export default async function handler(req, res) {
             data = { raw: text };
         }
 
+        if (halconRes.status === 409 && data.already_exists) {
+            // Ya existe en Halcon — devolver 200 con el serial existente para actualizar la UI
+            return res.status(200).json({ ...data, success: true });
+        }
+
         if (!halconRes.ok) {
             console.error('Error respuesta Halcon:', halconRes.status, data);
             return res.status(halconRes.status).json({

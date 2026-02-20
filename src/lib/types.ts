@@ -30,6 +30,7 @@ export interface Order {
   tags?: string[];
   notes?: string | null;
   logistic_type?: string | null;  // Solo ML: 'fulfillment' | 'self_service' | 'cross_docking'
+  halcon_serial?: number | null;  // Serial asignado en Halcon al migrar; null = no migrado
   // Presente solo en packs de ML agrupados (no viene de la DB)
   subOrders?: Order[];
 }

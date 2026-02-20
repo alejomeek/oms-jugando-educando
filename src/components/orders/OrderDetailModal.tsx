@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ImageOff, Download, ArrowRightLeft } from 'lucide-react';
+import { ImageOff, Download, ArrowRightLeft, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/services/supabase';
 import {
   Sheet,
   SheetContent,
@@ -37,10 +39,13 @@ export function OrderDetailModal({
 }: OrderDetailModalProps) {
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | ''>('');
   const [migratingToHalcon, setMigratingToHalcon] = useState(false);
+  const [halconSerial, setHalconSerial] = useState<number | null>(order?.halcon_serial ?? null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (order) {
       setSelectedStatus(order.status);
+      setHalconSerial(order.halcon_serial ?? null);
     }
   }, [order]);
 
@@ -84,6 +89,18 @@ export function OrderDetailModal({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al migrar');
+
+      // Guardar serial en Supabase para prevenir duplicados futuros
+      const targetId = order.subOrders?.[0]?.id ?? order.id;
+      await supabase
+        .from('orders')
+        .update({ halcon_serial: data.numero_serial })
+        .eq('id', targetId);
+
+      // Actualizar UI inmediatamente y refrescar cache
+      setHalconSerial(data.numero_serial);
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+
       toast.success(`Pedido #${data.numero_serial} creado en Halcon`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error al migrar a Halcon');
@@ -306,15 +323,22 @@ export function OrderDetailModal({
               </Button>
             )}
             {isHalconEligible && (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={migratingToHalcon}
-                onClick={() => void handleMigrateToHalcon()}
-              >
-                <ArrowRightLeft className="size-4 mr-2" />
-                {migratingToHalcon ? 'Migrando...' : 'Migrar a Halcon'}
-              </Button>
+              halconSerial != null ? (
+                <span className="inline-flex items-center gap-1.5 rounded-md border border-green-200 bg-green-50 px-2.5 py-1.5 text-xs font-medium text-green-700">
+                  <CheckCircle2 className="size-3.5" />
+                  En Halcon #{halconSerial}
+                </span>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={migratingToHalcon}
+                  onClick={() => void handleMigrateToHalcon()}
+                >
+                  <ArrowRightLeft className="size-4 mr-2" />
+                  {migratingToHalcon ? 'Migrando...' : 'Migrar a Halcon'}
+                </Button>
+              )
             )}
           </div>
 
