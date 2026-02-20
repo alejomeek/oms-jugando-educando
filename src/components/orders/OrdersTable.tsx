@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { OrderStatusBadge } from './OrderStatusBadge';
 import { ChannelBadge } from './ChannelBadge';
+import { LogisticTypeBadge } from './LogisticTypeBadge';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import type { Order } from '@/lib/types';
 
@@ -109,7 +110,10 @@ export function OrdersTable({
                 {customerName}
               </TableCell>
               <TableCell>
-                <ChannelBadge channel={order.channel} />
+                <div className="flex items-center gap-1.5">
+                  <ChannelBadge channel={order.channel} />
+                  <LogisticTypeBadge logisticType={order.logistic_type} />
+                </div>
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
                 {formatDate(order.order_date, 'dd MMM yyyy')}

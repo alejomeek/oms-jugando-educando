@@ -55,17 +55,16 @@ function normalizeMLOrder(mlOrder) {
  * Obtiene la dirección de entrega de un envío de ML.
  * Endpoint: GET /shipments/{id}
  */
-async function fetchMLShipmentAddress(accessToken, shipmentId) {
+async function fetchMLShipmentData(accessToken, shipmentId) {
     try {
         const response = await fetch(
             `https://api.mercadolibre.com/shipments/${shipmentId}`,
             { headers: { Authorization: `Bearer ${accessToken}` } }
         );
-        if (!response.ok) return null;
+        if (!response.ok) return { address: null, logistic_type: null };
         const data = await response.json();
         const addr = data.receiver_address;
-        if (!addr) return null;
-        return {
+        const address = addr ? {
             street: [addr.street_name, addr.street_number].filter(Boolean).join(' '),
             comment: addr.comment || undefined,
             neighborhood: addr.neighborhood?.name || undefined,
@@ -77,9 +76,10 @@ async function fetchMLShipmentAddress(accessToken, shipmentId) {
             receiverPhone: addr.receiver_phone || undefined,
             latitude: addr.latitude || undefined,
             longitude: addr.longitude || undefined,
-        };
+        } : null;
+        return { address, logistic_type: data.logistic_type || null };
     } catch {
-        return null;
+        return { address: null, logistic_type: null };
     }
 }
 
@@ -205,10 +205,12 @@ export default async function handler(req, res) {
             allOrders.map(async (order) => {
                 const normalized = normalizeMLOrder(order);
                 if (normalized.shipping_id) {
-                    normalized.shipping_address = await fetchMLShipmentAddress(
+                    const { address, logistic_type } = await fetchMLShipmentData(
                         accessToken,
                         normalized.shipping_id
                     );
+                    normalized.shipping_address = address;
+                    normalized.logistic_type = logistic_type;
                 }
                 return normalized;
             })

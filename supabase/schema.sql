@@ -51,6 +51,7 @@ CREATE TABLE orders (
   payment_info JSONB,                     -- Info de pago
   tags TEXT[],                            -- Tags de ML o flags personalizados
   notes TEXT,                             -- Comentarios internos del operador
+  logistic_type TEXT,                     -- Solo ML: 'fulfillment' (Full) | 'self_service' (Flex) | 'cross_docking' (Colecta)
 
   -- Constraint para evitar duplicados
   UNIQUE(channel, external_id)

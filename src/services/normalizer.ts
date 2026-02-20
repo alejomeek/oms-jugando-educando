@@ -55,6 +55,7 @@ export function normalizeMLOrder(
       : null,
     tags: mlOrder.tags || [],
     notes: null,
+    logistic_type: null, // Se enriquece en sync-ml.js tras fetch a /shipments/{id}
   };
 }
 

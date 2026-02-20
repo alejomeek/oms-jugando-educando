@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { OrderStatusBadge } from './OrderStatusBadge';
 import { ChannelBadge } from './ChannelBadge';
+import { LogisticTypeBadge } from './LogisticTypeBadge';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { printWixLabel } from '@/services/labelPrinter';
 import type { Order, OrderStatus } from '@/lib/types';
@@ -76,6 +77,7 @@ export function OrderDetailModal({
               {isPack ? 'Pack' : 'Pedido'} #{displayId}
             </SheetTitle>
             <ChannelBadge channel={order.channel} />
+            <LogisticTypeBadge logisticType={order.logistic_type} />
             {isPack && (
               <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
                 {order.subOrders!.length} órdenes
