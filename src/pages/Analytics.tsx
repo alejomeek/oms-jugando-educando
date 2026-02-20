@@ -258,11 +258,10 @@ export function Analytics() {
               <button
                 key={opt.key}
                 onClick={() => setRangeKey(opt.key)}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                  rangeKey === opt.key
+                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${rangeKey === opt.key
                     ? 'bg-card text-primary shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
-                }`}
+                  }`}
               >
                 {opt.label}
               </button>
@@ -327,18 +326,18 @@ export function Analytics() {
                         key={i}
                         className={`min-w-[180px] max-w-[220px] shrink-0 transition-all${isRepeatCard ? ' cursor-pointer hover:shadow-md hover:border-primary/40' : ''}`}
                         onClick={isRepeatCard ? () => setShowRepeatCustomers(true) : undefined}
+                        title={insight.tooltip}
                       >
                         <CardContent className="pt-3 pb-3">
                           <p className="text-xs text-muted-foreground">{insight.label}</p>
                           <div className="mt-1 flex items-center gap-1">
                             <p
-                              className={`text-lg font-bold ${
-                                insight.trend === 'up'
+                              className={`text-lg font-bold ${insight.trend === 'up'
                                   ? 'text-green-600'
                                   : insight.trend === 'down'
-                                  ? 'text-red-600'
-                                  : 'text-gray-500'
-                              }`}
+                                    ? 'text-red-600'
+                                    : 'text-gray-500'
+                                }`}
                             >
                               {insight.value}
                             </p>

@@ -54,6 +54,7 @@ export interface KeyInsight {
   value: string;        // e.g. "+23%"
   trend: 'up' | 'down' | 'flat';
   detail?: string;      // e.g. "89 pedidos vs 72 el mes pasado"
+  tooltip?: string;     // Hover info for period comparison
 }
 
 export interface DayOfWeekStats {
@@ -115,9 +116,9 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
     // Apply date range filter
     const filtered = dateRange
       ? orders.filter(o => {
-          const d = new Date(o.order_date);
-          return d >= dateRange.from && d <= dateRange.to;
-        })
+        const d = new Date(o.order_date);
+        return d >= dateRange.from && d <= dateRange.to;
+      })
       : orders;
 
     if (filtered.length === 0) return EMPTY;
@@ -350,37 +351,93 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
 
     const keyInsights: KeyInsight[] = [];
 
-    // 1. Month-over-month
-    const thisMonth = now.getMonth();
-    const thisYear = now.getFullYear();
-    const lastMonthDate = new Date(thisYear, thisMonth - 1, 1);
-    const lastMonth = lastMonthDate.getMonth();
-    const lastMonthYear = lastMonthDate.getFullYear();
+    // 1. Dynamic Period Trend (Orders & Revenue)
+    if (dateRange) {
+      const periodMs = dateRange.to.getTime() - dateRange.from.getTime();
+      const diffDays = Math.round(periodMs / (1000 * 60 * 60 * 24));
 
-    let thisMonthCount = 0;
-    let lastMonthCount = 0;
-    // Reuse seenEventKeys: iterate filtered but skip duplicate event rows
-    const countedMomEvents = new Set<string>();
-    for (const order of filtered) {
-      const momKey = order.pack_id && order.channel === 'mercadolibre'
-        ? `pack:${order.pack_id}`
-        : `order:${order.id}`;
-      if (countedMomEvents.has(momKey)) continue;
-      countedMomEvents.add(momKey);
-      const d = new Date(order.order_date);
-      if (d.getFullYear() === thisYear && d.getMonth() === thisMonth) thisMonthCount++;
-      if (d.getFullYear() === lastMonthYear && d.getMonth() === lastMonth) lastMonthCount++;
-    }
-    if (lastMonthCount > 0 || thisMonthCount > 0) {
-      const momChange = lastMonthCount > 0
-        ? Math.round(((thisMonthCount - lastMonthCount) / lastMonthCount) * 100)
-        : 100;
-      const trend: 'up' | 'down' | 'flat' = momChange > 0 ? 'up' : momChange < 0 ? 'down' : 'flat';
+      const prevEnd = new Date(dateRange.from.getTime() - 1);
+      const prevStart = new Date(prevEnd.getTime() - periodMs);
+
+      let currentOrdersCount = 0;
+      let prevOrdersCount = 0;
+      let currentRevenue = 0;
+      let prevRevenue = 0;
+
+      const countedMomEvents = new Set<string>();
+
+      for (const order of orders) { // We use the global 'orders' to find past data
+        const d = new Date(order.order_date).getTime();
+        const amount = order.total_amount || 0;
+
+        const momKey = order.pack_id && order.channel === 'mercadolibre'
+          ? `pack:${order.pack_id}`
+          : `order:${order.id}`;
+
+        const isNewEvent = !countedMomEvents.has(momKey);
+
+        if (d >= dateRange.from.getTime() && d <= dateRange.to.getTime()) {
+          if (isNewEvent) currentOrdersCount++;
+          currentRevenue += amount;
+        } else if (d >= prevStart.getTime() && d <= prevEnd.getTime()) {
+          if (isNewEvent) prevOrdersCount++;
+          prevRevenue += amount;
+        }
+
+        if (isNewEvent) countedMomEvents.add(momKey);
+      }
+
+      const formatLabelDays = (d: number) => d === 7 || d === 30 || d === 90 ? `estos ${d} días` : 'este período';
+      const orderLabel = `Pedidos ${formatLabelDays(diffDays)} vs anteriores`;
+      const revLabel = `Ingresos ${formatLabelDays(diffDays)} vs anteriores`;
+
+      const fmDate = (d: Date) => d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+      const tooltip = `Comparando: ${fmDate(dateRange.from)} - ${fmDate(dateRange.to)} vs ${fmDate(prevStart)} - ${fmDate(prevEnd)}`;
+
+      // Format currency for insight (since we can't easily import formatters inside this hook cleanly if we didn't before, we can use Intl)
+      const formatCOP = (val: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val);
+
+      // Orders Insight
+      const momOrderChange = prevOrdersCount > 0
+        ? Math.round(((currentOrdersCount - prevOrdersCount) / prevOrdersCount) * 100)
+        : currentOrdersCount > 0 ? 100 : 0;
+      const orderTrend = momOrderChange > 0 ? 'up' : momOrderChange < 0 ? 'down' : 'flat';
       keyInsights.push({
-        label: 'Pedidos este mes vs mes anterior',
-        value: `${momChange > 0 ? '+' : ''}${momChange}%`,
-        trend,
-        detail: `${thisMonthCount} pedidos vs ${lastMonthCount} el mes pasado`,
+        label: orderLabel,
+        value: `${momOrderChange > 0 ? '+' : ''}${momOrderChange}%`,
+        trend: orderTrend,
+        detail: `${currentOrdersCount} pedidos vs ${prevOrdersCount}`,
+        tooltip
+      });
+
+      // Revenue Insight
+      const momRevChange = prevRevenue > 0
+        ? Math.round(((currentRevenue - prevRevenue) / prevRevenue) * 100)
+        : currentRevenue > 0 ? 100 : 0;
+      const revTrend = momRevChange > 0 ? 'up' : momRevChange < 0 ? 'down' : 'flat';
+      keyInsights.push({
+        label: revLabel,
+        value: `${momRevChange > 0 ? '+' : ''}${momRevChange}%`,
+        trend: revTrend,
+        detail: `${formatCOP(currentRevenue)} vs ${formatCOP(prevRevenue)}`,
+        tooltip
+      });
+
+    } else {
+      // "Todo" Mode
+      const formatCOP = (val: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val);
+
+      keyInsights.push({
+        label: 'Pedidos Históricos',
+        value: totalOrders.toString(),
+        trend: 'flat',
+        detail: 'Desde que hay registros',
+      });
+      keyInsights.push({
+        label: 'Ingresos Históricos',
+        value: formatCOP(totalRevenue),
+        trend: 'flat',
+        detail: 'Suma de todas las ventas',
       });
     }
 
