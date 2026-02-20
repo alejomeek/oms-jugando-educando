@@ -53,6 +53,8 @@ import {
 } from '@/components/ui/table';
 import { CustomerSheet } from '@/components/crm/CustomerSheet';
 import { GeoMap } from '@/components/analytics/GeoMap';
+import { MLRevenueMap } from '@/components/analytics/MLRevenueMap';
+import type { MLCityData } from '@/components/analytics/MLRevenueMap';
 import {
   Tooltip as UITooltip,
   TooltipContent,
@@ -203,6 +205,64 @@ export function Analytics() {
     () => customers.filter(c => c.isRepeat).sort((a, b) => b.ltv - a.ltv),
     [customers],
   );
+
+  const mlGeoData = useMemo((): MLCityData[] => {
+    const mlOrders = filteredOrders.filter(o => o.channel === 'mercadolibre');
+    const seenEvents = new Set<string>();
+
+    const cityMap = new Map<string, {
+      city: string;
+      state: string;
+      latSum: number;
+      lngSum: number;
+      coordCount: number;
+      orderCount: number;
+      revenue: number;
+      products: Map<string, number>;
+    }>();
+
+    for (const order of mlOrders) {
+      const eventKey = order.pack_id ? `pack:${order.pack_id}` : `order:${order.id}`;
+      const isFirst = !seenEvents.has(eventKey);
+      if (isFirst) seenEvents.add(eventKey);
+
+      const city = order.shipping_address?.city;
+      const state = order.shipping_address?.state ?? '';
+      const lat = order.shipping_address?.latitude;
+      const lng = order.shipping_address?.longitude;
+
+      if (!city) continue;
+
+      const key = `${city}::${state}`;
+      const g = cityMap.get(key) ?? {
+        city, state, latSum: 0, lngSum: 0, coordCount: 0,
+        orderCount: 0, revenue: 0, products: new Map<string, number>(),
+      };
+
+      if (isFirst) g.orderCount++;
+      g.revenue += order.total_amount || 0;
+
+      if (lat != null && lng != null) { g.latSum += lat; g.lngSum += lng; g.coordCount++; }
+
+      for (const item of order.items || [])
+        g.products.set(item.title, (g.products.get(item.title) ?? 0) + item.quantity);
+
+      cityMap.set(key, g);
+    }
+
+    return Array.from(cityMap.values())
+      .filter(g => g.coordCount > 0)
+      .map(g => ({
+        city: g.city, state: g.state,
+        lat: g.latSum / g.coordCount, lng: g.lngSum / g.coordCount,
+        orderCount: g.orderCount, revenue: g.revenue,
+        avgTicket: g.orderCount > 0 ? g.revenue / g.orderCount : 0,
+        topProducts: Array.from(g.products.entries())
+          .sort((a, b) => b[1] - a[1]).slice(0, 3)
+          .map(([title, qty]) => ({ title, qty })),
+      }))
+      .sort((a, b) => b.revenue - a.revenue);
+  }, [filteredOrders]);
 
   const channelChartData = useMemo(() => {
     if (!analytics) return [];
@@ -651,7 +711,23 @@ export function Analytics() {
               </Card>
             </div>
 
-            {/* Row 8: Métodos de Pago y Tipo de Pago */}
+            {/* Row 8: Mapa de Alcance Mercado Libre */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <div className="h-1 w-8 rounded-full" style={{ backgroundColor: '#FFD600' }} />
+                  <CardTitle>Alcance Geográfico · Mercado Libre</CardTitle>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Tamaño = pedidos · Color = ingresos (amarillo → naranja) · Top 5 ciudades con anillo pulsante
+                </p>
+              </CardHeader>
+              <CardContent className="p-0 m-4 mt-0 min-h-[420px]">
+                <MLRevenueMap cities={mlGeoData} />
+              </CardContent>
+            </Card>
+
+            {/* Row 9: Métodos de Pago y Tipo de Pago */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <Card>
                 <CardHeader>
