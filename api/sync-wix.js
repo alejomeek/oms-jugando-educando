@@ -90,48 +90,63 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Faltan credenciales de Wix' });
         }
 
-        console.log(`📡 [WIX] Obteniendo órdenes (limit: ${limit})...`);
+        console.log(`📡 [WIX] Obteniendo órdenes...`);
 
-        const response = await fetch('https://www.wixapis.com/ecom/v1/orders/search', {
-            method: 'POST',
-            headers: {
-                Authorization: config.apiKey,
-                'wix-site-id': config.siteId,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                search: {
-                    cursorPaging: {
-                        limit,
-                        cursor: cursor || undefined,
-                    },
-                    // Solo importar órdenes pagadas
-                    filter: {
-                        paymentStatus: 'PAID',
-                    },
+        const allOrders = [];
+        let currentCursor = cursor || undefined;
+        let keepGoing = true;
+
+        while (keepGoing) {
+            const response = await fetch('https://www.wixapis.com/ecom/v1/orders/search', {
+                method: 'POST',
+                headers: {
+                    Authorization: config.apiKey,
+                    'wix-site-id': config.siteId,
+                    'Content-Type': 'application/json',
                 },
-            }),
-        });
+                body: JSON.stringify({
+                    search: {
+                        cursorPaging: {
+                            limit,
+                            cursor: currentCursor,
+                        },
+                        // Solo importar órdenes pagadas
+                        filter: {
+                            paymentStatus: 'PAID',
+                        },
+                    },
+                }),
+            });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(`Error de Wix API (${response.status}): ${errorData.message || response.statusText}`);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Error de Wix API (${response.status}): ${errorData.message || response.statusText}`);
+            }
+
+            const data = await response.json();
+            const orders = data.orders || [];
+            allOrders.push(...orders);
+
+            currentCursor = data.pagingMetadata?.cursors?.next || null;
+
+            if (!currentCursor || orders.length < limit) {
+                keepGoing = false;
+            } else if (allOrders.length >= 1000) {
+                console.warn(`⏳ [WIX] Límite de seguridad alcanzado (1000 órdenes).`);
+                keepGoing = false;
+            }
         }
 
-        const data = await response.json();
-        const orders = data.orders || [];
-        const nextCursor = data.pagingMetadata?.cursor;
+        console.log(`✅ [WIX] ${allOrders.length} órdenes obtenidas`);
 
-        console.log(`✅ [WIX] ${orders.length} órdenes obtenidas`);
-
-        const normalizedOrders = orders.map(normalizeWixOrder);
+        const normalizedOrders = allOrders.map(normalizeWixOrder);
 
         return res.json({
             success: true,
             orders: normalizedOrders,
-            total: orders.length,
-            nextCursor,
-            hasMore: !!nextCursor,
+            total: allOrders.length,
+            nextCursor: currentCursor,
+            hasMore: !!currentCursor,
         });
 
     } catch (error) {

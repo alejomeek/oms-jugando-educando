@@ -153,34 +153,53 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Faltan credenciales de Mercado Libre' });
         }
 
+        console.log(`📡 [ML] Obteniendo órdenes...`);
+
+        // Necesitamos fetch iterativo como en sync-incremental.
         let accessToken = config.accessToken;
         let newTokens = null;
+        const allOrders = [];
+        let currentOffset = offset;
+        let keepGoing = true;
 
-        console.log(`📡 [ML] Obteniendo órdenes (limit: ${limit}, offset: ${offset})...`);
+        while (keepGoing) {
+            let { response, data } = await fetchMLOrders(accessToken, config.sellerId, limit, currentOffset);
 
-        // Primer intento
-        let { response, data } = await fetchMLOrders(accessToken, config.sellerId, limit, offset);
+            // Si es 401, refrescar token y reintentar
+            if (response.status === 401) {
+                console.log('⚠️  [ML] Token expirado, intentando refresh...');
+                newTokens = await refreshMLToken(config);
+                accessToken = newTokens.accessToken;
 
-        // Si es 401, refrescar token y reintentar
-        if (response.status === 401) {
-            console.log('⚠️  [ML] Token expirado, intentando refresh...');
-            newTokens = await refreshMLToken(config);
-            accessToken = newTokens.accessToken;
+                console.log('📡 [ML] Reintentando con nuevo token...');
+                ({ response, data } = await fetchMLOrders(accessToken, config.sellerId, limit, currentOffset));
+            }
 
-            console.log('📡 [ML] Reintentando con nuevo token...');
-            ({ response, data } = await fetchMLOrders(accessToken, config.sellerId, limit, offset));
+            if (!response.ok) {
+                throw new Error(`Error de ML API: ${data.message || response.statusText}`);
+            }
+
+            const orders = data.results || [];
+            allOrders.push(...orders);
+
+            if (orders.length < limit) {
+                keepGoing = false; // No hay más páginas
+            } else {
+                currentOffset += limit; // Siguiente página
+
+                // Si llegamos a un límite de seguridad para evitar timeouts en Serverless
+                if (allOrders.length >= 1000) {
+                    console.warn(`⏳ [ML] Límite de seguridad alcanzado (1000 órdenes).`);
+                    keepGoing = false;
+                }
+            }
         }
 
-        if (!response.ok) {
-            throw new Error(`Error de ML API: ${data.message || response.statusText}`);
-        }
-
-        const orders = data.results || [];
-        console.log(`✅ [ML] ${orders.length} órdenes obtenidas`);
+        console.log(`✅ [ML] ${allOrders.length} órdenes obtenidas (Histórico parcial/reciente)`);
 
         // Normalizar y enriquecer con dirección de envío en paralelo
         const normalizedOrders = await Promise.all(
-            orders.map(async (order) => {
+            allOrders.map(async (order) => {
                 const normalized = normalizeMLOrder(order);
                 if (normalized.shipping_id) {
                     normalized.shipping_address = await fetchMLShipmentAddress(

@@ -108,8 +108,9 @@ export function useSyncML() {
     },
     onSuccess: (data) => {
       console.log('Sincronización ML exitosa:', data);
-      // 4. Invalidar queries para refrescar la UI
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders-all'] });
+      queryClient.invalidateQueries({ queryKey: ['order-stats'] });
     },
     onError: (error) => {
       console.error('Error en sincronización ML:', error);
