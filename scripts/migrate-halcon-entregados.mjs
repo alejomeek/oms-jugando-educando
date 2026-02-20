@@ -31,8 +31,8 @@ const SUPABASE_KEY = env.VITE_SUPABASE_ANON_KEY;
 
 // ─── Firebase (mismo proyecto que recibir-pedido.js) ─────────────────────────
 
-const FIREBASE_API_KEY = 'AIzaSyD9sKuqivGZryt7Ol33WtUpsM5Q0eARNR4';
-const PROJECT_ID = 'flex-tracker-ce54b';
+const FIREBASE_API_KEY = env.HALCON_FIREBASE_API_KEY;
+const PROJECT_ID = env.HALCON_FIREBASE_PROJECT_ID;
 const FIRESTORE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 const QUERY_URL = `${FIRESTORE_URL}:runQuery?key=${FIREBASE_API_KEY}`;
 
@@ -94,6 +94,11 @@ async function main() {
 
     if (!SUPABASE_URL || !SUPABASE_KEY) {
         console.error('❌ Faltan VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY en .env.local');
+        process.exit(1);
+    }
+
+    if (!FIREBASE_API_KEY || !PROJECT_ID) {
+        console.error('❌ Faltan HALCON_FIREBASE_API_KEY o HALCON_FIREBASE_PROJECT_ID en .env.local');
         process.exit(1);
     }
 
