@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ImageOff, Download } from 'lucide-react';
+import { ImageOff, Download, ArrowRightLeft } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   Sheet,
   SheetContent,
@@ -35,6 +36,7 @@ export function OrderDetailModal({
   onStatusChange,
 }: OrderDetailModalProps) {
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | ''>('');
+  const [migratingToHalcon, setMigratingToHalcon] = useState(false);
 
   useEffect(() => {
     if (order) {
@@ -67,6 +69,29 @@ export function OrderDetailModal({
   const mlLabelUrl = order.channel === 'mercadolibre' && order.shipping_id
     ? `/api/download-ml-label?shipment_id=${order.shipping_id}`
     : null;
+
+  const isHalconEligible =
+    order.channel === 'wix' ||
+    (order.channel === 'mercadolibre' &&
+      (order.logistic_type === 'cross_docking' || order.logistic_type === 'self_service'));
+
+  const handleMigrateToHalcon = async () => {
+    setMigratingToHalcon(true);
+    try {
+      const res = await fetch('/api/push-to-halcon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al migrar');
+      toast.success(`Pedido #${data.numero_serial} creado en Halcon`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al migrar a Halcon');
+    } finally {
+      setMigratingToHalcon(false);
+    }
+  };
 
   return (
     <Sheet open={true} onOpenChange={() => onClose()}>
@@ -266,7 +291,7 @@ export function OrderDetailModal({
           <Separator />
 
           {/* Actions */}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {mlLabelUrl && (
               <Button variant="outline" size="sm" asChild>
                 <a href={mlLabelUrl} download>
@@ -279,6 +304,17 @@ export function OrderDetailModal({
               <Button variant="outline" size="sm" onClick={() => void printWixLabel(order)}>
                 <Download className="size-4 mr-2" />
                 Generar Etiqueta PDF
+              </Button>
+            )}
+            {isHalconEligible && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={migratingToHalcon}
+                onClick={() => void handleMigrateToHalcon()}
+              >
+                <ArrowRightLeft className="size-4 mr-2" />
+                {migratingToHalcon ? 'Migrando...' : 'Migrar a Halcon'}
               </Button>
             )}
           </div>
