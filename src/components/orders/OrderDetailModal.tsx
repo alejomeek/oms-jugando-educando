@@ -72,8 +72,7 @@ export function OrderDetailModal({
 
   const isHalconEligible =
     order.channel === 'wix' ||
-    (order.channel === 'mercadolibre' &&
-      (order.logistic_type === 'cross_docking' || order.logistic_type === 'self_service'));
+    (order.channel === 'mercadolibre' && order.logistic_type === 'self_service');
 
   const handleMigrateToHalcon = async () => {
     setMigratingToHalcon(true);

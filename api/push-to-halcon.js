@@ -1,12 +1,9 @@
 /**
  * Vercel Serverless Function: Migrar pedido al sistema Halcon
  *
- * Recibe un pedido del OMS, lo transforma al formato de Halcon y llama
- * al endpoint /api/recibir-pedido del proyecto Halcon (flex-tracker).
- *
  * Pedidos elegibles:
  *   - Canal Wix (cualquier logistic_type)
- *   - Canal Mercado Libre con logistic_type: 'cross_docking' | 'self_service'
+ *   - Canal Mercado Libre con logistic_type: 'self_service'
  *
  * Env vars requeridas:
  *   HALCON_API_URL          - URL completa del endpoint de Halcon
@@ -27,19 +24,21 @@ export default async function handler(req, res) {
     const halconUrl = process.env.HALCON_API_URL;
     const secret = process.env.HALCON_WEBHOOK_SECRET;
 
-    if (!halconUrl || !secret) {
-        return res.status(500).json({ error: 'HALCON_API_URL o HALCON_WEBHOOK_SECRET no configurados' });
+    if (!halconUrl) {
+        return res.status(500).json({ error: 'Variable HALCON_API_URL no configurada en Vercel' });
+    }
+    if (!secret) {
+        return res.status(500).json({ error: 'Variable HALCON_WEBHOOK_SECRET no configurada en Vercel' });
     }
 
     // Validar elegibilidad
     const isWix = order.channel === 'wix';
-    const isMLSelfManaged =
-        order.channel === 'mercadolibre' &&
-        (order.logistic_type === 'cross_docking' || order.logistic_type === 'self_service');
+    const isMLSelfService =
+        order.channel === 'mercadolibre' && order.logistic_type === 'self_service';
 
-    if (!isWix && !isMLSelfManaged) {
+    if (!isWix && !isMLSelfService) {
         return res.status(400).json({
-            error: 'Pedido no elegible: solo Wix o ML cross_docking/self_service',
+            error: 'Pedido no elegible: solo Wix o ML self_service',
         });
     }
 
@@ -61,28 +60,11 @@ export default async function handler(req, res) {
 
     const ciudad = shipping.city || '';
 
-    let origen, numero_envio, numero_pedido_wix;
+    const origen = isWix ? 'wix' : 'mercadolibre';
+    const numero_envio = isWix ? `WIX-${order.order_id}` : `ML-${order.order_id}`;
+    const numero_pedido_wix = order.order_id;
 
-    if (isWix) {
-        origen = 'wix';
-        numero_envio = `WIX-${order.order_id}`;
-        numero_pedido_wix = order.order_id;
-    } else {
-        // ML cross_docking / self_service
-        origen = 'mercadolibre';
-        numero_envio = `ML-${order.order_id}`;
-        numero_pedido_wix = order.order_id;
-    }
-
-    const pedido = {
-        origen,
-        numero_envio,
-        numero_pedido_wix,
-        destinatario,
-        celular,
-        direccion,
-        ciudad,
-    };
+    const pedido = { origen, numero_envio, numero_pedido_wix, destinatario, celular, direccion, ciudad };
 
     try {
         const halconRes = await fetch(halconUrl, {
@@ -91,16 +73,29 @@ export default async function handler(req, res) {
             body: JSON.stringify({ secret, pedido }),
         });
 
-        const data = await halconRes.json();
+        let data;
+        const contentType = halconRes.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            data = await halconRes.json();
+        } else {
+            const text = await halconRes.text();
+            data = { raw: text };
+        }
 
         if (!halconRes.ok) {
-            console.error('Error respuesta Halcon:', data);
-            return res.status(halconRes.status).json({ error: data.error || 'Error en Halcon', details: data });
+            console.error('Error respuesta Halcon:', halconRes.status, data);
+            return res.status(halconRes.status).json({
+                error: data.error || `Halcon respondió con status ${halconRes.status}`,
+                details: data,
+            });
         }
 
         return res.status(200).json(data);
     } catch (error) {
         console.error('Error llamando a Halcon:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({
+            error: `No se pudo conectar con Halcon: ${error.message}`,
+            halcon_url: halconUrl,
+        });
     }
 }
