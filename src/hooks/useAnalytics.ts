@@ -180,13 +180,17 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
 
       const date = new Date(order.order_date);
 
-      // Daily stats (if 'Todo' is selected, include all days)
+      // Daily stats (if 'Todo' is selected, group by week so the distance is like 90d, otherwise by day)
       const cutoffDay = dateRange ? dateRange.from : new Date(0);
       if (date >= cutoffDay) {
-        // Option 1: if 'Todo' is huge, group by month (YYYY-MM). But to keep `recentDays` AreaChart smooth, we'll group by month if `!dateRange`, else day.
         const dayKey = !dateRange
-          ? order.order_date.substring(0, 7) // "YYYY-MM"
-          : order.order_date.split('T')[0];  // "YYYY-MM-DD"
+          ? (() => {
+            const day = date.getDay();
+            const diff = day === 0 ? -6 : 1 - day;
+            const weekStart = new Date(date.getFullYear(), date.getMonth(), date.getDate() + diff);
+            return weekStart.toISOString().split('T')[0];
+          })()
+          : order.order_date.split('T')[0];
 
         const d = dayMap.get(dayKey) || { orderCount: 0, revenue: 0 };
         dayMap.set(dayKey, {
