@@ -1,78 +1,136 @@
 import type { Order } from '@/lib/types';
+import jsPDF from 'jspdf';
+import QRCode from 'qrcode';
 
-export function printWixLabel(order: Order): void {
+async function loadLogoAsBase64(url: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = function () {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx!.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+export async function printWixLabel(order: Order): Promise<void> {
   if (order.channel !== 'wix') {
     console.warn('printWixLabel: only for Wix orders');
     return;
   }
 
-  const { customer, shipping_address, items, order_id, total_amount, currency } = order;
+  const { customer, shipping_address, order_id } = order;
 
-  const customerName = customer.firstName && customer.lastName
-    ? `${customer.firstName} ${customer.lastName}`
-    : customer.email || 'Cliente';
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'cm',
+    format: [10, 15],
+  });
 
-  const address = shipping_address
-    ? [
-      shipping_address.receiverName || customerName,
-      shipping_address.street,
-      `${shipping_address.city}, ${shipping_address.state}`,
-      shipping_address.zipCode,
-      shipping_address.country,
-    ].filter(Boolean).join('\n')
-    : 'Direccion no disponible';
+  doc.setFont('helvetica');
+  let y = 0.5;
 
-  const itemLines = items
-    .map(item => `\u2022 ${item.title} \u00d7 ${item.quantity} @ $${item.unitPrice.toLocaleString('es-CO')} ${currency}`)
-    .join('\n');
-
-  const escapeHtml = (str: string) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
-  const labelHtml = `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Etiqueta de Envio - Pedido #${escapeHtml(order_id)}</title>
-  <style>
-    @media print { body { margin: 0; } .no-print { display: none; } }
-    body { font-family: 'Courier New', monospace; font-size: 12px; padding: 20px; max-width: 400px; }
-    .label-box { border: 2px solid #000; padding: 16px; margin-bottom: 8px; }
-    .label-title { font-size: 18px; font-weight: bold; text-align: center; border-bottom: 1px solid #000; padding-bottom: 8px; margin-bottom: 8px; }
-    .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #555; margin-top: 12px; margin-bottom: 4px; }
-    .address { font-size: 14px; font-weight: bold; white-space: pre-line; line-height: 1.6; }
-    .items { white-space: pre-line; font-size: 11px; color: #333; }
-    .order-id { font-size: 20px; font-weight: bold; text-align: center; margin: 8px 0; letter-spacing: 2px; }
-    .total { font-size: 13px; font-weight: bold; margin-top: 8px; }
-    .btn { padding: 8px 16px; background: #3B82F6; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 8px; font-size: 14px; }
-    .btn-secondary { background: #6B7280; }
-    .actions { margin-bottom: 16px; }
-    .store-name { text-align: center; font-size: 10px; color: #888; margin-bottom: 4px; }
-  </style>
-</head>
-<body>
-  <div class="no-print actions">
-    <button class="btn" onclick="window.print()">Imprimir</button>
-    <button class="btn btn-secondary" onclick="window.close()">Cerrar</button>
-  </div>
-  <div class="label-box">
-    <div class="store-name">JUGANDO Y EDUCANDO</div>
-    <div class="label-title">ETIQUETA DE ENVIO</div>
-    <div class="section-title">N DE PEDIDO</div>
-    <div class="order-id">#${escapeHtml(order_id)}</div>
-    <div class="section-title">DESTINATARIO</div>
-    <div class="address">${escapeHtml(address)}</div>
-    <div class="section-title">ARTICULOS</div>
-    <div class="items">${escapeHtml(itemLines)}</div>
-    <div class="total">Total: $${total_amount.toLocaleString('es-CO')} ${escapeHtml(currency)}</div>
-  </div>
-</body>
-</html>`;
-
-  const printWindow = window.open('', '_blank', 'width=500,height=600');
-  if (!printWindow) {
-    alert('Por favor permite ventanas emergentes para imprimir la etiqueta.');
-    return;
+  // Logo
+  try {
+    const logoData = await loadLogoAsBase64('/logo.png');
+    const logoWidth = 4;
+    const logoHeight = 1;
+    const logoX = (10 - logoWidth) / 2;
+    doc.addImage(logoData, 'PNG', logoX, y, logoWidth, logoHeight);
+    y += logoHeight + 0.3;
+  } catch {
+    // Sin logo: empezamos con encabezado directamente
   }
-  printWindow.document.write(labelHtml);
-  printWindow.document.close();
+
+  // Encabezado empresa
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DIDÁCTICOS JUGANDO Y EDUCANDO SAS', 5, y, { align: 'center' });
+  y += 0.45;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text('NIT 901,144,615-6', 5, y, { align: 'center' });
+  y += 0.4;
+  doc.text('CC Bulevar - Local S113, Bogotá', 5, y, { align: 'center' });
+  y += 0.4;
+  doc.text('Celular 3134285423', 5, y, { align: 'center' });
+  y += 0.5;
+
+  // Separador
+  doc.setLineWidth(0.02);
+  doc.line(0.5, y, 9.5, y);
+  y += 0.6;
+
+  // Destinatario
+  const receiverName =
+    shipping_address?.receiverName ||
+    (customer.firstName && customer.lastName
+      ? `${customer.firstName} ${customer.lastName}`
+      : customer.email || 'Destinatario');
+
+  const phone = shipping_address?.receiverPhone || '';
+  const street = shipping_address?.street || '';
+  const comment = shipping_address?.comment || '';
+  const city = shipping_address?.city || '';
+
+  const maxWidth = 8.5;
+
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  const nameLines = doc.splitTextToSize(`Destinatario: ${receiverName}`, maxWidth) as string[];
+  nameLines.forEach((line) => {
+    doc.text(line, 0.5, y);
+    y += 0.5;
+  });
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+
+  if (phone) {
+    doc.text(`Celular: ${phone}`, 0.5, y);
+    y += 0.5;
+  }
+
+  const addressText = comment ? `${street}, ${comment}` : street;
+  const addressLines = doc.splitTextToSize(`Dirección: ${addressText}`, maxWidth) as string[];
+  addressLines.forEach((line) => {
+    doc.text(line, 0.5, y);
+    y += 0.45;
+  });
+
+  if (city) {
+    doc.text(`Ciudad: ${city}`, 0.5, y);
+    y += 0.5;
+  }
+
+  doc.text(`Pedido: #${order_id}`, 0.5, y);
+
+  // Código QR (esquina inferior derecha)
+  try {
+    const qrDataUrl = await QRCode.toDataURL(order_id, {
+      width: 200,
+      margin: 1,
+      color: { dark: '#000000', light: '#ffffff' },
+    });
+    const qrSize = 3;
+    const qrX = 9.5 - qrSize - 0.5;
+    const qrY = 15 - qrSize - 1;
+    doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    const pedidoText = `#${order_id}`;
+    const textWidth = doc.getTextWidth(pedidoText);
+    doc.text(pedidoText, qrX + (qrSize - textWidth) / 2, qrY + qrSize + 0.4);
+  } catch {
+    // Sin QR si falla
+  }
+
+  doc.save(`WIX_${order_id}.pdf`);
 }

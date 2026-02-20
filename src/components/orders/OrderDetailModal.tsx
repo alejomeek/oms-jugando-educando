@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ImageOff, Printer, Download } from 'lucide-react';
+import { ImageOff, Download } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -276,9 +276,9 @@ export function OrderDetailModal({
               </Button>
             )}
             {order.channel === 'wix' && (
-              <Button variant="outline" size="sm" onClick={() => printWixLabel(order)}>
-                <Printer className="size-4" />
-                Imprimir Etiqueta
+              <Button variant="outline" size="sm" onClick={() => void printWixLabel(order)}>
+                <Download className="size-4 mr-2" />
+                Generar Etiqueta PDF
               </Button>
             )}
           </div>
