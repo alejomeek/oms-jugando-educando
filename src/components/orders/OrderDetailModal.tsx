@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ExternalLink, ImageOff, Printer } from 'lucide-react';
+import { ImageOff, Printer, Download } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -64,7 +64,7 @@ export function OrderDetailModal({
   );
 
   const mlLabelUrl = order.channel === 'mercadolibre' && order.shipping_id
-    ? `https://api.mercadolibre.com/shipment_labels?shipment_ids=${order.shipping_id}`
+    ? `/api/download-ml-label?shipment_id=${order.shipping_id}`
     : null;
 
   return (
@@ -267,9 +267,9 @@ export function OrderDetailModal({
           <div className="flex gap-2">
             {mlLabelUrl && (
               <Button variant="outline" size="sm" asChild>
-                <a href={mlLabelUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="size-4" />
-                  Ver etiqueta ML
+                <a href={mlLabelUrl} download>
+                  <Download className="size-4 mr-2" />
+                  Descargar Etiqueta ML
                 </a>
               </Button>
             )}
