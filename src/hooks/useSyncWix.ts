@@ -39,11 +39,31 @@ export function useSyncWix() {
 
       console.log('Iniciando sincronización de Wix...');
 
+      // Consultar fecha del último pedido para sincronización incremental
+      const { data: lastOrder } = await supabase
+        .from('orders')
+        .select('order_date')
+        .eq('channel', 'wix')
+        .order('order_date', { ascending: false })
+        .limit(1)
+        .single();
+
+      let dateFrom = undefined;
+      let dateTo = undefined;
+
+      if (lastOrder && lastOrder.order_date) {
+        const lastDate = new Date(lastOrder.order_date);
+        const fromDate = new Date(lastDate.getTime() - 2 * 24 * 60 * 60 * 1000); // Margen de 2 días
+        dateFrom = fromDate.toISOString();
+        dateTo = new Date().toISOString();
+        console.log(`Sincronización incremental Wix desde: ${dateFrom.split('T')[0]}`);
+      }
+
       // 2. Llamar a la Serverless Function (relativo: funciona en Vercel y local)
       const response = await fetch('/api/sync-wix', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config, limit: 50, cursor: null }),
+        body: JSON.stringify({ config, limit: 50, cursor: null, dateFrom, dateTo }),
       });
 
       if (!response.ok) {

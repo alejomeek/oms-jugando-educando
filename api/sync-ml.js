@@ -83,13 +83,16 @@ async function fetchMLShipmentAddress(accessToken, shipmentId) {
     }
 }
 
-async function fetchMLOrders(accessToken, sellerId, limit, offset) {
+async function fetchMLOrders(accessToken, sellerId, limit, offset, dateFrom, dateTo) {
     const params = new URLSearchParams({
         seller: sellerId,
         sort: 'date_desc',
         limit: String(limit),
         offset: String(offset),
     });
+
+    if (dateFrom) params.append('order.date_created.from', dateFrom);
+    if (dateTo) params.append('order.date_created.to', dateTo);
 
     const response = await fetch(
         `https://api.mercadolibre.com/orders/search?${params}`,
@@ -146,14 +149,14 @@ export default async function handler(req, res) {
     console.log('\n🟡 [ML] Iniciando sincronización de Mercado Libre...');
 
     try {
-        const { config, limit = 50, offset = 0 } = req.body;
+        const { config, limit = 50, offset = 0, dateFrom, dateTo } = req.body;
 
         // Validar config
         if (!config?.accessToken || !config?.sellerId) {
             return res.status(400).json({ error: 'Faltan credenciales de Mercado Libre' });
         }
 
-        console.log(`📡 [ML] Obteniendo órdenes...`);
+        console.log(`📡 [ML] Obteniendo órdenes...${dateFrom ? ` (Desde: ${dateFrom.split('T')[0]})` : ''}`);
 
         // Necesitamos fetch iterativo como en sync-incremental.
         let accessToken = config.accessToken;
@@ -163,7 +166,7 @@ export default async function handler(req, res) {
         let keepGoing = true;
 
         while (keepGoing) {
-            let { response, data } = await fetchMLOrders(accessToken, config.sellerId, limit, currentOffset);
+            let { response, data } = await fetchMLOrders(accessToken, config.sellerId, limit, currentOffset, dateFrom, dateTo);
 
             // Si es 401, refrescar token y reintentar
             if (response.status === 401) {
@@ -172,7 +175,7 @@ export default async function handler(req, res) {
                 accessToken = newTokens.accessToken;
 
                 console.log('📡 [ML] Reintentando con nuevo token...');
-                ({ response, data } = await fetchMLOrders(accessToken, config.sellerId, limit, currentOffset));
+                ({ response, data } = await fetchMLOrders(accessToken, config.sellerId, limit, currentOffset, dateFrom, dateTo));
             }
 
             if (!response.ok) {

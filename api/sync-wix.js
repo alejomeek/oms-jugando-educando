@@ -83,14 +83,14 @@ export default async function handler(req, res) {
     console.log('\n🟢 [WIX] Iniciando sincronización de Wix...');
 
     try {
-        const { config, limit = 50, cursor = null } = req.body;
+        const { config, limit = 50, cursor = null, dateFrom } = req.body;
 
         // Validar config
         if (!config?.apiKey || !config?.siteId) {
             return res.status(400).json({ error: 'Faltan credenciales de Wix' });
         }
 
-        console.log(`📡 [WIX] Obteniendo órdenes...`);
+        console.log(`📡 [WIX] Obteniendo órdenes...${dateFrom ? ` (Desde: ${dateFrom.split('T')[0]})` : ''}`);
 
         const allOrders = [];
         let currentCursor = cursor || undefined;
@@ -114,6 +114,7 @@ export default async function handler(req, res) {
                         filter: {
                             paymentStatus: 'PAID',
                         },
+                        sort: [{ fieldName: 'createdDate', order: 'DESC' }],
                     },
                 }),
             });
@@ -125,7 +126,24 @@ export default async function handler(req, res) {
 
             const data = await response.json();
             const orders = data.orders || [];
-            allOrders.push(...orders);
+
+            // Filtrar y detener si encontramos órdenes más antiguas que dateFrom
+            if (dateFrom) {
+                const inRange = orders.filter(o => {
+                    const d = o.createdDate || o._createdDate;
+                    return d && d >= dateFrom;
+                });
+                allOrders.push(...inRange);
+
+                // Si encontramos menos órdenes en rango que el total de la página,
+                // significa que ya llegamos al límite de fecha antigua
+                if (inRange.length < orders.length) {
+                    keepGoing = false;
+                    break;
+                }
+            } else {
+                allOrders.push(...orders);
+            }
 
             currentCursor = data.pagingMetadata?.cursors?.next || null;
 
