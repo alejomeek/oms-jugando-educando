@@ -52,6 +52,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CustomerSheet } from '@/components/crm/CustomerSheet';
+import { GeoMap } from '@/components/analytics/GeoMap';
 import {
   Tooltip as UITooltip,
   TooltipContent,
@@ -184,6 +185,7 @@ export function Analytics() {
 
   const [showRepeatCustomers, setShowRepeatCustomers] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerProfile | null>(null);
+  const [selectedCityCoord, setSelectedCityCoord] = useState<[number, number] | null>(null);
 
   const { data: orders = [], isLoading, error } = useAllOrders();
   const analytics = useAnalytics(orders, dateRange);
@@ -582,11 +584,15 @@ export function Analytics() {
                 </CardContent>
               </Card>
 
-              <Card>
+            </div>
+
+            {/* Row 7: Distribución Geográfica + Mapa de Calor */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <Card className="flex flex-col h-full">
                 <CardHeader>
                   <CardTitle>Distribución Geográfica</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-1 overflow-auto max-h-[400px]">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -598,20 +604,30 @@ export function Analytics() {
                     </TableHeader>
                     <TableBody>
                       {analytics.geoStats.slice(0, 10).map((geo, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="font-medium">{geo.city || '—'}</TableCell>
-                          <TableCell className="text-muted-foreground text-sm">
+                        <TableRow
+                          key={i}
+                          className={geo.lat && geo.lng ? 'cursor-pointer hover:bg-muted/50 transition-colors' : ''}
+                          onClick={() => {
+                            if (geo.lat && geo.lng) setSelectedCityCoord([geo.lat, geo.lng]);
+                          }}
+                        >
+                          <TableCell className="font-medium text-xs">
+                            <span className={geo.lat && geo.lng ? 'text-primary underline decoration-primary/30 underline-offset-2' : ''}>
+                              {geo.city || '—'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-xs">
                             {geo.state || '—'}
                           </TableCell>
-                          <TableCell className="text-right">{geo.orderCount}</TableCell>
-                          <TableCell className="text-right text-sm">
+                          <TableCell className="text-right text-xs font-semibold">{geo.orderCount}</TableCell>
+                          <TableCell className="text-right text-xs">
                             {formatCOP(geo.revenue)}
                           </TableCell>
                         </TableRow>
                       ))}
                       {analytics.geoStats.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center text-muted-foreground">
+                          <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                             Sin datos geográficos
                           </TableCell>
                         </TableRow>
@@ -620,8 +636,22 @@ export function Analytics() {
                   </Table>
                 </CardContent>
               </Card>
+
+              <Card className="flex flex-col h-full">
+                <CardHeader>
+                  <CardTitle>Mapa de Concentración</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 p-0 m-4 mt-0 min-h-[400px]">
+                  <GeoMap
+                    heatmapData={analytics.heatmapData}
+                    topCities={analytics.geoStats}
+                    selectedLocation={selectedCityCoord}
+                  />
+                </CardContent>
+              </Card>
             </div>
-            {/* Row 7: Métodos de Pago */}
+
+            {/* Row 8: Métodos de Pago y Tipo de Pago */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <Card>
                 <CardHeader>

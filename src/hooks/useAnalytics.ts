@@ -34,6 +34,8 @@ export interface GeoStats {
   state: string;
   orderCount: number;
   revenue: number;
+  lat?: number;
+  lng?: number;
 }
 
 export interface PaymentMethodStats {
@@ -77,6 +79,7 @@ export interface AnalyticsSummary {
   byDayOfWeek: DayOfWeekStats[];
   byPaymentMethod: PaymentMethodStats[];
   installmentsInsight: InstallmentsInsight;
+  heatmapData: Array<[number, number, number]>;
 }
 
 const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -107,6 +110,7 @@ const EMPTY: AnalyticsSummary = {
   byDayOfWeek: [],
   byPaymentMethod: [],
   installmentsInsight: { upfront: 0, financed: 0, financedRevenue: 0 },
+  heatmapData: [],
 };
 
 export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date }): AnalyticsSummary {
@@ -141,7 +145,8 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
       imageUrl?: string;
       orderIds: Set<string>;
     }>();
-    const geoMap = new Map<string, { city: string; state: string; orderCount: number; revenue: number }>();
+    const heatmapData: Array<[number, number, number]> = [];
+    const geoMap = new Map<string, { city: string; state: string; orderCount: number; revenue: number; latSum: number; lngSum: number; coordCount: number }>();
     // day of week (0=Sun..6=Sat) -> event count
     const dowMap = new Map<number, number>();
     // payment method -> count + revenue (event-level)
@@ -243,13 +248,23 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
       // Geo — one destination per event; revenue from all rows (same address)
       const city = order.shipping_address?.city;
       const state = order.shipping_address?.state || '';
+      const lat = order.shipping_address?.latitude;
+      const lng = order.shipping_address?.longitude;
+
+      if (isFirstInEvent && lat != null && lng != null) {
+        heatmapData.push([lat, lng, 1]);
+      }
+
       if (city) {
         const geoKey = `${city}::${state}`;
-        const g = geoMap.get(geoKey) || { city, state, orderCount: 0, revenue: 0 };
+        const g = geoMap.get(geoKey) || { city, state, orderCount: 0, revenue: 0, latSum: 0, lngSum: 0, coordCount: 0 };
         geoMap.set(geoKey, {
           city, state,
           orderCount: g.orderCount + (isFirstInEvent ? 1 : 0),
           revenue: g.revenue + amount,
+          latSum: g.latSum + (lat || 0),
+          lngSum: g.lngSum + (lng || 0),
+          coordCount: g.coordCount + (lat != null && lng != null ? 1 : 0),
         });
       }
 
@@ -327,6 +342,11 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
 
     // geoStats
     const geoStats: GeoStats[] = Array.from(geoMap.values())
+      .map(g => ({
+        ...g,
+        lat: g.coordCount > 0 ? g.latSum / g.coordCount : undefined,
+        lng: g.coordCount > 0 ? g.lngSum / g.coordCount : undefined,
+      }))
       .sort((a, b) => b.orderCount - a.orderCount)
       .slice(0, 15);
 
@@ -510,6 +530,7 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
       byDayOfWeek,
       byPaymentMethod,
       installmentsInsight,
+      heatmapData,
     };
   }, [orders, dateRange]);
 }
