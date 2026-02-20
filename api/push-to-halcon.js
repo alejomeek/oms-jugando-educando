@@ -61,7 +61,12 @@ export default async function handler(req, res) {
     const ciudad = shipping.city || '';
 
     const origen = isWix ? 'wix' : 'mercadolibre';
-    const numero_envio = isWix ? `WIX-${order.order_id}` : `ML-${order.order_id}`;
+    // Wix: numero_envio = "WIX-{order_id}"
+    // ML:  numero_envio = shipping_id (número real de envío ML, ej. "46503424246")
+    //      numero_pedido_wix = order_id (número de venta ML)
+    const numero_envio = isWix
+        ? `WIX-${order.order_id}`
+        : (order.shipping_id || order.order_id);
     const numero_pedido_wix = order.order_id;
 
     const pedido = { origen, numero_envio, numero_pedido_wix, destinatario, celular, direccion, ciudad };
