@@ -7,8 +7,8 @@ import type { OrderStatus, OrderChannel } from './types';
 export const ORDER_STATUSES: Record<OrderStatus, { label: string; color: string }> = {
   nuevo: { label: 'Nuevo', color: 'blue' },
   preparando: { label: 'Preparando', color: 'yellow' },
-  listo: { label: 'Listo', color: 'green' },
   enviado: { label: 'Enviado', color: 'gray' },
+  entregado: { label: 'Entregado', color: 'green' },
   cancelado: { label: 'Cancelado', color: 'red' },
 };
 

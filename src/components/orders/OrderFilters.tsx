@@ -77,8 +77,8 @@ export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
           <SelectItem value="all">Todos los estados</SelectItem>
           <SelectItem value="nuevo">Nuevo</SelectItem>
           <SelectItem value="preparando">Preparando</SelectItem>
-          <SelectItem value="listo">Listo</SelectItem>
           <SelectItem value="enviado">Enviado</SelectItem>
+          <SelectItem value="entregado">Entregado</SelectItem>
           <SelectItem value="cancelado">Cancelado</SelectItem>
         </SelectContent>
       </Select>

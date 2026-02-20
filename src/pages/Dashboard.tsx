@@ -163,7 +163,7 @@ export function Dashboard() {
             total: 0,
             nuevo: 0,
             preparando: 0,
-            listo: 0,
+            entregado: 0,
             enviado: 0,
             mercadolibre: 0,
             wix: 0

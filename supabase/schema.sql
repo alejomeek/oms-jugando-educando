@@ -20,7 +20,7 @@ CREATE TABLE orders (
 
   -- Estado unificado en español
   status TEXT NOT NULL DEFAULT 'nuevo' CHECK (
-    status IN ('nuevo', 'preparando', 'listo', 'enviado', 'cancelado')
+    status IN ('nuevo', 'preparando', 'enviado', 'entregado', 'cancelado')
   ),
 
   -- Fechas

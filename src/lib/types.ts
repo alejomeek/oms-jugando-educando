@@ -3,7 +3,7 @@
 // ============================================
 
 export type OrderChannel = 'mercadolibre' | 'wix';
-export type OrderStatus = 'nuevo' | 'preparando' | 'listo' | 'enviado' | 'cancelado';
+export type OrderStatus = 'nuevo' | 'preparando' | 'enviado' | 'entregado' | 'cancelado';
 
 // ============================================
 // INTERFACES PRINCIPALES
@@ -112,8 +112,8 @@ export interface PaginatedResponse<T> {
 export interface OrderStats {
   nuevo: number;
   preparando: number;
-  listo: number;
   enviado: number;
+  entregado: number;
   total: number;
   mercadolibre: number;
   wix: number;

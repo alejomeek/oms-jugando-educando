@@ -31,8 +31,8 @@ create table public.orders (
         array[
           'nuevo'::text,
           'preparando'::text,
-          'listo'::text,
           'enviado'::text,
+          'entregado'::text,
           'cancelado'::text
         ]
       )

@@ -72,7 +72,7 @@ supabase/         # schema.sql, README.md
 ### Database Schema
 
 Two tables:
-- **`orders`** — primary table; `external_id + channel` is the unique key used for upserts. Status enum: `nuevo | preparando | listo | enviado | cancelado`.
+- **`orders`** — primary table; `external_id + channel` is the unique key used for upserts. Status enum: `nuevo | preparando | enviado | entregado | cancelado`.
 - **`order_status_history`** — audit log; auto-populated via application logic on status change.
 
 RLS is enabled but permissive (`USING (true)`) — this is intentional for MVP but must be restricted before multi-user production use.

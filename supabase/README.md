@@ -21,7 +21,7 @@ Almacena todas las órdenes de Mercado Libre y Wix en formato normalizado.
 - `id` - UUID único generado automáticamente
 - `external_id` - ID original del canal (ML order ID o Wix order number)
 - `channel` - Canal de origen: 'mercadolibre' o 'wix'
-- `status` - Estado actual: 'nuevo', 'preparando', 'listo', 'enviado', 'cancelado'
+- `status` - Estado actual: 'nuevo', 'preparando', 'enviado', 'entregado', 'cancelado'
 - `pack_id` - (Solo ML) Agrupa múltiples órdenes del mismo carrito
 - `customer` - JSONB con información del cliente (estructura varía por canal)
 - `items` - JSONB array con los productos del pedido

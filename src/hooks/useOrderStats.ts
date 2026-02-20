@@ -11,16 +11,16 @@ export function useOrderStats() {
                 { count: total },
                 { count: nuevo },
                 { count: preparando },
-                { count: listo },
                 { count: enviado },
+                { count: entregado },
                 { count: mercadolibre },
                 { count: wix },
             ] = await Promise.all([
                 supabase.from('orders').select('*', { count: 'exact', head: true }),
                 supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'nuevo'),
                 supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'preparando'),
-                supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'listo'),
                 supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'enviado'),
+                supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'entregado'),
                 supabase.from('orders').select('*', { count: 'exact', head: true }).eq('channel', 'mercadolibre'),
                 supabase.from('orders').select('*', { count: 'exact', head: true }).eq('channel', 'wix'),
             ]);
@@ -29,8 +29,8 @@ export function useOrderStats() {
                 total: total || 0,
                 nuevo: nuevo || 0,
                 preparando: preparando || 0,
-                listo: listo || 0,
                 enviado: enviado || 0,
+                entregado: entregado || 0,
                 mercadolibre: mercadolibre || 0,
                 wix: wix || 0,
             };

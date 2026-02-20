@@ -361,8 +361,8 @@ export function OrderDetailModal({
                   <SelectContent>
                     <SelectItem value="nuevo">Nuevo</SelectItem>
                     <SelectItem value="preparando">Preparando</SelectItem>
-                    <SelectItem value="listo">Listo</SelectItem>
                     <SelectItem value="enviado">Enviado</SelectItem>
+                    <SelectItem value="entregado">Entregado</SelectItem>
                     <SelectItem value="cancelado">Cancelado</SelectItem>
                   </SelectContent>
                 </Select>

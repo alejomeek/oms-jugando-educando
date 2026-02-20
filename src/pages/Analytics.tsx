@@ -92,8 +92,8 @@ const CHANNEL_COLORS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   nuevo: '#3B82F6',
   preparando: '#EAB308',
-  listo: '#22C55E',
   enviado: '#6B7280',
+  entregado: '#22C55E',
   cancelado: '#EF4444',
 };
 
