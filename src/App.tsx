@@ -16,18 +16,22 @@ const queryClient = new QueryClient({
   },
 });
 
+import { TooltipProvider } from "@/components/ui/tooltip"
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/crm" element={<Crm />} />
-          </Routes>
-        </AppLayout>
-      </BrowserRouter>
+      <TooltipProvider delayDuration={100}>
+        <BrowserRouter>
+          <AppLayout>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/crm" element={<Crm />} />
+            </Routes>
+          </AppLayout>
+        </BrowserRouter>
+      </TooltipProvider>
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );

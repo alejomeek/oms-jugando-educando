@@ -23,6 +23,7 @@ import {
   Minus,
   Users,
   Crown,
+  Info,
 } from 'lucide-react';
 import { useAllOrders } from '@/hooks/useAllOrders';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -51,6 +52,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CustomerSheet } from '@/components/crm/CustomerSheet';
+import {
+  Tooltip as UITooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type DateRangeKey = '7d' | '30d' | '90d' | 'all';
 
@@ -259,8 +265,8 @@ export function Analytics() {
                 key={opt.key}
                 onClick={() => setRangeKey(opt.key)}
                 className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${rangeKey === opt.key
-                    ? 'bg-card text-primary shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-card text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
                 {opt.label}
@@ -326,17 +332,28 @@ export function Analytics() {
                         key={i}
                         className={`min-w-[180px] max-w-[220px] shrink-0 transition-all${isRepeatCard ? ' cursor-pointer hover:shadow-md hover:border-primary/40' : ''}`}
                         onClick={isRepeatCard ? () => setShowRepeatCustomers(true) : undefined}
-                        title={insight.tooltip}
                       >
                         <CardContent className="pt-3 pb-3">
-                          <p className="text-xs text-muted-foreground">{insight.label}</p>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <span>{insight.label}</span>
+                            {insight.tooltip && (
+                              <UITooltip>
+                                <TooltipTrigger asChild>
+                                  <Info className="size-3.5 cursor-help text-muted-foreground/50 hover:text-muted-foreground transition-colors" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{insight.tooltip}</p>
+                                </TooltipContent>
+                              </UITooltip>
+                            )}
+                          </div>
                           <div className="mt-1 flex items-center gap-1">
                             <p
                               className={`text-lg font-bold ${insight.trend === 'up'
-                                  ? 'text-green-600'
-                                  : insight.trend === 'down'
-                                    ? 'text-red-600'
-                                    : 'text-gray-500'
+                                ? 'text-green-600'
+                                : insight.trend === 'down'
+                                  ? 'text-red-600'
+                                  : 'text-gray-500'
                                 }`}
                             >
                               {insight.value}
