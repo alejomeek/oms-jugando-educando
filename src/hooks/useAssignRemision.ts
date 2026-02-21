@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/services/supabase';
-import { reconSupabase } from '@/services/reconciliationSupabase';
+import { getReconSupabase } from '@/services/reconciliationSupabase';
 import type { Order } from '@/lib/types';
 
 interface AssignRemisionParams {
@@ -36,9 +36,10 @@ export function useAssignRemision() {
       if (omsError) throw new Error(`Error OMS: ${omsError.message}`);
 
       // 2. Upsert en meli_reconciliation ml_orders (crea la orden si no existe)
+      const recon = getReconSupabase();
       const results = await Promise.all(
         mlOrderIds.map(order_id =>
-          reconSupabase
+          recon
             .from('ml_orders')
             .upsert(
               { order_id, remision, fecha_remision: fecha, usuario: 'OMS' },
