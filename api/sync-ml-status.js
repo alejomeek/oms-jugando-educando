@@ -1,16 +1,14 @@
 /**
  * Vercel Serverless Function: Sync estado 'entregado' de ML → OMS
  *
- * Consulta en Supabase las órdenes ML con logistic_type fulfillment o
- * cross_docking que NO están en estado entregado/cancelado, verifica el
- * estado del envío en la API de ML y marca como 'entregado' las que
+ * Consulta en Supabase las órdenes ML que NO están en estado entregado/cancelado,
+ * verifica el estado del envío en la API de ML y marca como 'entregado' las que
  * ML reporta como 'delivered'.
  *
- * Solo aplica a:
+ * Aplica a todos los logistic_type:
  *   - fulfillment  (FULL): ML gestiona la última milla
  *   - cross_docking (Colecta): courier de ML
- *
- * NO aplica a self_service: esos los gestiona Halcon vía sync-halcon-status.
+ *   - self_service (Flex): repartidor propio, ML confirma la entrega
  *
  * Env vars requeridas:
  *   VITE_SUPABASE_URL
