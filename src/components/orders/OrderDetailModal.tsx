@@ -75,15 +75,13 @@ export function OrderDetailModal({
   const isPack = (order.subOrders?.length ?? 0) > 1;
   const displayId = order.pack_id ?? order.order_id ?? (order as any).external_id;
 
-  const handleStatusUpdate = () => {
-    if (selectedStatus && selectedStatus !== order.status) {
-      // Si es pack, actualizar todas las sub-órdenes
-      if (isPack && order.subOrders) {
-        order.subOrders.forEach(sub => onStatusChange(sub.id, selectedStatus as OrderStatus));
-      } else {
-        onStatusChange(order.id, selectedStatus as OrderStatus);
-      }
-      onClose();
+  const handleStatusChange = (newStatus: OrderStatus) => {
+    if (newStatus === order.status) return;
+    setSelectedStatus(newStatus);
+    if (isPack && order.subOrders) {
+      order.subOrders.forEach(sub => onStatusChange(sub.id, newStatus));
+    } else {
+      onStatusChange(order.id, newStatus);
     }
   };
 
@@ -389,33 +387,23 @@ export function OrderDetailModal({
           {/* Change status */}
           <section>
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Cambiar estado{isPack ? ' (todas las órdenes del pack)' : ''}
+              Estado{isPack ? ' (todas las órdenes del pack)' : ''}
             </h3>
-            <div className="flex items-end gap-3">
-              <div className="flex-1">
-                <Select
-                  value={selectedStatus}
-                  onValueChange={(v) => setSelectedStatus(v as OrderStatus)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Seleccionar estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="nuevo">Nuevo</SelectItem>
-                    <SelectItem value="preparando">Preparando</SelectItem>
-                    <SelectItem value="enviado">Enviado</SelectItem>
-                    <SelectItem value="entregado">Entregado</SelectItem>
-                    <SelectItem value="cancelado">Cancelado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                onClick={handleStatusUpdate}
-                disabled={selectedStatus === order.status || !selectedStatus}
-              >
-                Actualizar
-              </Button>
-            </div>
+            <Select
+              value={selectedStatus}
+              onValueChange={(v) => handleStatusChange(v as OrderStatus)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleccionar estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nuevo">Nuevo</SelectItem>
+                <SelectItem value="preparando">Preparando</SelectItem>
+                <SelectItem value="enviado">Enviado</SelectItem>
+                <SelectItem value="entregado">Entregado</SelectItem>
+                <SelectItem value="cancelado">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
           </section>
 
           {/* Remisión TBC — solo órdenes ML */}
