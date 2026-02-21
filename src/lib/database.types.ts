@@ -40,6 +40,8 @@ export interface Database {
           halcon_serial: number | null
           store_id: string | null
           store_name: string | null
+          remision_tbc: string | null
+          fecha_remision_tbc: string | null
         }
         Insert: {
           id?: string
@@ -64,6 +66,8 @@ export interface Database {
           halcon_serial?: number | null
           store_id?: string | null
           store_name?: string | null
+          remision_tbc?: string | null
+          fecha_remision_tbc?: string | null
         }
         Update: {
           id?: string
@@ -88,6 +92,8 @@ export interface Database {
           halcon_serial?: number | null
           store_id?: string | null
           store_name?: string | null
+          remision_tbc?: string | null
+          fecha_remision_tbc?: string | null
         }
       }
       order_status_history: {

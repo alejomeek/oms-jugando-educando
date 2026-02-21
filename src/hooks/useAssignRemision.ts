@@ -17,21 +17,17 @@ export function useAssignRemision() {
     mutationFn: async ({ order, remision, fecha }: AssignRemisionParams) => {
       const isPack = (order.subOrders?.length ?? 0) > 1;
 
-      // IDs internos del OMS (UUIDs) para actualizar la tabla orders
-      const internalIds = isPack
-        ? order.subOrders!.map(s => s.id)
-        : [order.id];
-
-      // IDs de ML (string) para actualizar ml_orders en meli_reconciliation
+      // IDs de ML (string) para filtrar en ambas DBs
       const mlOrderIds = isPack
         ? order.subOrders!.map(s => s.order_id)
         : [order.order_id];
 
-      // 1. Actualizar OMS orders
+      // 1. Actualizar OMS orders (filtrar por order_id, no por id,
+      //    porque los packs agrupados usan pack_id como id en el frontend)
       const { error: omsError } = await supabase
         .from('orders')
         .update({ remision_tbc: remision, fecha_remision_tbc: fecha })
-        .in('id', internalIds);
+        .in('order_id', mlOrderIds);
 
       if (omsError) throw new Error(`Error OMS: ${omsError.message}`);
 
