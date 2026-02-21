@@ -28,8 +28,8 @@ export function OrderStats({ stats, isLoading }: OrderStatsProps) {
       iconBg: 'bg-amber-100 text-amber-600',
     },
     {
-      label: 'Enviados',
-      value: stats.enviado,
+      label: 'Entregados',
+      value: stats.entregado,
       icon: Truck,
       iconBg: 'bg-green-100 text-green-600',
     },
