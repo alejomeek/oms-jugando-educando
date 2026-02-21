@@ -107,6 +107,26 @@ const PAYMENT_METHOD_COLORS: Record<string, string> = {
 
 const PAYMENT_FALLBACK_COLORS = ['#6366F1', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#9CA3AF'];
 
+const LOGISTIC_LABELS: Record<string, string> = {
+  fulfillment: 'FULL',
+  cross_docking: 'Colecta',
+  self_service: 'Flex',
+};
+
+const LOGISTIC_COLORS: Record<string, string> = {
+  fulfillment: '#8B5CF6',
+  cross_docking: '#F59E0B',
+  self_service: '#10B981',
+};
+
+const STORE_COLORS: Record<string, string> = {
+  'MEDELLÍN': '#3B82F6',
+  'AVENIDA 19': '#EC4899',
+  'CEDI': '#14B8A6',
+  'BULEVAR': '#F97316',
+  'FULL': '#8B5CF6',
+};
+
 function formatCOP(value: number): string {
   return formatCurrency(value, 'COP');
 }
@@ -307,6 +327,86 @@ export function Analytics() {
       fill: PAYMENT_METHOD_COLORS[p.method] ?? PAYMENT_FALLBACK_COLORS[i % PAYMENT_FALLBACK_COLORS.length],
     }));
   }, [analytics]);
+
+  // ── Logística ML ────────────────────────────────────────────────────────────
+  const logisticsData = useMemo(() => {
+    const mlOrders = filteredOrders.filter(o => o.channel === 'mercadolibre');
+    const seenEvents = new Set<string>();
+    const map = new Map<string, { orderCount: number; revenue: number; statuses: Record<string, number> }>();
+
+    for (const order of mlOrders) {
+      const lt = order.logistic_type;
+      if (!lt) continue;
+
+      const eventKey = order.pack_id ? `pack:${order.pack_id}` : `order:${order.id}`;
+      const isFirst = !seenEvents.has(eventKey);
+      if (isFirst) seenEvents.add(eventKey);
+
+      const e = map.get(lt) ?? { orderCount: 0, revenue: 0, statuses: {} };
+      if (isFirst) {
+        e.orderCount++;
+        e.statuses[order.status] = (e.statuses[order.status] || 0) + 1;
+      }
+      e.revenue += order.total_amount || 0;
+      map.set(lt, e);
+    }
+
+    return Array.from(map.entries())
+      .map(([lt, d]) => ({
+        key: lt,
+        name: LOGISTIC_LABELS[lt] ?? lt,
+        color: LOGISTIC_COLORS[lt] ?? '#9CA3AF',
+        orderCount: d.orderCount,
+        revenue: d.revenue,
+        avgTicket: d.orderCount > 0 ? d.revenue / d.orderCount : 0,
+        statuses: d.statuses,
+      }))
+      .sort((a, b) => b.orderCount - a.orderCount);
+  }, [filteredOrders]);
+
+  const logisticsStatusData = useMemo(() => logisticsData.map(lt => ({
+    name: lt.name,
+    entregado: lt.statuses['entregado'] || 0,
+    enviado: lt.statuses['enviado'] || 0,
+    preparando: lt.statuses['preparando'] || 0,
+    nuevo: lt.statuses['nuevo'] || 0,
+    cancelado: lt.statuses['cancelado'] || 0,
+  })), [logisticsData]);
+
+  // ── Tiendas ML ───────────────────────────────────────────────────────────────
+  const storeData = useMemo(() => {
+    const seenEvents = new Set<string>();
+    const map = new Map<string, { orderCount: number; revenue: number; statuses: Record<string, number> }>();
+
+    for (const order of filteredOrders) {
+      if (!order.store_name) continue;
+
+      const eventKey = order.pack_id ? `pack:${order.pack_id}` : `order:${order.id}`;
+      const isFirst = !seenEvents.has(eventKey);
+      if (isFirst) seenEvents.add(eventKey);
+
+      const sn = order.store_name;
+      const e = map.get(sn) ?? { orderCount: 0, revenue: 0, statuses: {} };
+      if (isFirst) {
+        e.orderCount++;
+        e.statuses[order.status] = (e.statuses[order.status] || 0) + 1;
+      }
+      e.revenue += order.total_amount || 0;
+      map.set(sn, e);
+    }
+
+    return Array.from(map.entries())
+      .map(([name, d]) => ({
+        name,
+        color: STORE_COLORS[name] ?? '#9CA3AF',
+        orderCount: d.orderCount,
+        revenue: d.revenue,
+        avgTicket: d.orderCount > 0 ? d.revenue / d.orderCount : 0,
+        entregados: d.statuses['entregado'] || 0,
+        entregadoPct: d.orderCount > 0 ? Math.round(((d.statuses['entregado'] || 0) / d.orderCount) * 100) : 0,
+      }))
+      .sort((a, b) => b.orderCount - a.orderCount);
+  }, [filteredOrders]);
 
   const mlStats = analytics?.byChannel.find((c) => c.channel === 'mercadolibre');
   const wixStats = analytics?.byChannel.find((c) => c.channel === 'wix');
@@ -564,6 +664,194 @@ export function Analytics() {
               </Card>
             </div>
 
+            {/* ── Sección: Logística · Mercado Libre ──────────────────────── */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="h-1 w-8 rounded-full bg-yellow-400" />
+                <h2 className="text-base font-semibold">Logística · Mercado Libre</h2>
+                <span className="text-sm text-muted-foreground">Solo órdenes ML</span>
+              </div>
+
+              {/* KPI strip */}
+              {logisticsData.length > 0 && (
+                <div className="grid grid-cols-3 gap-3">
+                  {logisticsData.map(lt => (
+                    <div key={lt.key} className="rounded-lg border bg-card p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: lt.color }} />
+                        <span className="text-sm font-semibold">{lt.name}</span>
+                      </div>
+                      <p className="text-2xl font-bold">{lt.orderCount}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Ticket prom: {formatCOP(lt.avgTicket)}</p>
+                      <p className="text-xs text-muted-foreground">{formatCOP(lt.revenue)} ingresos</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Pedidos por Modalidad</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {logisticsData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={280}>
+                        <PieChart>
+                          <Pie
+                            data={logisticsData}
+                            dataKey="orderCount"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={110}
+                            innerRadius={60}
+                            strokeWidth={2}
+                            stroke="#fff"
+                          >
+                            {logisticsData.map(entry => (
+                              <Cell key={entry.key} fill={entry.color} />
+                            ))}
+                            <Label
+                              content={(props) => (
+                                <DonutCenterLabel
+                                  viewBox={props.viewBox as { cx?: number; cy?: number }}
+                                  value={logisticsData.reduce((s, l) => s + l.orderCount, 0)}
+                                  label="pedidos ML"
+                                />
+                              )}
+                            />
+                          </Pie>
+                          <Tooltip formatter={(value) => [`${value} pedidos`, 'Pedidos']} />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-[280px] items-center justify-center text-muted-foreground">
+                        Sin datos logísticos
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Estados por Modalidad</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {logisticsStatusData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={280}>
+                        <BarChart data={logisticsStatusData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis allowDecimals={false} />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="entregado" stackId="s" fill={STATUS_COLORS.entregado} name="Entregado" />
+                          <Bar dataKey="enviado" stackId="s" fill={STATUS_COLORS.enviado} name="Enviado" />
+                          <Bar dataKey="preparando" stackId="s" fill={STATUS_COLORS.preparando} name="Preparando" />
+                          <Bar dataKey="nuevo" stackId="s" fill={STATUS_COLORS.nuevo} name="Nuevo" />
+                          <Bar dataKey="cancelado" stackId="s" fill={STATUS_COLORS.cancelado} name="Cancelado" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-[280px] items-center justify-center text-muted-foreground">
+                        Sin datos logísticos
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* ── Sección: Tiendas · Mercado Libre ────────────────────────── */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="h-1 w-8 rounded-full bg-yellow-400" />
+                <h2 className="text-base font-semibold">Tiendas · Mercado Libre</h2>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Pedidos por Tienda</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {storeData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={280}>
+                        <BarChart data={storeData} layout="vertical" margin={{ left: 8 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis type="number" allowDecimals={false} />
+                          <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12 }} />
+                          <Tooltip formatter={(value) => [`${value} pedidos`, 'Pedidos']} />
+                          <Bar dataKey="orderCount" name="Pedidos" radius={[0, 4, 4, 0]}>
+                            {storeData.map(entry => (
+                              <Cell key={entry.name} fill={entry.color} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-[280px] items-center justify-center text-muted-foreground">
+                        Sin datos de tienda
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Detalle por Tienda</CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-0 pb-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="pl-6">Tienda</TableHead>
+                          <TableHead className="text-right">Pedidos</TableHead>
+                          <TableHead className="text-right">Ingresos</TableHead>
+                          <TableHead className="text-right">Ticket prom.</TableHead>
+                          <TableHead className="text-right pr-6">% Entregados</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {storeData.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                              Sin datos de tienda
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          storeData.map(store => (
+                            <TableRow key={store.name}>
+                              <TableCell className="pl-6">
+                                <div className="flex items-center gap-2">
+                                  <div className="size-3 rounded-full shrink-0" style={{ backgroundColor: store.color }} />
+                                  <span className="font-medium text-sm">{store.name}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right font-semibold">{store.orderCount}</TableCell>
+                              <TableCell className="text-right text-sm text-muted-foreground">{formatCOP(store.revenue)}</TableCell>
+                              <TableCell className="text-right text-sm text-muted-foreground">{formatCOP(store.avgTicket)}</TableCell>
+                              <TableCell className="text-right pr-6">
+                                <span className={`text-sm font-semibold ${
+                                  store.entregadoPct >= 70 ? 'text-green-600'
+                                  : store.entregadoPct >= 40 ? 'text-amber-600'
+                                  : 'text-red-500'
+                                }`}>
+                                  {store.entregadoPct}%
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
             {/* Row 5: Top Productos + Pedidos por Día de Semana */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <Card>
@@ -621,30 +909,27 @@ export function Analytics() {
               </Card>
             </div>
 
-            {/* Row 6: Estado de Pedidos + Distribución Geográfica */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Estado de Pedidos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={statusChartData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" allowDecimals={false} />
-                      <YAxis type="category" dataKey="name" width={100} />
-                      <Tooltip formatter={(value) => [`${value} pedidos`, 'Cantidad']} />
-                      <Bar dataKey="count" name="Pedidos" radius={[0, 4, 4, 0]}>
-                        {statusChartData.map((entry, index) => (
-                          <Cell key={index} fill={entry.fill} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-            </div>
+            {/* Row 6: Estado de Pedidos */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Estado de Pedidos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={statusChartData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" allowDecimals={false} />
+                    <YAxis type="category" dataKey="name" width={100} />
+                    <Tooltip formatter={(value) => [`${value} pedidos`, 'Cantidad']} />
+                    <Bar dataKey="count" name="Pedidos" radius={[0, 4, 4, 0]}>
+                      {statusChartData.map((entry, index) => (
+                        <Cell key={index} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
 
             {/* Row 7: Distribución Geográfica + Mapa de Calor */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
