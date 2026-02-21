@@ -13,16 +13,41 @@ const ML_STORE_MAP = {
     '71348291': 'BULEVAR',
 };
 
+/**
+ * Convierte los estados de ML al estado OMS.
+ * mlOrderStatus: estado de la orden (paid, cancelled…)
+ * shipmentStatus: estado del envío (shipped, delivered, cancelled…)
+ *
+ * El estado del envío tiene precedencia sobre el de la orden,
+ * excepto cuando la orden está cancelada.
+ */
+function mapMLStatus(mlOrderStatus, shipmentStatus) {
+    if (mlOrderStatus === 'cancelled') return 'cancelado';
+
+    switch (shipmentStatus) {
+        case 'delivered':    return 'entregado';
+        case 'shipped':      return 'enviado';
+        case 'cancelled':
+        case 'returned':     return 'cancelado';
+        case 'handling':
+        case 'ready_to_ship': return 'preparando';
+        default:             return 'nuevo';
+    }
+}
+
 function normalizeMLOrder(mlOrder) {
     const rawStoreId = mlOrder.order_items[0]?.stock?.store_id?.toString() || null;
     const storeName = rawStoreId ? (ML_STORE_MAP[rawStoreId] || null) : null;
+    // El status inicial se basa en el nivel de orden; se refinará con el shipment
+    const initialStatus = mlOrder.status === 'cancelled' ? 'cancelado' : 'nuevo';
 
     return {
         order_id: mlOrder.id.toString(),
         channel: 'mercadolibre',
         pack_id: mlOrder.pack_id?.toString() || null,
         shipping_id: mlOrder.shipping?.id?.toString() || null,
-        status: 'nuevo',
+        status: initialStatus,
+        _mlOrderStatus: mlOrder.status, // campo temporal para usar en el loop
         order_date: mlOrder.date_created,
         closed_date: mlOrder.date_closed || null,
         total_amount: mlOrder.total_amount,
@@ -73,7 +98,7 @@ async function fetchMLShipmentData(accessToken, shipmentId) {
             `https://api.mercadolibre.com/shipments/${shipmentId}`,
             { headers: { Authorization: `Bearer ${accessToken}` } }
         );
-        if (!response.ok) return { address: null, logistic_type: null };
+        if (!response.ok) return { address: null, logistic_type: null, shipment_status: null };
         const data = await response.json();
         const addr = data.receiver_address;
         const address = addr ? {
@@ -89,9 +114,9 @@ async function fetchMLShipmentData(accessToken, shipmentId) {
             latitude: addr.latitude || undefined,
             longitude: addr.longitude || undefined,
         } : null;
-        return { address, logistic_type: data.logistic_type || null };
+        return { address, logistic_type: data.logistic_type || null, shipment_status: data.status || null };
     } catch {
-        return { address: null, logistic_type: null };
+        return { address: null, logistic_type: null, shipment_status: null };
     }
 }
 
@@ -217,18 +242,23 @@ export default async function handler(req, res) {
             allOrders.map(async (order) => {
                 const normalized = normalizeMLOrder(order);
                 if (normalized.shipping_id) {
-                    const { address, logistic_type } = await fetchMLShipmentData(
+                    const { address, logistic_type, shipment_status } = await fetchMLShipmentData(
                         accessToken,
                         normalized.shipping_id
                     );
                     normalized.shipping_address = address;
                     normalized.logistic_type = logistic_type;
+                    normalized.status = mapMLStatus(normalized._mlOrderStatus, shipment_status);
                     // FULL: stock gestionado por ML, no tiene store propia
                     if (logistic_type === 'fulfillment' && !normalized.store_id) {
                         normalized.store_name = 'FULL';
                         normalized.store_id = 'full';
                     }
+                } else {
+                    // Sin envío: el status solo depende del estado de la orden
+                    normalized.status = mapMLStatus(normalized._mlOrderStatus, null);
                 }
+                delete normalized._mlOrderStatus;
                 return normalized;
             })
         );
