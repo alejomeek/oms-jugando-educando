@@ -38,6 +38,8 @@ export interface Database {
           tags: string[] | null
           notes: string | null
           halcon_serial: number | null
+          store_id: string | null
+          store_name: string | null
         }
         Insert: {
           id?: string
@@ -60,6 +62,8 @@ export interface Database {
           tags?: string[] | null
           notes?: string | null
           halcon_serial?: number | null
+          store_id?: string | null
+          store_name?: string | null
         }
         Update: {
           id?: string
@@ -82,6 +86,8 @@ export interface Database {
           tags?: string[] | null
           notes?: string | null
           halcon_serial?: number | null
+          store_id?: string | null
+          store_name?: string | null
         }
       }
       order_status_history: {

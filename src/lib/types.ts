@@ -31,6 +31,8 @@ export interface Order {
   notes?: string | null;
   logistic_type?: string | null;  // Solo ML: 'fulfillment' | 'self_service' | 'cross_docking'
   halcon_serial?: number | null;  // Serial asignado en Halcon al migrar; null = no migrado
+  store_id?: string | null;       // Solo ML: ID de bodega de origen
+  store_name?: string | null;     // Solo ML: Nombre de bodega de origen
   // Presente solo en packs de ML agrupados (no viene de la DB)
   subOrders?: Order[];
 }
@@ -99,6 +101,7 @@ export interface OrderStatusHistory {
 export interface OrderFilters {
   status?: OrderStatus | null;
   channel?: OrderChannel | null;
+  store?: string | null;
   search?: string;
   page?: number;
   pageSize?: number;

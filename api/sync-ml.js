@@ -6,7 +6,17 @@
 // UTILIDADES
 // ============================================
 
+const ML_STORE_MAP = {
+    '76644462': 'MEDELLÍN',
+    '71348293': 'AVENIDA 19',
+    '71843625': 'CEDI',
+    '71348291': 'BULEVAR',
+};
+
 function normalizeMLOrder(mlOrder) {
+    const rawStoreId = mlOrder.order_items[0]?.stock?.store_id?.toString() || null;
+    const storeName = rawStoreId ? (ML_STORE_MAP[rawStoreId] || null) : null;
+
     return {
         order_id: mlOrder.id.toString(),
         channel: 'mercadolibre',
@@ -24,6 +34,8 @@ function normalizeMLOrder(mlOrder) {
             nickname: mlOrder.buyer.nickname,
         },
         shipping_address: null,
+        store_id: rawStoreId,
+        store_name: storeName,
         items: mlOrder.order_items.map((item) => ({
             sku: item.item.seller_sku,
             title: item.item.title,
@@ -211,6 +223,11 @@ export default async function handler(req, res) {
                     );
                     normalized.shipping_address = address;
                     normalized.logistic_type = logistic_type;
+                    // FULL: stock gestionado por ML, no tiene store propia
+                    if (logistic_type === 'fulfillment' && !normalized.store_id) {
+                        normalized.store_name = 'FULL';
+                        normalized.store_id = 'full';
+                    }
                 }
                 return normalized;
             })

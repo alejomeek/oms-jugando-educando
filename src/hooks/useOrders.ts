@@ -28,6 +28,10 @@ export function useOrders(filters?: OrderFilters) {
         query = query.eq('channel', filters.channel);
       }
 
+      if (filters?.store) {
+        query = query.eq('store_name', filters.store);
+      }
+
       if (filters?.search) {
         query = query.or(
           `order_id.ilike.%${filters.search}%,customer->>nickname.ilike.%${filters.search}%,customer->>email.ilike.%${filters.search}%`

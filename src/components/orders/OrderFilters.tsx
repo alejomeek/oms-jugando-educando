@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ML_STORE_NAMES } from '@/lib/constants';
 import type { OrderFilters as OrderFiltersType } from '@/lib/types';
 
 export interface OrderFiltersProps {
@@ -34,11 +35,18 @@ export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
     });
   };
 
-  const handleClearFilters = () => {
-    onFiltersChange({ search: '', status: null, channel: null });
+  const handleStoreChange = (store: string) => {
+    onFiltersChange({
+      ...filters,
+      store: store === 'all' ? null : store,
+    });
   };
 
-  const hasActiveFilters = filters.search || filters.status || filters.channel;
+  const handleClearFilters = () => {
+    onFiltersChange({ search: '', status: null, channel: null, store: null });
+  };
+
+  const hasActiveFilters = filters.search || filters.status || filters.channel || filters.store;
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -63,6 +71,21 @@ export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
           <SelectItem value="all">Todos los canales</SelectItem>
           <SelectItem value="mercadolibre">Mercado Libre</SelectItem>
           <SelectItem value="wix">Wix</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={filters.store || 'all'}
+        onValueChange={handleStoreChange}
+      >
+        <SelectTrigger className="w-full sm:w-40">
+          <SelectValue placeholder="Todas las tiendas" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Todas las tiendas</SelectItem>
+          {ML_STORE_NAMES.map((name) => (
+            <SelectItem key={name} value={name}>{name}</SelectItem>
+          ))}
         </SelectContent>
       </Select>
 
