@@ -33,6 +33,8 @@ export interface Order {
   halcon_serial?: number | null;  // Serial asignado en Halcon al migrar; null = no migrado
   store_id?: string | null;       // Solo ML: ID de bodega de origen
   store_name?: string | null;     // Solo ML: Nombre de bodega de origen
+  remision_tbc?: string | null;       // Solo ML: Número de remisión TBC asignado
+  fecha_remision_tbc?: string | null; // Solo ML: Fecha de la remisión TBC (YYYY-MM-DD)
   // Presente solo en packs de ML agrupados (no viene de la DB)
   subOrders?: Order[];
 }

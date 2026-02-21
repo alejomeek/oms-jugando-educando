@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ImageOff, Download, ArrowRightLeft, CheckCircle2 } from 'lucide-react';
+import { ImageOff, Download, ArrowRightLeft, CheckCircle2, FileText, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/services/supabase';
@@ -24,6 +24,7 @@ import { ChannelBadge } from './ChannelBadge';
 import { LogisticTypeBadge } from './LogisticTypeBadge';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { printWixLabel } from '@/services/labelPrinter';
+import { useAssignRemision } from '@/hooks/useAssignRemision';
 import type { Order, OrderStatus } from '@/lib/types';
 
 export interface OrderDetailModalProps {
@@ -40,12 +41,32 @@ export function OrderDetailModal({
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | ''>('');
   const [migratingToHalcon, setMigratingToHalcon] = useState(false);
   const [halconSerial, setHalconSerial] = useState<number | null>(order?.halcon_serial ?? null);
+
+  // Remisión TBC
+  const [remisionAssigned, setRemisionAssigned] = useState<{ remision: string; fecha: string } | null>(
+    order?.remision_tbc ? { remision: order.remision_tbc, fecha: order.fecha_remision_tbc ?? '' } : null,
+  );
+  const [remisionInput, setRemisionInput] = useState('');
+  const [fechaInput, setFechaInput] = useState(() => new Date().toISOString().split('T')[0]);
+  const [editingRemision, setEditingRemision] = useState(false);
+  const assignRemision = useAssignRemision();
+
   const queryClient = useQueryClient();
 
   useEffect(() => {
     if (order) {
       setSelectedStatus(order.status);
       setHalconSerial(order.halcon_serial ?? null);
+      if (order.remision_tbc) {
+        setRemisionAssigned({ remision: order.remision_tbc, fecha: order.fecha_remision_tbc ?? '' });
+        setRemisionInput(order.remision_tbc);
+        setFechaInput(order.fecha_remision_tbc ?? new Date().toISOString().split('T')[0]);
+      } else {
+        setRemisionAssigned(null);
+        setRemisionInput('');
+        setFechaInput(new Date().toISOString().split('T')[0]);
+      }
+      setEditingRemision(false);
     }
   }, [order]);
 
@@ -107,6 +128,22 @@ export function OrderDetailModal({
     } finally {
       setMigratingToHalcon(false);
     }
+  };
+
+  const handleSaveRemision = () => {
+    if (!remisionInput.trim()) {
+      toast.error('Ingresa un número de remisión');
+      return;
+    }
+    assignRemision.mutate(
+      { order, remision: remisionInput.trim(), fecha: fechaInput },
+      {
+        onSuccess: () => {
+          setRemisionAssigned({ remision: remisionInput.trim(), fecha: fechaInput });
+          setEditingRemision(false);
+        },
+      },
+    );
   };
 
   return (
@@ -380,6 +417,101 @@ export function OrderDetailModal({
               </Button>
             </div>
           </section>
+
+          {/* Remisión TBC — solo órdenes ML */}
+          {order.channel === 'mercadolibre' && (
+            <>
+              <Separator />
+              <section>
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Remisión TBC
+                </h3>
+
+                {remisionAssigned && !editingRemision ? (
+                  /* Remisión ya asignada */
+                  <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <FileText className="size-4 shrink-0 text-green-600" />
+                      <div>
+                        <p className="text-sm font-semibold text-green-800">
+                          #{remisionAssigned.remision}
+                        </p>
+                        {remisionAssigned.fecha && (
+                          <p className="text-xs text-green-600">
+                            {formatDate(remisionAssigned.fecha, 'dd/MM/yyyy')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setRemisionInput(remisionAssigned.remision);
+                        setFechaInput(remisionAssigned.fecha || new Date().toISOString().split('T')[0]);
+                        setEditingRemision(true);
+                      }}
+                    >
+                      <Pencil className="size-3.5 mr-1" />
+                      Editar
+                    </Button>
+                  </div>
+                ) : (
+                  /* Formulario de asignación */
+                  <div className="space-y-3">
+                    {isPack && (
+                      <p className="text-xs text-muted-foreground">
+                        Se aplicará a las {order.subOrders!.length} órdenes del pack
+                      </p>
+                    )}
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <label className="mb-1 block text-xs text-muted-foreground">Número</label>
+                        <input
+                          type="text"
+                          value={remisionInput}
+                          onChange={e => setRemisionInput(e.target.value)}
+                          placeholder="Ej: 12345"
+                          className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs text-muted-foreground">Fecha</label>
+                        <input
+                          type="date"
+                          value={fechaInput}
+                          onChange={e => setFechaInput(e.target.value)}
+                          className="rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        disabled={assignRemision.isPending || !remisionInput.trim()}
+                        onClick={handleSaveRemision}
+                      >
+                        {assignRemision.isPending ? 'Guardando...' : 'Guardar'}
+                      </Button>
+                    </div>
+                    {editingRemision && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditingRemision(false);
+                          if (remisionAssigned) {
+                            setRemisionInput(remisionAssigned.remision);
+                            setFechaInput(remisionAssigned.fecha);
+                          }
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </section>
+            </>
+          )}
         </div>
       </SheetContent>
     </Sheet>
