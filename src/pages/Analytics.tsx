@@ -769,8 +769,8 @@ export function Analytics() {
                           <YAxis allowDecimals={false} />
                           <Tooltip formatter={(value, name) => [`${value} pedidos`, name as string]} />
                           <Legend />
-                          <Bar dataKey="flex" name="Flex" fill={LOGISTIC_COLORS.self_service} radius={[4, 4, 0, 0]} />
                           <Bar dataKey="colecta" name="Colecta" fill={LOGISTIC_COLORS.cross_docking} radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="flex" name="Flex" fill={LOGISTIC_COLORS.self_service} radius={[4, 4, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
