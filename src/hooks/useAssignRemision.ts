@@ -15,15 +15,16 @@ export function useAssignRemision() {
 
   return useMutation({
     mutationFn: async ({ order, remision, fecha }: AssignRemisionParams) => {
-      const isPack = (order.subOrders?.length ?? 0) > 1;
+      // Si la orden tiene subOrders (pack agrupado), usarlos siempre —
+      // incluso si solo hay 1 visible — porque el pack tiene order_id = pack_id,
+      // no el order_id real de la sub-orden.
+      const ordersToProcess = (order.subOrders?.length ?? 0) > 0
+        ? order.subOrders!
+        : [order];
 
-      // IDs de ML (string) para filtrar en ambas DBs
-      const mlOrderIds = isPack
-        ? order.subOrders!.map(s => s.order_id)
-        : [order.order_id];
+      const mlOrderIds = ordersToProcess.map(o => o.order_id);
 
-      // 1. Actualizar OMS orders (filtrar por order_id, no por id,
-      //    porque los packs agrupados usan pack_id como id en el frontend)
+      // 1. Actualizar OMS orders
       const { error: omsError } = await supabase
         .from('orders')
         .update({ remision_tbc: remision, fecha_remision_tbc: fecha })
@@ -31,17 +32,34 @@ export function useAssignRemision() {
 
       if (omsError) throw new Error(`Error OMS: ${omsError.message}`);
 
-      // 2. Upsert en meli_reconciliation ml_orders (crea la orden si no existe)
+      // 2. Upsert completo en meli_reconciliation con todos los datos de la orden.
+      //    Así funciona aunque el usuario nunca haya abierto la app Streamlit.
       const recon = getReconSupabase();
       const results = await Promise.all(
-        mlOrderIds.map(order_id =>
-          recon
-            .from('ml_orders')
-            .upsert(
-              { order_id, remision, fecha_remision: fecha, usuario: 'OMS' },
-              { onConflict: 'order_id' },
-            ),
-        ),
+        ordersToProcess.map(o => {
+          const productos = o.items.map(item => ({
+            sku: item.sku,
+            titulo: item.title,
+            cantidad: item.quantity,
+            precio_unitario: item.unitPrice,
+          }));
+
+          return recon.from('ml_orders').upsert(
+            {
+              order_id: o.order_id,
+              pack_id: o.pack_id ?? null,
+              shipping_id: o.shipping_id ?? null,
+              fecha_orden: o.order_date,
+              total: o.total_amount,
+              productos: JSON.stringify(productos),
+              buyer_nickname: o.customer.nickname ?? null,
+              remision,
+              fecha_remision: fecha,
+              usuario: 'OMS',
+            },
+            { onConflict: 'order_id' },
+          );
+        }),
       );
 
       const reconError = results.find(r => r.error);
