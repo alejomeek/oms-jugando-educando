@@ -364,14 +364,36 @@ export function Analytics() {
       .sort((a, b) => b.orderCount - a.orderCount);
   }, [filteredOrders]);
 
-  const logisticsStatusData = useMemo(() => logisticsData.map(lt => ({
-    name: lt.name,
-    entregado: lt.statuses['entregado'] || 0,
-    enviado: lt.statuses['enviado'] || 0,
-    preparando: lt.statuses['preparando'] || 0,
-    nuevo: lt.statuses['nuevo'] || 0,
-    cancelado: lt.statuses['cancelado'] || 0,
-  })), [logisticsData]);
+  // Flex vs Colecta por tienda física (excluye FULL que siempre es fulfillment)
+  const storeLogisticsData = useMemo(() => {
+    const PHYSICAL_STORES = ['MEDELLÍN', 'AVENIDA 19', 'CEDI', 'BULEVAR'];
+    const seenEvents = new Set<string>();
+    const map = new Map<string, { flex: number; colecta: number }>();
+
+    for (const order of filteredOrders) {
+      if (!order.store_name || !PHYSICAL_STORES.includes(order.store_name)) continue;
+      const lt = order.logistic_type;
+      if (lt !== 'self_service' && lt !== 'cross_docking') continue;
+
+      const eventKey = order.pack_id ? `pack:${order.pack_id}` : `order:${order.id}`;
+      const isFirst = !seenEvents.has(eventKey);
+      if (isFirst) seenEvents.add(eventKey);
+      if (!isFirst) continue;
+
+      const e = map.get(order.store_name) ?? { flex: 0, colecta: 0 };
+      if (lt === 'self_service') e.flex++;
+      else e.colecta++;
+      map.set(order.store_name, e);
+    }
+
+    return PHYSICAL_STORES
+      .filter(s => map.has(s))
+      .map(s => ({
+        store: s,
+        flex: map.get(s)!.flex,
+        colecta: map.get(s)!.colecta,
+      }));
+  }, [filteredOrders]);
 
   // ── Tiendas ML ───────────────────────────────────────────────────────────────
   const storeData = useMemo(() => {
@@ -736,27 +758,24 @@ export function Analytics() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Estados por Modalidad</CardTitle>
+                    <CardTitle>Flex vs Colecta por Tienda</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {logisticsStatusData.length > 0 ? (
+                    {storeLogisticsData.length > 0 ? (
                       <ResponsiveContainer width="100%" height={280}>
-                        <BarChart data={logisticsStatusData}>
+                        <BarChart data={storeLogisticsData} margin={{ left: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
+                          <XAxis dataKey="store" tick={{ fontSize: 12 }} />
                           <YAxis allowDecimals={false} />
-                          <Tooltip />
+                          <Tooltip formatter={(value, name) => [`${value} pedidos`, name as string]} />
                           <Legend />
-                          <Bar dataKey="entregado" stackId="s" fill={STATUS_COLORS.entregado} name="Entregado" />
-                          <Bar dataKey="enviado" stackId="s" fill={STATUS_COLORS.enviado} name="Enviado" />
-                          <Bar dataKey="preparando" stackId="s" fill={STATUS_COLORS.preparando} name="Preparando" />
-                          <Bar dataKey="nuevo" stackId="s" fill={STATUS_COLORS.nuevo} name="Nuevo" />
-                          <Bar dataKey="cancelado" stackId="s" fill={STATUS_COLORS.cancelado} name="Cancelado" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="flex" name="Flex" fill={LOGISTIC_COLORS.self_service} radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="colecta" name="Colecta" fill={LOGISTIC_COLORS.cross_docking} radius={[4, 4, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
                       <div className="flex h-[280px] items-center justify-center text-muted-foreground">
-                        Sin datos logísticos
+                        Sin datos de tienda
                       </div>
                     )}
                   </CardContent>
