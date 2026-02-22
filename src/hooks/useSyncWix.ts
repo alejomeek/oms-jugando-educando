@@ -85,12 +85,38 @@ export function useSyncWix() {
         return { inserted: 0, updated: 0, total: 0, hasMore: false };
       }
 
-      // 3. Upsert en Supabase (insert o update si ya existe)
+      // 3. Preservar cambios manuales de status:
+      //    Consultar los estados actuales de las órdenes que ya existen en la DB.
+      //    El sync solo sobreescribe el status si Wix reporta un estado terminal
+      //    (entregado / cancelado). De lo contrario se conserva el status manual.
+      const incomingIds = normalizedOrders.map(o => o.order_id);
+      const { data: existingOrders } = await supabase
+        .from('orders')
+        .select('order_id, status')
+        .eq('channel', 'wix')
+        .in('order_id', incomingIds);
+
+      const existingStatusMap = new Map(
+        (existingOrders ?? []).map(o => [o.order_id, o.status])
+      );
+
+      const TERMINAL_STATUSES = ['entregado', 'cancelado'];
+
+      const ordersToUpsert = normalizedOrders.map(o => {
+        const currentStatus = existingStatusMap.get(o.order_id);
+        if (currentStatus && !TERMINAL_STATUSES.includes(o.status)) {
+          // Orden ya existe y el nuevo status no es terminal → preservar manual
+          return { ...o, status: currentStatus };
+        }
+        return o; // Orden nueva, o Wix dice entregado/cancelado → usar status de Wix
+      });
+
+      // 4. Upsert en Supabase (insert o update si ya existe)
       const { error, count } = await supabase
         .from('orders')
-        .upsert(normalizedOrders, {
+        .upsert(ordersToUpsert, {
           onConflict: 'channel,order_id',
-          ignoreDuplicates: false, // Actualizar si ya existe
+          ignoreDuplicates: false,
         });
 
       if (error) {
