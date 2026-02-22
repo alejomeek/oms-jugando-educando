@@ -52,7 +52,7 @@ function mapMLStatus(mlOrderStatus, shipmentStatus, shipmentSubstatus) {
         case 'returned':      return 'cancelado';
         case 'handling':      return 'preparando';
         case 'ready_to_ship':
-            return (shipmentSubstatus === 'printed' || shipmentSubstatus === 'ready_for_pickup') ? 'preparando' : 'nuevo';
+            return (shipmentSubstatus === 'printed' || shipmentSubstatus === 'ready_for_pickup' || shipmentSubstatus === 'packed') ? 'preparando' : 'nuevo';
         default:              return 'nuevo';
     }
 }
