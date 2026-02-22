@@ -110,10 +110,8 @@ export default async function handler(req, res) {
                             limit,
                             cursor: currentCursor,
                         },
-                        // Solo importar órdenes pagadas
-                        filter: {
-                            paymentStatus: 'PAID',
-                        },
+                        // Sin filtro de paymentStatus: incluye PAID, UNPAID (transferencia,
+                        // link de pago, etc.) y cualquier otro medio de pago
                         sort: [{ fieldName: 'createdDate', order: 'DESC' }],
                     },
                 }),
@@ -145,9 +143,9 @@ export default async function handler(req, res) {
                 allOrders.push(...orders);
             }
 
-            currentCursor = data.pagingMetadata?.cursors?.next || null;
+            currentCursor = data.metadata?.cursors?.next || null;
 
-            if (!currentCursor || orders.length < limit) {
+            if (!currentCursor || !data.metadata?.hasNext) {
                 keepGoing = false;
             } else if (allOrders.length >= 1000) {
                 console.warn(`⏳ [WIX] Límite de seguridad alcanzado (1000 órdenes).`);
