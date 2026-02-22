@@ -42,7 +42,7 @@ const DELAY_MS  = 250; // pausa entre lotes
 
 // ─── Mapeo de estados (igual que en api/sync-ml.js) ──────────────────────────
 
-function mapMLStatus(mlOrderStatus, shipmentStatus) {
+function mapMLStatus(mlOrderStatus, shipmentStatus, shipmentSubstatus) {
     if (mlOrderStatus === 'cancelled') return 'cancelado';
 
     switch (shipmentStatus) {
@@ -51,7 +51,8 @@ function mapMLStatus(mlOrderStatus, shipmentStatus) {
         case 'cancelled':
         case 'returned':      return 'cancelado';
         case 'handling':      return 'preparando';
-        case 'ready_to_ship': return 'nuevo';
+        case 'ready_to_ship':
+            return shipmentSubstatus === 'printed' ? 'preparando' : 'nuevo';
         default:              return 'nuevo';
     }
 }
@@ -100,7 +101,7 @@ async function fetchMLShipmentStatus(shipmentId, retry = true) {
     }
     if (!res.ok) throw new Error(`ML /shipments ${res.status}: ${await res.text()}`);
     const data = await res.json();
-    return data.status; // 'delivered', 'shipped', etc.
+    return { status: data.status, substatus: data.substatus || null };
 }
 
 // ─── Supabase ─────────────────────────────────────────────────────────────────
@@ -165,12 +166,13 @@ async function processOrders(orders, counters) {
 
                 // 2. Estado del envío (si aplica)
                 let shipmentStatus = null;
+                let shipmentSubstatus = null;
                 if (mlOrderStatus !== 'cancelled' && shipping_id) {
-                    shipmentStatus = await fetchMLShipmentStatus(shipping_id);
+                    ({ status: shipmentStatus, substatus: shipmentSubstatus } = await fetchMLShipmentStatus(shipping_id));
                 }
 
                 // 3. Calcular nuevo estado OMS
-                const newStatus = mapMLStatus(mlOrderStatus, shipmentStatus);
+                const newStatus = mapMLStatus(mlOrderStatus, shipmentStatus, shipmentSubstatus);
 
                 // 4. Actualizar solo si cambió
                 if (newStatus !== currentStatus) {

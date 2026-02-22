@@ -21,7 +21,7 @@ const ML_STORE_MAP = {
  * El estado del envío tiene precedencia sobre el de la orden,
  * excepto cuando la orden está cancelada.
  */
-function mapMLStatus(mlOrderStatus, shipmentStatus) {
+function mapMLStatus(mlOrderStatus, shipmentStatus, shipmentSubstatus) {
     if (mlOrderStatus === 'cancelled') return 'cancelado';
 
     switch (shipmentStatus) {
@@ -29,8 +29,11 @@ function mapMLStatus(mlOrderStatus, shipmentStatus) {
         case 'shipped':      return 'enviado';
         case 'cancelled':
         case 'returned':     return 'cancelado';
-        case 'handling':      return 'preparando';
-        case 'ready_to_ship': return 'nuevo';
+        case 'handling':     return 'preparando';
+        case 'ready_to_ship':
+            // printed = etiqueta impresa, esperando courier → preparando
+            // ready_to_print = sin imprimir aún → nuevo
+            return shipmentSubstatus === 'printed' ? 'preparando' : 'nuevo';
         default:             return 'nuevo';
     }
 }
@@ -114,9 +117,9 @@ async function fetchMLShipmentData(accessToken, shipmentId) {
             latitude: addr.latitude || undefined,
             longitude: addr.longitude || undefined,
         } : null;
-        return { address, logistic_type: data.logistic_type || null, shipment_status: data.status || null };
+        return { address, logistic_type: data.logistic_type || null, shipment_status: data.status || null, shipment_substatus: data.substatus || null };
     } catch {
-        return { address: null, logistic_type: null, shipment_status: null };
+        return { address: null, logistic_type: null, shipment_status: null, shipment_substatus: null };
     }
 }
 
@@ -242,13 +245,13 @@ export default async function handler(req, res) {
             allOrders.map(async (order) => {
                 const normalized = normalizeMLOrder(order);
                 if (normalized.shipping_id) {
-                    const { address, logistic_type, shipment_status } = await fetchMLShipmentData(
+                    const { address, logistic_type, shipment_status, shipment_substatus } = await fetchMLShipmentData(
                         accessToken,
                         normalized.shipping_id
                     );
                     normalized.shipping_address = address;
                     normalized.logistic_type = logistic_type;
-                    normalized.status = mapMLStatus(normalized._mlOrderStatus, shipment_status);
+                    normalized.status = mapMLStatus(normalized._mlOrderStatus, shipment_status, shipment_substatus);
                     // FULL: stock gestionado por ML, no tiene store propia
                     if (logistic_type === 'fulfillment' && !normalized.store_id) {
                         normalized.store_name = 'FULL';
