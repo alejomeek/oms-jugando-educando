@@ -50,8 +50,8 @@ function mapMLStatus(mlOrderStatus, shipmentStatus) {
         case 'shipped':       return 'enviado';
         case 'cancelled':
         case 'returned':      return 'cancelado';
-        case 'handling':
-        case 'ready_to_ship': return 'preparando';
+        case 'handling':      return 'preparando';
+        case 'ready_to_ship': return 'nuevo';
         default:              return 'nuevo';
     }
 }
