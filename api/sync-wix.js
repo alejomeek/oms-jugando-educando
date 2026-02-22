@@ -12,7 +12,11 @@ function normalizeWixOrder(wixOrder) {
         channel: 'wix',
         pack_id: null,
         shipping_id: null,
-        status: wixOrder.fulfillmentStatus === 'FULFILLED' ? 'entregado' : 'nuevo',
+        status: wixOrder.status === 'CANCELED'
+            ? 'cancelado'
+            : wixOrder.fulfillmentStatus === 'FULFILLED'
+                ? 'entregado'
+                : 'nuevo',
         order_date: wixOrder.createdDate || wixOrder._createdDate || new Date().toISOString(),
         closed_date: wixOrder.updatedDate || wixOrder._updatedDate || wixOrder.createdDate || wixOrder._createdDate || null,
         total_amount: parseFloat(wixOrder.priceSummary.total?.amount || wixOrder.priceSummary.total || 0),

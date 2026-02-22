@@ -77,7 +77,17 @@ export function useSyncWix() {
         throw new Error('Error al sincronizar con Wix');
       }
 
-      const { orders: normalizedOrders, nextCursor, hasMore } = data;
+      type WixNormalizedOrder = {
+        order_id: string;
+        status: string;
+        [key: string]: unknown;
+      };
+
+      const { orders: normalizedOrders, nextCursor, hasMore } = data as {
+        orders: WixNormalizedOrder[];
+        nextCursor: string | null;
+        hasMore: boolean;
+      };
 
       console.log(`Obtenidas ${normalizedOrders.length} órdenes de Wix`);
 
@@ -97,7 +107,7 @@ export function useSyncWix() {
         .in('order_id', incomingIds);
 
       const existingStatusMap = new Map(
-        (existingOrders ?? []).map(o => [o.order_id, o.status])
+        (existingOrders ?? []).map((o: { order_id: string; status: string | null }) => [o.order_id, o.status])
       );
 
       const TERMINAL_STATUSES = ['entregado', 'cancelado'];
