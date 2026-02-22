@@ -32,8 +32,9 @@ function mapMLStatus(mlOrderStatus, shipmentStatus, shipmentSubstatus) {
         case 'handling':     return 'preparando';
         case 'ready_to_ship':
             // printed = etiqueta impresa, esperando courier → preparando
+            // ready_for_pickup = courier asignado, viene a recoger → preparando
             // ready_to_print = sin imprimir aún → nuevo
-            return shipmentSubstatus === 'printed' ? 'preparando' : 'nuevo';
+            return (shipmentSubstatus === 'printed' || shipmentSubstatus === 'ready_for_pickup') ? 'preparando' : 'nuevo';
         default:             return 'nuevo';
     }
 }
