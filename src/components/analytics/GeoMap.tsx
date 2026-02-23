@@ -31,6 +31,17 @@ function MapController({ center }: { center: [number, number] | null }) {
     return null;
 }
 
+// Forces Leaflet to recalculate size after fullscreen toggle
+function MapResizer({ fullscreen }: { fullscreen: boolean }) {
+    const map = useMap();
+    useEffect(() => {
+        // Small delay lets the CSS transition finish before invalidating
+        const t = setTimeout(() => map.invalidateSize(), 50);
+        return () => clearTimeout(t);
+    }, [fullscreen, map]);
+    return null;
+}
+
 export function GeoMap({
     heatmapData,
     selectedLocation
@@ -96,6 +107,7 @@ export function GeoMap({
                 </MarkerClusterGroup>
 
                 <MapController center={selectedLocation} />
+                <MapResizer fullscreen={fullscreen} />
             </MapContainer>
         </div>
     );
