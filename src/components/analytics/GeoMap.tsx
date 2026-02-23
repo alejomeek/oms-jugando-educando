@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { MapContainer, TileLayer, Popup, useMap, Marker } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
@@ -34,16 +35,40 @@ export function GeoMap({
     heatmapData,
     selectedLocation
 }: {
-    // heatmapData is now a list of raw order points [lat, lng, weight]
     heatmapData: Array<[number, number, number]>,
     topCities?: GeoStats[],
     selectedLocation: [number, number] | null
 }) {
-    const defaultCenter: [number, number] = [4.5709, -74.2973]; // Centro de Colombia aproximado
+    const defaultCenter: [number, number] = [4.5709, -74.2973];
     const defaultZoom = 5;
+    const [fullscreen, setFullscreen] = useState(false);
+
+    // Cerrar con Escape
+    useEffect(() => {
+        if (!fullscreen) return;
+        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setFullscreen(false); };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [fullscreen]);
+
+    const containerClass = fullscreen
+        ? 'fixed inset-0 z-[9999] bg-background'
+        : 'h-full min-h-[400px] w-full z-0 relative rounded-md overflow-hidden bg-muted/20';
 
     return (
-        <div className="h-full min-h-[400px] w-full z-0 relative rounded-md overflow-hidden bg-muted/20">
+        <div className={containerClass}>
+            {/* Botón fullscreen */}
+            <button
+                onClick={() => setFullscreen(f => !f)}
+                className="absolute top-2 right-2 z-[1000] flex items-center justify-center rounded bg-white/90 p-1.5 shadow hover:bg-white transition-colors"
+                title={fullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+            >
+                {fullscreen
+                    ? <Minimize2 className="size-4 text-slate-700" />
+                    : <Maximize2 className="size-4 text-slate-700" />
+                }
+            </button>
+
             <MapContainer
                 center={defaultCenter}
                 zoom={defaultZoom}
@@ -55,7 +80,6 @@ export function GeoMap({
                     url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                 />
 
-                {/* Marker Clustering Replaces the Heatmap */}
                 <MarkerClusterGroup
                     chunkedLoading
                     maxClusterRadius={40}
