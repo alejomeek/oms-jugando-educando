@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -55,6 +56,16 @@ function orderRadius(count: number, max: number): number {
   return 8 + 32 * Math.sqrt(count / Math.max(1, max));
 }
 
+// Forces Leaflet to recalculate size after fullscreen toggle
+function MapResizer({ fullscreen }: { fullscreen: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    const t = setTimeout(() => map.invalidateSize(), 50);
+    return () => clearTimeout(t);
+  }, [fullscreen, map]);
+  return null;
+}
+
 // ── Pulsing rings layer (drawn below circle markers via custom pane) ───────────
 
 function PulseLayer({ cities }: { cities: MLCityData[] }) {
@@ -88,9 +99,9 @@ function PulseLayer({ cities }: { cities: MLCityData[] }) {
       const icon = L.divIcon({
         className: '',
         html: `<div style="position:relative;width:${W}px;height:${W}px;">
-          <div class="ml-ring-1" style="position:absolute;top:${off}px;left:${off}px;width:${S}px;height:${S}px;border-radius:50%;border:2.5px solid #FFD600;box-sizing:border-box;"></div>
-          <div class="ml-ring-2" style="position:absolute;top:${off}px;left:${off}px;width:${S}px;height:${S}px;border-radius:50%;border:2px solid #FFD600;box-sizing:border-box;"></div>
-          <div class="ml-ring-3" style="position:absolute;top:${off}px;left:${off}px;width:${S}px;height:${S}px;border-radius:50%;border:1.5px solid #FFEA00;box-sizing:border-box;"></div>
+          <div class="ml-ring-1" style="position:absolute;top:${off}px;left:${off}px;width:${S}px;height:${S}px;border-radius:50%;border:2.5px solid #FF6D00;box-sizing:border-box;"></div>
+          <div class="ml-ring-2" style="position:absolute;top:${off}px;left:${off}px;width:${S}px;height:${S}px;border-radius:50%;border:2px solid #FF6D00;box-sizing:border-box;"></div>
+          <div class="ml-ring-3" style="position:absolute;top:${off}px;left:${off}px;width:${S}px;height:${S}px;border-radius:50%;border:1.5px solid #FF9800;box-sizing:border-box;"></div>
         </div>`,
         iconSize: [W, W],
         iconAnchor: [W / 2, W / 2],
@@ -118,6 +129,15 @@ function PulseLayer({ cities }: { cities: MLCityData[] }) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function MLRevenueMap({ cities }: { cities: MLCityData[] }) {
+  const [fullscreen, setFullscreen] = useState(false);
+
+  useEffect(() => {
+    if (!fullscreen) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setFullscreen(false); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [fullscreen]);
+
   if (cities.length === 0) {
     return (
       <div className="flex h-full min-h-[420px] items-center justify-center rounded-md bg-muted/20 text-sm text-muted-foreground">
@@ -133,9 +153,12 @@ export function MLRevenueMap({ cities }: { cities: MLCityData[] }) {
   const totalOrders = cities.reduce((s, c) => s + c.orderCount, 0);
 
   const center: [number, number] = [4.5709, -74.2973];
+  const containerClass = fullscreen
+    ? 'fixed inset-0 z-[9999] bg-background'
+    : 'relative h-full min-h-[420px] w-full overflow-hidden rounded-md';
 
   return (
-    <div className="relative h-full min-h-[420px] w-full overflow-hidden rounded-md">
+    <div className={containerClass}>
       {/* Stats badge ─────────────────────────────────────────────────────── */}
       <div
         className="absolute left-3 top-3 z-[1000] space-y-0.5 rounded-md px-3 py-2 text-xs text-white"
@@ -152,6 +175,18 @@ export function MLRevenueMap({ cities }: { cities: MLCityData[] }) {
           {cities.length} ciudades · {totalOrders} pedidos
         </p>
       </div>
+
+      {/* Fullscreen button ──────────────────────────────────────────────── */}
+      <button
+        onClick={() => setFullscreen(f => !f)}
+        className="absolute top-2 right-2 z-[1000] flex items-center justify-center rounded bg-white/90 p-1.5 shadow hover:bg-white transition-colors"
+        title={fullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+      >
+        {fullscreen
+          ? <Minimize2 className="size-4 text-slate-700" />
+          : <Maximize2 className="size-4 text-slate-700" />
+        }
+      </button>
 
       {/* Color + size legend ─────────────────────────────────────────────── */}
       <div
@@ -181,7 +216,7 @@ export function MLRevenueMap({ cities }: { cities: MLCityData[] }) {
           <span>= pedidos</span>
         </div>
         <div className="mt-1 flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-          <div className="h-3 w-3 rounded-full" style={{ border: '1.5px solid #FFD600' }} />
+          <div className="h-3 w-3 rounded-full" style={{ border: '1.5px solid #FF6D00' }} />
           <span>= top 5 ingresos</span>
         </div>
       </div>
@@ -321,6 +356,7 @@ export function MLRevenueMap({ cities }: { cities: MLCityData[] }) {
             </CircleMarker>
           );
         })}
+        <MapResizer fullscreen={fullscreen} />
       </MapContainer>
     </div>
   );
