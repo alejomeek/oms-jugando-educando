@@ -96,7 +96,7 @@ export function useCustomers(orders: Order[]): UseCustomersResult {
       } else {
         const displayName = c.source === 'wix'
           ? ([c.firstName, c.lastName].filter(Boolean).join(' ') || c.email || c.id)
-          : (c.nickname || `ML-${c.id}`);
+          : (order.shipping_address?.receiverName || c.nickname || `ML-${c.id}`);
         profileMap.set(key, {
           channel: c.source,
           displayName,
