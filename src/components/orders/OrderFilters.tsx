@@ -1,4 +1,4 @@
-import { Search, X } from 'lucide-react';
+import { ChevronDown, Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,6 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ML_STORE_NAMES } from '@/lib/constants';
 import type { OrderFilters as OrderFiltersType } from '@/lib/types';
 
@@ -35,18 +41,26 @@ export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
     });
   };
 
-  const handleStoreChange = (store: string) => {
-    onFiltersChange({
-      ...filters,
-      store: store === 'all' ? null : store,
-    });
+  const handleStoreToggle = (store: string) => {
+    const current = filters.store ?? [];
+    const updated = current.includes(store)
+      ? current.filter(s => s !== store)
+      : [...current, store];
+    onFiltersChange({ ...filters, store: updated.length > 0 ? updated : null });
+  };
+
+  const storeLabel = () => {
+    const selected = filters.store ?? [];
+    if (selected.length === 0) return 'Todas las tiendas';
+    if (selected.length === 1) return selected[0];
+    return `${selected.length} tiendas`;
   };
 
   const handleClearFilters = () => {
-    onFiltersChange({ search: '', status: null, channel: null, store: null });
+    onFiltersChange({ search: '', status: null, channel: null, store: [] });
   };
 
-  const hasActiveFilters = filters.search || filters.status || filters.channel || filters.store;
+  const hasActiveFilters = filters.search || filters.status || filters.channel || (filters.store && filters.store.length > 0);
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -74,20 +88,25 @@ export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
         </SelectContent>
       </Select>
 
-      <Select
-        value={filters.store || 'all'}
-        onValueChange={handleStoreChange}
-      >
-        <SelectTrigger className="w-full sm:w-40">
-          <SelectValue placeholder="Todas las tiendas" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todas las tiendas</SelectItem>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" className="w-full justify-between sm:w-40 font-normal">
+            <span className="truncate">{storeLabel()}</span>
+            <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-40">
           {ML_STORE_NAMES.map((name) => (
-            <SelectItem key={name} value={name}>{name}</SelectItem>
+            <DropdownMenuCheckboxItem
+              key={name}
+              checked={(filters.store ?? []).includes(name)}
+              onCheckedChange={() => handleStoreToggle(name)}
+            >
+              {name}
+            </DropdownMenuCheckboxItem>
           ))}
-        </SelectContent>
-      </Select>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Select
         value={filters.status || 'all'}

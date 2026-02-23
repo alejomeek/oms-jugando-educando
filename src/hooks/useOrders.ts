@@ -28,8 +28,8 @@ export function useOrders(filters?: OrderFilters) {
         query = query.eq('channel', filters.channel);
       }
 
-      if (filters?.store) {
-        query = query.eq('store_name', filters.store);
+      if (filters?.store && filters.store.length > 0) {
+        query = query.in('store_name', filters.store);
       }
 
       if (filters?.search) {

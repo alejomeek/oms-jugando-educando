@@ -103,7 +103,7 @@ export interface OrderStatusHistory {
 export interface OrderFilters {
   status?: OrderStatus | null;
   channel?: OrderChannel | null;
-  store?: string | null;
+  store?: string[] | null;
   search?: string;
   page?: number;
   pageSize?: number;
