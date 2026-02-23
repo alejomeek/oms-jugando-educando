@@ -84,6 +84,7 @@ export interface PaymentInfo {
   installments?: number;
   paidAmount?: number;
   paymentDate?: string;
+  shipping_cost?: number;
 }
 
 export interface OrderStatusHistory {

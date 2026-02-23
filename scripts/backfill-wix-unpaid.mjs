@@ -86,6 +86,7 @@ function normalizeWixOrder(wixOrder) {
         })) || [],
         payment_info: {
             status: wixOrder.paymentStatus,
+            shipping_cost: parseFloat(wixOrder.priceSummary?.shipping?.amount || wixOrder.priceSummary?.shipping || 0) || undefined,
         },
         tags: [],
         notes: null,

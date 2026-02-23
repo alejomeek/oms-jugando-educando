@@ -90,9 +90,7 @@ export function OrderDetailModal({
     0
   );
 
-  const shippingCost = order.channel === 'wix'
-    ? Math.max(0, order.total_amount - itemsSubtotal)
-    : 0;
+  const shippingCost = order.payment_info?.shipping_cost ?? 0;
 
   const mlLabelUrl = order.channel === 'mercadolibre' && order.shipping_id
     ? `/api/download-ml-label?shipment_id=${order.shipping_id}`
