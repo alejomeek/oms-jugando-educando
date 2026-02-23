@@ -130,7 +130,14 @@ export function OrdersTable({
                 {formatCurrency(order.total_amount, order.currency)}
               </TableCell>
               <TableCell>
-                <OrderStatusBadge status={order.status} />
+                <div className="flex flex-wrap items-center gap-1">
+                  <OrderStatusBadge status={order.status} />
+                  {order.logistic_type === 'fulfillment' && !order.remision_tbc && (
+                    <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                      Sin remisión
+                    </span>
+                  )}
+                </div>
               </TableCell>
               <TableCell>
                 <Button

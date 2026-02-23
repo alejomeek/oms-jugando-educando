@@ -105,26 +105,7 @@ export function useSyncML() {
         return { inserted: 0, updated: 0, total: 0 };
       }
 
-      // 3. FULL special case: identificar órdenes FULL activas sin remisión
-      const TERMINAL = ['entregado', 'cancelado'];
-      const fullActiveIds = normalizedOrders
-        .filter((o: any) => o.logistic_type === 'fulfillment' && !TERMINAL.includes(o.status))
-        .map((o: any) => o.order_id);
-
-      let fullIdsToForce: string[] = [];
-
-      if (fullActiveIds.length > 0) {
-        const { data: fullWithRemision } = await supabase
-          .from('orders')
-          .select('order_id')
-          .in('order_id', fullActiveIds)
-          .not('remision_tbc', 'is', null);
-
-        const withRemisionSet = new Set((fullWithRemision ?? []).map((o: any) => o.order_id));
-        fullIdsToForce = fullActiveIds.filter((id: string) => !withRemisionSet.has(id));
-      }
-
-      // 4. Upsert en Supabase (insert o update si ya existe)
+      // 3. Upsert en Supabase (insert o update si ya existe)
       const { error, count } = await supabase
         .from('orders')
         .upsert(normalizedOrders, {
@@ -135,22 +116,6 @@ export function useSyncML() {
       if (error) {
         console.error('Error upserting ML orders:', error);
         throw new Error(`Error al guardar órdenes: ${error.message}`);
-      }
-
-      // 5. FULL sin remisión → forzar 'nuevo' con update explícito (el upsert no garantiza
-      //    el cambio de status por RLS de INSERT vs UPDATE en Supabase)
-      if (fullIdsToForce.length > 0) {
-        const { error: fullError } = await supabase
-          .from('orders')
-          .update({ status: 'nuevo' })
-          .in('order_id', fullIdsToForce)
-          .eq('channel', 'mercadolibre');
-
-        if (fullError) {
-          console.error('Error forzando status FULL:', fullError);
-        } else {
-          console.log(`${fullIdsToForce.length} órdenes FULL forzadas a 'nuevo'`);
-        }
       }
 
       console.log(`Sincronización completada: ${count} órdenes procesadas`);
