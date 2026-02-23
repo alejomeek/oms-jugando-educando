@@ -1,21 +1,28 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/services/supabase';
-import type { OrderStats } from '@/lib/types';
+import type { OrderFilters, OrderStats } from '@/lib/types';
 
-export function useOrderStats() {
+type StatsFilters = Pick<OrderFilters, 'channel' | 'store' | 'status'>;
+
+export function useOrderStats(filters?: StatsFilters) {
     return useQuery({
-        queryKey: ['order-stats'],
+        queryKey: ['order-stats', filters],
         queryFn: async (): Promise<OrderStats> => {
-            // Inicio del día en hora local (Colombia UTC-5)
             const todayStart = new Date();
             todayStart.setHours(0, 0, 0, 0);
             const todayISO = todayStart.toISOString();
 
-            const base = () =>
-                supabase
+            const base = () => {
+                let q = supabase
                     .from('orders')
                     .select('*', { count: 'exact', head: true })
                     .gte('order_date', todayISO);
+
+                if (filters?.channel) q = q.eq('channel', filters.channel);
+                if (filters?.store && filters.store.length > 0) q = q.in('store_name', filters.store);
+
+                return q;
+            };
 
             const [
                 { count: total },
@@ -26,7 +33,7 @@ export function useOrderStats() {
                 { count: mercadolibre },
                 { count: wix },
             ] = await Promise.all([
-                base(),
+                filters?.status ? base().eq('status', filters.status) : base(),
                 base().eq('status', 'nuevo'),
                 base().eq('status', 'preparando'),
                 base().eq('status', 'enviado'),

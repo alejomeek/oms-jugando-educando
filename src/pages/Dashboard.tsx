@@ -38,8 +38,12 @@ export function Dashboard() {
   const totalCount = ordersData?.count || 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  // Fetch global stats separately
-  const { data: stats, isLoading: isLoadingStats } = useOrderStats();
+  // Fetch stats filtered by the active channel/store/status
+  const { data: stats, isLoading: isLoadingStats } = useOrderStats({
+    channel: filters.channel,
+    store: filters.store,
+    status: filters.status,
+  });
 
   const { mutate: syncML, isPending: isSyncingML } = useSyncML();
   const { mutate: syncWix, isPending: isSyncingWix } = useSyncWix();
