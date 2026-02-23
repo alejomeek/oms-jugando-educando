@@ -90,6 +90,10 @@ export function OrderDetailModal({
     0
   );
 
+  const shippingCost = order.channel === 'wix'
+    ? Math.max(0, order.total_amount - itemsSubtotal)
+    : 0;
+
   const mlLabelUrl = order.channel === 'mercadolibre' && order.shipping_id
     ? `/api/download-ml-label?shipment_id=${order.shipping_id}`
     : null;
@@ -296,6 +300,12 @@ export function OrderDetailModal({
                 <span className="text-muted-foreground">Subtotal items:</span>
                 <span className="font-medium">{formatCurrency(itemsSubtotal, order.currency)}</span>
               </div>
+              {shippingCost > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Envío:</span>
+                  <span className="font-medium">{formatCurrency(shippingCost, order.currency)}</span>
+                </div>
+              )}
               {!isPack && order.paid_amount && order.paid_amount !== order.total_amount && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Monto pagado:</span>
