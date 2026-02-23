@@ -36,20 +36,38 @@ if (!OMS_URL || !OMS_KEY || !RECON_URL || !RECON_KEY) {
     process.exit(1);
 }
 
-// ─── Leer remisiones desde meli_reconciliation ────────────────────────────────
+// ─── Leer remisiones desde meli_reconciliation (con paginación) ───────────────
 
 async function fetchRemisiones() {
-    const res = await fetch(
-        `${RECON_URL}/rest/v1/ml_orders?remision=not.is.null&select=order_id,remision,fecha_remision`,
-        {
-            headers: {
-                apikey: RECON_KEY,
-                Authorization: `Bearer ${RECON_KEY}`,
-            },
-        }
-    );
-    if (!res.ok) throw new Error(`meli_reconciliation ${res.status}: ${await res.text()}`);
-    return res.json();
+    const all = [];
+    const PAGE = 1000;
+    let offset = 0;
+
+    while (true) {
+        const res = await fetch(
+            `${RECON_URL}/rest/v1/ml_orders?remision=not.is.null&select=order_id,remision,fecha_remision`,
+            {
+                headers: {
+                    apikey: RECON_KEY,
+                    Authorization: `Bearer ${RECON_KEY}`,
+                    Range: `${offset}-${offset + PAGE - 1}`,
+                    Prefer: 'count=exact',
+                },
+            }
+        );
+        if (!res.ok) throw new Error(`meli_reconciliation ${res.status}: ${await res.text()}`);
+
+        const page = await res.json();
+        all.push(...page);
+
+        const contentRange = res.headers.get('content-range'); // ej: "0-999/1157"
+        const total = contentRange ? parseInt(contentRange.split('/')[1]) : all.length;
+
+        if (all.length >= total) break;
+        offset += PAGE;
+    }
+
+    return all;
 }
 
 // ─── Actualizar OMS ───────────────────────────────────────────────────────────

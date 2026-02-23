@@ -105,12 +105,38 @@ export function useSyncML() {
         return { inserted: 0, updated: 0, total: 0 };
       }
 
-      // 3. Upsert en Supabase (insert o update si ya existe)
+      // 3. FULL special case: órdenes FULL sin remisión asignada → forzar 'nuevo'
+      //    Solo aplica a estados activos (no entregado/cancelado).
+      const TERMINAL = ['entregado', 'cancelado'];
+      const fullActiveIds = normalizedOrders
+        .filter((o: any) => o.store_id === 'full' && !TERMINAL.includes(o.status))
+        .map((o: any) => o.order_id);
+
+      let ordersToUpsert = normalizedOrders;
+
+      if (fullActiveIds.length > 0) {
+        const { data: fullWithRemision } = await supabase
+          .from('orders')
+          .select('order_id')
+          .in('order_id', fullActiveIds)
+          .not('remision_tbc', 'is', null);
+
+        const withRemisionSet = new Set((fullWithRemision ?? []).map((o: any) => o.order_id));
+
+        ordersToUpsert = normalizedOrders.map((o: any) => {
+          if (o.store_id === 'full' && !TERMINAL.includes(o.status) && !withRemisionSet.has(o.order_id)) {
+            return { ...o, status: 'nuevo' };
+          }
+          return o;
+        });
+      }
+
+      // 4. Upsert en Supabase (insert o update si ya existe)
       const { error, count } = await supabase
         .from('orders')
-        .upsert(normalizedOrders, {
+        .upsert(ordersToUpsert, {
           onConflict: 'channel,order_id',
-          ignoreDuplicates: false, // Actualizar si ya existe
+          ignoreDuplicates: false,
         });
 
       if (error) {
