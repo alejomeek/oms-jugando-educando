@@ -51,6 +51,7 @@ export function OrderStats({ stats, isLoading }: OrderStatsProps) {
               <div>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
                 <p className="text-2xl font-bold">{stat.value}</p>
+                <p className="text-xs text-muted-foreground">Hoy</p>
               </div>
             </CardContent>
           </Card>

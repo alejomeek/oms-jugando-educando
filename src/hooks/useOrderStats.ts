@@ -6,7 +6,17 @@ export function useOrderStats() {
     return useQuery({
         queryKey: ['order-stats'],
         queryFn: async (): Promise<OrderStats> => {
-            // Execute all count queries in parallel
+            // Inicio del día en hora local (Colombia UTC-5)
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const todayISO = todayStart.toISOString();
+
+            const base = () =>
+                supabase
+                    .from('orders')
+                    .select('*', { count: 'exact', head: true })
+                    .gte('order_date', todayISO);
+
             const [
                 { count: total },
                 { count: nuevo },
@@ -16,13 +26,13 @@ export function useOrderStats() {
                 { count: mercadolibre },
                 { count: wix },
             ] = await Promise.all([
-                supabase.from('orders').select('*', { count: 'exact', head: true }),
-                supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'nuevo'),
-                supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'preparando'),
-                supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'enviado'),
-                supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'entregado'),
-                supabase.from('orders').select('*', { count: 'exact', head: true }).eq('channel', 'mercadolibre'),
-                supabase.from('orders').select('*', { count: 'exact', head: true }).eq('channel', 'wix'),
+                base(),
+                base().eq('status', 'nuevo'),
+                base().eq('status', 'preparando'),
+                base().eq('status', 'enviado'),
+                base().eq('status', 'entregado'),
+                base().eq('channel', 'mercadolibre'),
+                base().eq('channel', 'wix'),
             ]);
 
             return {
@@ -35,7 +45,6 @@ export function useOrderStats() {
                 wix: wix || 0,
             };
         },
-        // Refresh stats every minute or when invalidated
         staleTime: 60 * 1000,
     });
 }
