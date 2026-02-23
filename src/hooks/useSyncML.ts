@@ -109,7 +109,7 @@ export function useSyncML() {
       //    Solo aplica a estados activos (no entregado/cancelado).
       const TERMINAL = ['entregado', 'cancelado'];
       const fullActiveIds = normalizedOrders
-        .filter((o: any) => o.store_id === 'full' && !TERMINAL.includes(o.status))
+        .filter((o: any) => o.logistic_type === 'fulfillment' && !TERMINAL.includes(o.status))
         .map((o: any) => o.order_id);
 
       let ordersToUpsert = normalizedOrders;
@@ -124,7 +124,7 @@ export function useSyncML() {
         const withRemisionSet = new Set((fullWithRemision ?? []).map((o: any) => o.order_id));
 
         ordersToUpsert = normalizedOrders.map((o: any) => {
-          if (o.store_id === 'full' && !TERMINAL.includes(o.status) && !withRemisionSet.has(o.order_id)) {
+          if (o.logistic_type === 'fulfillment' && !TERMINAL.includes(o.status) && !withRemisionSet.has(o.order_id)) {
             return { ...o, status: 'nuevo' };
           }
           return o;

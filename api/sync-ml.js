@@ -252,8 +252,8 @@ export default async function handler(req, res) {
                     normalized.shipping_address = address;
                     normalized.logistic_type = logistic_type;
                     normalized.status = mapMLStatus(normalized._mlOrderStatus, shipment_status, shipment_substatus);
-                    // FULL: stock gestionado por ML, no tiene store propia
-                    if (logistic_type === 'fulfillment' && !normalized.store_id) {
+                    // FULL: stock gestionado por ML, siempre sobreescribir sin importar store_id numérico
+                    if (logistic_type === 'fulfillment') {
                         normalized.store_name = 'FULL';
                         normalized.store_id = 'full';
                     }
