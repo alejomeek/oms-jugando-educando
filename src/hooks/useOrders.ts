@@ -34,7 +34,7 @@ export function useOrders(filters?: OrderFilters) {
 
       if (filters?.search) {
         query = query.or(
-          `order_id.ilike.%${filters.search}%,customer->>nickname.ilike.%${filters.search}%,customer->>email.ilike.%${filters.search}%`
+          `order_id.ilike.%${filters.search}%,pack_id.ilike.%${filters.search}%,customer->>nickname.ilike.%${filters.search}%,customer->>email.ilike.%${filters.search}%`
         );
       }
 
@@ -54,8 +54,31 @@ export function useOrders(filters?: OrderFilters) {
         throw new Error(`Error al obtener órdenes: ${error.message}`);
       }
 
+      // Complete partial packs: when searching, only the matching row comes back.
+      // Fetch all sibling orders that share the same pack_id so packs are always shown complete.
+      let fullData = data as Order[];
+      const packIds = [
+        ...new Set(
+          fullData
+            .filter(o => o.pack_id && o.channel === 'mercadolibre')
+            .map(o => o.pack_id as string)
+        ),
+      ];
+      if (packIds.length > 0) {
+        const { data: siblings } = await supabase
+          .from('orders')
+          .select('*')
+          .in('pack_id', packIds)
+          .eq('channel', 'mercadolibre');
+        if (siblings && siblings.length > 0) {
+          const existingIds = new Set(fullData.map(o => o.id));
+          const newSiblings = (siblings as Order[]).filter(s => !existingIds.has(s.id));
+          fullData = [...fullData, ...newSiblings];
+        }
+      }
+
       // Group packs on the client side (within the current page)
-      const groupedData = groupPackOrders(data as Order[]);
+      const groupedData = groupPackOrders(fullData);
 
       return {
         data: groupedData,
