@@ -91,9 +91,8 @@ export function OrdersTable({
         {orders.map((order) => {
           const customerName =
             order.customer.source === 'mercadolibre'
-              ? order.customer.nickname
-              : order.customer.email ||
-              `${order.customer.firstName} ${order.customer.lastName}`;
+              ? (order.shipping_address?.receiverName || order.customer.nickname)
+              : (`${order.customer.firstName ?? ''} ${order.customer.lastName ?? ''}`.trim() || order.customer.email);
 
           return (
             <TableRow
