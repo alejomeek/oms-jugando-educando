@@ -56,11 +56,15 @@ export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
     return `${selected.length} tiendas`;
   };
 
-  const handleClearFilters = () => {
-    onFiltersChange({ search: '', status: null, channel: null, store: [] });
+  const handleSinRemisionToggle = () => {
+    onFiltersChange({ ...filters, sinRemision: !filters.sinRemision });
   };
 
-  const hasActiveFilters = filters.search || filters.status || filters.channel || (filters.store && filters.store.length > 0);
+  const handleClearFilters = () => {
+    onFiltersChange({ search: '', status: null, channel: null, store: [], sinRemision: false });
+  };
+
+  const hasActiveFilters = filters.search || filters.status || filters.channel || (filters.store && filters.store.length > 0) || filters.sinRemision;
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -124,6 +128,15 @@ export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
           <SelectItem value="cancelado">Cancelado</SelectItem>
         </SelectContent>
       </Select>
+
+      <Button
+        variant={filters.sinRemision ? 'default' : 'outline'}
+        size="sm"
+        onClick={handleSinRemisionToggle}
+        className="shrink-0"
+      >
+        Sin remisión
+      </Button>
 
       {hasActiveFilters && (
         <Button variant="ghost" size="sm" onClick={handleClearFilters}>

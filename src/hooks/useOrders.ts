@@ -32,6 +32,10 @@ export function useOrders(filters?: OrderFilters) {
         query = query.in('store_name', filters.store);
       }
 
+      if (filters?.sinRemision) {
+        query = query.eq('channel', 'mercadolibre').is('remision_tbc', null);
+      }
+
       if (filters?.search) {
         query = query.or(
           `order_id.ilike.%${filters.search}%,pack_id.ilike.%${filters.search}%,customer->>nickname.ilike.%${filters.search}%,customer->>email.ilike.%${filters.search}%`

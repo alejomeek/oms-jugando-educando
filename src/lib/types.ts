@@ -106,6 +106,7 @@ export interface OrderFilters {
   channel?: OrderChannel | null;
   store?: string[] | null;
   search?: string;
+  sinRemision?: boolean;
   page?: number;
   pageSize?: number;
 }
