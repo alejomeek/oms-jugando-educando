@@ -1,70 +1,53 @@
-# Falabella Seller Center API — Investigación
+# Falabella Seller Center API — Contexto General
 
-> Fuente: Perplexity AI, febrero 2026
+> Leer este archivo primero antes de revisar los endpoints.
 
-## 1. Acceso y credenciales
+## Credenciales (Colombia)
 
-- **API**: Falabella Seller Center API — portal: https://developers.falabella.com/v500/reference/getting-started
-- **Autenticación**: API Key + User ID (correo de la cuenta Seller Center). No usa OAuth2.
-- **Credenciales del proyecto**:
-  - User ID: `germansantosmeek@gmail.com`
-  - API Key: `a5b9c2b0324e79514f34b2e02c5c77fea1f189c4`
-- Las credenciales son estáticas (no expiran como OAuth). Se envían en headers de cada request.
-- Ambiente de certificación disponible antes de ir a producción (asociado a la cuenta seller).
+- **User ID**: `germansantosmeek@gmail.com`
+- **API Key**: `a5b9c2b0324e79514f34b2e02c5c77fea1f189c4`
+- **Base URL**: `https://sellercenter-api.falabella.com/`
+- **Autenticación**: ver `Certificando_las_solicitudes.md`
 
-## 2. Órdenes
+## ⚠️ Usar siempre JSON, nunca XML
 
-### Endpoints conocidos
-- `GET /orders` — listar órdenes, con filtros por fecha y estado, paginación
-- `GET /orders/{orderId}` — detalle de una orden
-- `GET /orders/{orderId}/items` — ítems de la orden (o embebidos en el detalle)
+La API devuelve XML por defecto. **Siempre agregar `Format=JSON`** en todos los requests para recibir JSON. El parámetro `accept: application/json` también aplica en los headers.
 
-### Campos de una orden
-- `OrderId`
-- Datos del comprador: nombre, email, teléfono, documento
-- Dirección de entrega: calle, ciudad, región, código postal
-- Ítems: SKU seller, SKU Falabella, cantidad, precio unitario, total línea
-- Totales: subtotal, impuestos, total, descuentos, costo de envío
-- Fulfillment: tipo (by Seller / by Falabella), bodega, SLA de despacho
+## Alcance de esta integración
 
-### Estados — mapeo al OMS
-| OMS             | Falabella (aprox.)        |
-|-----------------|---------------------------|
-| `nuevo`         | Pending / Paid            |
-| `preparando`    | Processing                |
-| `enviado`       | Shipped                   |
-| `entregado`     | Delivered                 |
-| `cancelado`     | Cancelled                 |
+- Canal: `'falabella'` en la tabla `orders` de Supabase
+- **Incluye**: sync de órdenes, webhooks, marcar listo para envío, obtener etiqueta, tracking
+- **No incluye**: sync de catálogo/productos, stock, feeds, documentos tributarios
 
-- Se pueden actualizar estados desde la API (marcar como despachado, registrar tracking).
+## Mapeo de estados Falabella → OMS
 
-## 3. Webhooks
+Los estados exactos de Falabella deben extraerse de `Flujos_de_Órdenes.md`. Construir el mapeo a los estados del OMS (`nuevo`, `preparando`, `enviado`, `entregado`, `cancelado`) basándose en esa documentación.
 
-- Documentados en: https://developers.falabella.com/v500.0.0/reference/getwebhooks
-- Eventos: nueva orden, cambio de estado de orden, cambios de producto
-- Patrón recomendado: **webhooks para tiempo real + polling periódico** para reconciliación
+## Modelo de fulfillment
 
-## 4. Catálogo y stock
+- **`Dropshipping`** (ShippingType): Fulfillment by Seller — el seller despacha desde su bodega. Este es nuestro caso.
+- **`own_warehouse`**: Fulfillment by Falabella — Falabella despacha en nombre del seller.
 
-- API soporta crear/actualizar publicaciones de productos
-- Actualización de stock en tiempo real por SKU seller
-- Actualización de precios y estado publicado/no publicado
-- Mapeo necesario: SKU interno del OMS ↔ SKU Falabella
+## Arquitectura de órdenes en Falabella
 
-## 5. Limitaciones
+Una orden (`Order`) contiene múltiples ítems (`OrderItems`). Los ítems se consultan por separado via `GetMultipleOrderItems`. Cada ítem tiene su propio estado — el estado de la orden es el conjunto de estados únicos de sus ítems (`Statuses`).
 
-- Rate limits: no publicados; razonables para operación retail diaria (según integradores)
-- Disponible para Colombia: sí (Falabella MCO)
-- Modelo Colombia: Fulfillment by Seller (FBS) — el seller despacha
-- Documentos fiscales Colombia: `FACTURA`, `NOTA DE CREDITO`
+## Documentación disponible en esta carpeta
 
-## 6. Referencias de arquitectura OMS conocidas
-
-- **Multivende**, **Astroselling**, **Jumpseller**, **Bsale** — todos integran con esta misma API
-- Jumpseller: User ID + API Key → sincroniza productos, stock, precios y órdenes
-- Flujo típico: webhooks → crear orden en OMS → actualizar estado en Falabella al despachar
-
-## 7. Referencias técnicas
-
-- Python client no oficial: `FalabellaAPIClient` (GitHub) — tiene `Orders.get()`, `Orders.items()`
-- Doc "Requests and responses": https://developers.falabella.com/v500.0.0/reference/requests-and-responses
+| Archivo | Propósito |
+|---|---|
+| `Certificando_las_solicitudes.md` | Cómo construir la firma SHA256 y los headers |
+| `Opera_con_Nuestras_APIs.md` | Estructura general de requests/responses |
+| `Flujos_de_Órdenes.md` | Ciclo de vida completo de una orden |
+| `Webhooks.md` | Configuración y payloads de webhooks |
+| `Consultar_Órdenes_V2.md` | GET órdenes con filtros y paginación |
+| `Consultar_Orden_V2.md` | GET detalle de una orden |
+| `Consultar_Items.md` | GET ítems de una orden |
+| `Consultar_Items_para_Múltiples_Órdenes.md` | GET ítems de varias órdenes en batch |
+| `Marcar_Listo_para_Envío.md` | POST marcar orden como despachada |
+| `Obtener_Etiqueta.md` | GET etiqueta de envío (PDF/ZPL) |
+| `Consultar_Bodegas_Logísticas.md` | GET ID de bodega (requerido para despacho) |
+| `Enlistar_Eventos.md` | GET eventos disponibles para webhooks |
+| `Creacion_de_Webhook.md` | POST registrar webhook en Falabella |
+| `Consultar_Webhook.md` | GET verificar webhook activo |
+| `Eliminar_Webhook.md` | POST eliminar webhook |
