@@ -33,7 +33,11 @@ export function useOrders(filters?: OrderFilters) {
       }
 
       if (filters?.sinRemision) {
-        query = query.eq('channel', 'mercadolibre').is('remision_tbc', null);
+        query = query
+          .eq('channel', 'mercadolibre')
+          .is('remision_tbc', null)
+          .neq('status', 'cancelado')
+          .gte('order_date', '2026-01-01');
       }
 
       if (filters?.search) {
