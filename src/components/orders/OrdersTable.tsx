@@ -116,6 +116,11 @@ export function OrdersTable({
                       No Pagado
                     </span>
                   )}
+                  {order.channel === 'wix' && order.payment_info?.status === 'PAID' && (
+                    <span className="rounded border border-green-200 bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700">
+                      Pagado
+                    </span>
+                  )}
                   <LogisticTypeBadge logisticType={order.logistic_type} />
                   {order.store_name && order.channel !== 'falabella' && (
                     <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
