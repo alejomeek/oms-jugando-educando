@@ -130,7 +130,12 @@ export default async function handler(req, res) {
     const allOrders = [];
     let keepGoing = true;
 
-    const dateParam = dateFrom ? { CreatedAfter: dateFrom } : {};
+    // CreatedAfter o UpdatedAfter son obligatorios en la API de Falabella.
+    // Si no hay fecha previa (primer sync), traemos los últimos 6 meses.
+    const fallbackDate = new Date();
+    fallbackDate.setMonth(fallbackDate.getMonth() - 6);
+    const effectiveDate = dateFrom || fallbackDate.toISOString();
+    const dateParam = { UpdatedAfter: effectiveDate };
 
     while (keepGoing) {
       console.log(`📡 [Falabella] Obteniendo órdenes (offset=${offset})...`);
