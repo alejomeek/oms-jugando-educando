@@ -111,6 +111,11 @@ export function OrdersTable({
               <TableCell>
                 <div className="flex flex-wrap items-center gap-1.5">
                   <ChannelBadge channel={order.channel} />
+                  {order.channel === 'wix' && order.payment_info?.status === 'NOT_PAID' && (
+                    <span className="rounded border border-red-200 bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-700">
+                      No Pagado
+                    </span>
+                  )}
                   <LogisticTypeBadge logisticType={order.logistic_type} />
                   {order.store_name && order.channel !== 'falabella' && (
                     <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
