@@ -25,7 +25,7 @@ function mapFalabellaStatus(statuses) {
     if (lower === 'ready_to_ship') return 'preparando';
     if (lower === 'shipped') return 'enviado';
     if (lower === 'delivered') return 'entregado';
-    if (lower === 'failed' || lower === 'canceled' || lower.startsWith('return_')) return 'cancelado';
+    if (lower === 'failed' || lower === 'canceled' || lower === 'returned' || lower.startsWith('return')) return 'cancelado';
     return 'nuevo';
   });
   // Return highest priority status
