@@ -35,6 +35,10 @@ function mapFalabellaStatus(statuses) {
   return 'nuevo';
 }
 
+function parseAmount(v) {
+  return parseFloat(String(v || '0').replace(/,/g, ''));
+}
+
 function normalizeFalabellaOrderWithItems(order, items) {
   const statusArray = [].concat(order.Statuses?.Status || ['pending']);
 
@@ -46,8 +50,8 @@ function normalizeFalabellaOrderWithItems(order, items) {
     status: mapFalabellaStatus(statusArray),
     order_date: parseFalabellaDate(order.CreatedAt),
     closed_date: null,
-    total_amount: parseFloat(order.GrandTotal || order.Price || 0),
-    paid_amount: parseFloat(order.GrandTotal || order.Price || 0),
+    total_amount: parseAmount(order.GrandTotal || order.Price),
+    paid_amount: parseAmount(order.GrandTotal || order.Price),
     currency: items[0]?.Currency || 'COP',
     customer: {
       source: 'falabella',
@@ -72,8 +76,8 @@ function normalizeFalabellaOrderWithItems(order, items) {
       sku: item.Sku?.trim() || item.ShopSku?.trim() || '',
       title: item.Name?.trim() || '',
       quantity: 1,
-      unitPrice: parseFloat(item.PaidPrice || item.ItemPrice || 0),
-      fullPrice: parseFloat(item.PaidPrice || item.ItemPrice || 0),
+      unitPrice: parseAmount(item.PaidPrice || item.ItemPrice),
+      fullPrice: parseAmount(item.PaidPrice || item.ItemPrice),
       currency: item.Currency || 'COP',
       orderItemId: item.OrderItemId?.trim(),
       packageId: item.PackageId?.trim(),
@@ -83,8 +87,8 @@ function normalizeFalabellaOrderWithItems(order, items) {
     payment_info: {
       method: order.PaymentMethod?.trim(),
       status: statusArray[0] || 'pending',
-      paidAmount: parseFloat(order.GrandTotal || order.Price || 0),
-      shipping_cost: parseFloat(order.ShippingFeeTotal || 0),
+      paidAmount: parseAmount(order.GrandTotal || order.Price),
+      shipping_cost: parseAmount(order.ShippingFeeTotal),
       promised_shipping_time: items[0]?.PromisedShippingTime?.trim(),
     },
     tags: [order.ShippingType?.trim()].filter(Boolean),
@@ -155,14 +159,21 @@ export default async function handler(req, res) {
       });
 
       const body = data.SuccessResponse?.Body;
-      const ordersRaw = body?.Orders?.Order;
+      // API returns Body.Orders as [{Order:{...}}, ...] or {Order:[...]}
+      const ordersContainer = body?.Orders;
+      let ordersRaw;
+      if (Array.isArray(ordersContainer)) {
+        ordersRaw = ordersContainer.map(w => w.Order).filter(Boolean);
+      } else {
+        ordersRaw = ordersContainer?.Order ? [].concat(ordersContainer.Order) : null;
+      }
 
-      if (!ordersRaw) {
+      if (!ordersRaw || ordersRaw.length === 0) {
         keepGoing = false;
         break;
       }
 
-      const page = [].concat(ordersRaw);
+      const page = ordersRaw;
       allOrders.push(...page);
 
       const totalCount = parseInt(data.SuccessResponse?.Head?.TotalCount || '0', 10);
@@ -199,7 +210,14 @@ export default async function handler(req, res) {
           apiKey,
         });
 
-        const ordersWithItems = [].concat(itemsData.SuccessResponse?.Body?.Orders?.Order || []);
+        const itemsBody = itemsData.SuccessResponse?.Body;
+        const itemsContainer = itemsBody?.Orders;
+        let ordersWithItems;
+        if (Array.isArray(itemsContainer)) {
+          ordersWithItems = itemsContainer.map(w => w.Order).filter(Boolean);
+        } else {
+          ordersWithItems = [].concat(itemsContainer?.Order || []);
+        }
 
         for (const orderWithItems of ordersWithItems) {
           const orderId = String(orderWithItems.OrderId);
