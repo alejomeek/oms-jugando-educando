@@ -11,8 +11,8 @@
 CREATE TABLE orders (
   -- Identificadores
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  external_id TEXT NOT NULL,              -- ID original (ML order ID o Wix order number)
-  channel TEXT NOT NULL CHECK (channel IN ('mercadolibre', 'wix')),
+  order_id TEXT NOT NULL,                 -- ID original (ML order ID, Wix order number, Falabella OrderId)
+  channel TEXT NOT NULL CHECK (channel IN ('mercadolibre', 'wix', 'falabella')),
 
   -- Para Mercado Libre: soporte de packs
   pack_id TEXT,                           -- Solo ML: agrupa órdenes del mismo carrito
@@ -38,6 +38,7 @@ CREATE TABLE orders (
   customer JSONB NOT NULL,
   -- Ejemplo ML: {"source": "mercadolibre", "id": "666172639", "nickname": "DZR29"}
   -- Ejemplo Wix: {"source": "wix", "id": "uuid", "email": "x@example.com", "firstName": "Juan", "lastName": "Pérez", "phone": "+57123"}
+  -- Ejemplo Falabella: {"source": "falabella", "id": "CC123456", "firstName": "Ana", "lastName": "Gómez", "email": "ana@example.com", "phone": "+57300"}
 
   -- Dirección de envío (JSONB porque estructura varía por canal)
   shipping_address JSONB,
@@ -54,7 +55,7 @@ CREATE TABLE orders (
   logistic_type TEXT,                     -- Solo ML: 'fulfillment' (Full) | 'self_service' (Flex) | 'cross_docking' (Colecta)
 
   -- Constraint para evitar duplicados
-  UNIQUE(channel, external_id)
+  UNIQUE(channel, order_id)
 );
 
 -- ============================================
@@ -156,3 +157,28 @@ CREATE INDEX IF NOT EXISTS idx_orders_channel_status ON orders(channel, status);
 
 -- Index para queries de revenue
 CREATE INDEX IF NOT EXISTS idx_orders_total_amount ON orders(total_amount);
+
+-- ============================================
+-- MIGRACIÓN: Agregar canal Falabella
+-- Ejecutar en Supabase SQL Editor si la DB ya existe
+-- ============================================
+
+-- Eliminar constraint de canal existente (el nombre puede variar)
+DO $$
+DECLARE
+  constraint_name TEXT;
+BEGIN
+  SELECT conname INTO constraint_name
+  FROM pg_constraint
+  WHERE conrelid = 'orders'::regclass
+    AND contype = 'c'
+    AND pg_get_constraintdef(oid) LIKE '%channel%';
+
+  IF constraint_name IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE orders DROP CONSTRAINT ' || quote_ident(constraint_name);
+  END IF;
+END $$;
+
+-- Agregar constraint actualizado con 'falabella'
+ALTER TABLE orders ADD CONSTRAINT orders_channel_check
+  CHECK (channel IN ('mercadolibre', 'wix', 'falabella'));

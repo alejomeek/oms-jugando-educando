@@ -150,8 +150,6 @@ export default async function handler(req, res) {
         params: {
           Limit: String(pageLimit),
           Offset: String(offset),
-          SortBy: 'created_at',
-          SortDirection: 'DESC',
           ...dateParam,
         },
         userId,
