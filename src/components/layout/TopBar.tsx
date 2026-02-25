@@ -7,8 +7,10 @@ export interface TopBarProps {
   subtitle?: string;
   onSyncML?: () => void;
   onSyncWix?: () => void;
+  onSyncFalabella?: () => void;
   isSyncingML?: boolean;
   isSyncingWix?: boolean;
+  isSyncingFalabella?: boolean;
 }
 
 export function TopBar({
@@ -16,8 +18,10 @@ export function TopBar({
   subtitle,
   onSyncML,
   onSyncWix,
+  onSyncFalabella,
   isSyncingML = false,
   isSyncingWix = false,
+  isSyncingFalabella = false,
 }: TopBarProps) {
   return (
     <header className="flex h-14 items-center justify-between border-b bg-card px-6">
@@ -47,6 +51,15 @@ export function TopBar({
         >
           <RefreshCw className={isSyncingWix ? 'animate-spin' : ''} />
           Sincronizar Wix
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onSyncFalabella}
+          disabled={isSyncingFalabella}
+        >
+          <RefreshCw className={isSyncingFalabella ? 'animate-spin' : ''} />
+          Sincronizar Falabella
         </Button>
       </div>
     </header>

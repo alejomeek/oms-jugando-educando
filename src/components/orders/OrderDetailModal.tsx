@@ -49,6 +49,7 @@ export function OrderDetailModal({
   const [remisionInput, setRemisionInput] = useState('');
   const [fechaInput, setFechaInput] = useState(() => new Date().toISOString().split('T')[0]);
   const [editingRemision, setEditingRemision] = useState(false);
+  const [markingReadyToShip, setMarkingReadyToShip] = useState(false);
   const assignRemision = useAssignRemision();
 
   const queryClient = useQueryClient();
@@ -71,6 +72,13 @@ export function OrderDetailModal({
   }, [order]);
 
   if (!order) return null;
+
+  const falabellaOrderItemIds = order.channel === 'falabella'
+    ? order.items.map(i => i.orderItemId).filter(Boolean).join(',')
+    : null;
+  const falabellaLabelUrl = falabellaOrderItemIds
+    ? `/api/falabella-label?order_item_ids=${falabellaOrderItemIds}`
+    : null;
 
   const isPack = (order.subOrders?.length ?? 0) > 1;
   const displayId = order.pack_id ?? order.order_id ?? (order as any).external_id;
@@ -127,6 +135,36 @@ export function OrderDetailModal({
       toast.error(err instanceof Error ? err.message : 'Error al migrar a Halcon');
     } finally {
       setMigratingToHalcon(false);
+    }
+  };
+
+  const handleMarkReadyToShip = async () => {
+    setMarkingReadyToShip(true);
+    try {
+      const orderItemIds = order.items
+        .map(i => i.orderItemId)
+        .filter(Boolean)
+        .map(Number);
+      const packageId = order.items.find(i => i.packageId)?.packageId;
+
+      if (!orderItemIds.length || !packageId) {
+        throw new Error('Faltan OrderItemIds o PackageId. Re-sincroniza la orden.');
+      }
+
+      const res = await fetch('/api/falabella-ready-to-ship', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderItemIds, packageId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error((data as { error?: string }).error || 'Error al marcar');
+
+      onStatusChange(order.id, 'preparando');
+      toast.success('Orden marcada como lista para envío');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al marcar como listo para envío');
+    } finally {
+      setMarkingReadyToShip(false);
     }
   };
 
@@ -320,6 +358,14 @@ export function OrderDetailModal({
               <p className="text-right text-xs text-muted-foreground">
                 Moneda: {order.currency}
               </p>
+              {order.channel === 'falabella' && order.payment_info?.promised_shipping_time && (
+                <div className="mt-2 rounded-lg border border-orange-200 bg-orange-50 p-3 text-sm">
+                  <p className="font-medium text-orange-800">Fecha límite envío:</p>
+                  <p className="text-orange-700">
+                    {formatDate(order.payment_info.promised_shipping_time, "dd/MM/yyyy HH:mm")}
+                  </p>
+                </div>
+              )}
             </div>
           </section>
 
@@ -387,6 +433,27 @@ export function OrderDetailModal({
                   {migratingToHalcon ? 'Migrando...' : 'Migrar a Halcon'}
                 </Button>
               )
+            )}
+            {falabellaLabelUrl && (
+              <Button variant="outline" size="sm" asChild>
+                <a href={falabellaLabelUrl} download>
+                  <Download className="size-4 mr-2" />
+                  Descargar Etiqueta Falabella
+                </a>
+              </Button>
+            )}
+            {order.channel === 'falabella' &&
+             order.logistic_type === 'dropshipping' &&
+             order.status === 'nuevo' && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={markingReadyToShip}
+                onClick={() => void handleMarkReadyToShip()}
+              >
+                <CheckCircle2 className="size-4 mr-2" />
+                {markingReadyToShip ? 'Marcando...' : 'Listo para Envío'}
+              </Button>
             )}
           </div>
 

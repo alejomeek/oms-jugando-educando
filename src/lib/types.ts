@@ -2,7 +2,7 @@
 // ENUMS Y CONSTANTES
 // ============================================
 
-export type OrderChannel = 'mercadolibre' | 'wix';
+export type OrderChannel = 'mercadolibre' | 'wix' | 'falabella';
 export type OrderStatus = 'nuevo' | 'preparando' | 'enviado' | 'entregado' | 'cancelado';
 
 // ============================================
@@ -40,7 +40,7 @@ export interface Order {
 }
 
 export interface CustomerInfo {
-  source: 'mercadolibre' | 'wix';
+  source: 'mercadolibre' | 'wix' | 'falabella';
   id: string;
   nickname?: string;           // ML
   email?: string;              // Wix
@@ -76,6 +76,9 @@ export interface OrderItem {
     name: string;
     value: string;
   }>;
+  orderItemId?: string;
+  packageId?: string;
+  trackingCode?: string;
 }
 
 export interface PaymentInfo {
@@ -85,6 +88,7 @@ export interface PaymentInfo {
   paidAmount?: number;
   paymentDate?: string;
   shipping_cost?: number;
+  promised_shipping_time?: string;
 }
 
 export interface OrderStatusHistory {
@@ -124,6 +128,7 @@ export interface OrderStats {
   total: number;
   mercadolibre: number;
   wix: number;
+  falabella: number;
 }
 
 // ============================================
@@ -253,4 +258,62 @@ export interface WixOrder {
     total: { amount: string };
     totalPrice?: { amount: string };
   };
+}
+
+// ============================================
+// API RESPONSES (RAW) — Falabella
+// ============================================
+
+export interface FalabellaOrderItem {
+  OrderItemId: string;
+  Name: string;
+  Sku: string;
+  Variation?: string;
+  ShopSku?: string;
+  ShippingType?: string;
+  Currency: string;
+  Status: string;
+  PackageId?: string;
+  TrackingCode?: string;
+  TrackingCodePre?: string;
+  PaidPrice?: string;
+  ItemPrice?: string;
+  ShippingAmount?: string;
+  PromisedShippingTime?: string;
+}
+
+export interface FalabellaOrder {
+  OrderId: string;
+  CustomerFirstName: string;
+  CustomerLastName: string;
+  OrderNumber: string;
+  PaymentMethod?: string;
+  Price?: string;
+  GrandTotal?: string;
+  ShippingFeeTotal?: string;
+  CreatedAt: string;
+  UpdatedAt?: string;
+  AddressShipping?: {
+    FirstName?: string;
+    LastName?: string;
+    Phone?: string;
+    Address1?: string;
+    Address2?: string;
+    Address3?: string;
+    City?: string;
+    Ward?: string;
+    Region?: string;
+    Country?: string;
+    PostCode?: string;
+    CustomerEmail?: string;
+  };
+  AddressBilling?: {
+    Phone?: string;
+    CustomerEmail?: string;
+  };
+  NationalRegistrationNumber?: string;
+  Statuses: { Status: string | string[] };
+  PromisedShippingTime?: string;
+  ShippingType?: string;
+  Warehouse?: { SellerWarehouseId?: string; FacilityId?: string };
 }

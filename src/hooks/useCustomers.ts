@@ -3,7 +3,7 @@ import type { Order } from '@/lib/types';
 
 export interface CustomerProfile {
   key: string;                    // dedup key: "ml:12345" or "wix:email@x.com"
-  channel: 'mercadolibre' | 'wix';
+  channel: 'mercadolibre' | 'wix' | 'falabella';
   displayName: string;            // ML: nickname or "ML-{id}", Wix: "firstName lastName" or email
   email?: string;                 // Wix only
   phone?: string;                 // Wix only
@@ -73,7 +73,7 @@ function groupToEvents(orders: Order[]): Order[] {
 export function useCustomers(orders: Order[]): UseCustomersResult {
   return useMemo(() => {
     const profileMap = new Map<string, {
-      channel: 'mercadolibre' | 'wix';
+      channel: 'mercadolibre' | 'wix' | 'falabella';
       displayName: string;
       email?: string;
       phone?: string;

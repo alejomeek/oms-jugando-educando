@@ -4,6 +4,7 @@ import { useOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
 import { useOrderStats } from '@/hooks/useOrderStats';
 import { useSyncML } from '@/hooks/useSyncML';
 import { useSyncWix } from '@/hooks/useSyncWix';
+import { useSyncFalabella } from '@/hooks/useSyncFalabella';
 import { useAutoSync } from '@/hooks/useAutoSync';
 import { useAutoSyncSettings } from '@/hooks/useAutoSyncSettings';
 import { TopBar } from '@/components/layout/TopBar';
@@ -47,6 +48,7 @@ export function Dashboard() {
 
   const { mutate: syncML, isPending: isSyncingML } = useSyncML();
   const { mutate: syncWix, isPending: isSyncingWix } = useSyncWix();
+  const { mutate: syncFalabella, isPending: isSyncingFalabella } = useSyncFalabella();
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateOrderStatus();
 
   const { settings: autoSyncSettings, updateSettings: updateAutoSyncSettings } = useAutoSyncSettings();
@@ -84,6 +86,13 @@ export function Dashboard() {
     });
   };
 
+  const handleSyncFalabella = () => {
+    syncFalabella(undefined, {
+      onSuccess: () => toast.success('Sincronizacion Falabella completada'),
+      onError: (err) => toast.error('Error al sincronizar Falabella', { description: err.message }),
+    });
+  };
+
   const handleOrderClick = (order: Order) => {
     setSelectedOrder(order);
   };
@@ -115,6 +124,8 @@ export function Dashboard() {
         onSyncWix={handleSyncWix}
         isSyncingML={isSyncingML}
         isSyncingWix={isSyncingWix}
+        onSyncFalabella={handleSyncFalabella}
+        isSyncingFalabella={isSyncingFalabella}
       />
 
       <div className="space-y-6 p-6">
@@ -170,7 +181,8 @@ export function Dashboard() {
             entregado: 0,
             enviado: 0,
             mercadolibre: 0,
-            wix: 0
+            wix: 0,
+            falabella: 0
           }}
           isLoading={isLoadingStats}
         />

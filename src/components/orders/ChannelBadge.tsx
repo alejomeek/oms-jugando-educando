@@ -16,6 +16,10 @@ const channelConfig: Record<OrderChannel, { label: string; className: string }> 
     label: 'Wix',
     className: 'bg-purple-100 text-purple-800 border-purple-200',
   },
+  falabella: {
+    label: 'Falabella',
+    className: 'bg-red-100 text-red-800 border-red-200',
+  },
 };
 
 export function ChannelBadge({ channel, className }: ChannelBadgeProps) {

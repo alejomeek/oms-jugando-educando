@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ML_STORE_NAMES } from '@/lib/constants';
-import type { OrderFilters as OrderFiltersType } from '@/lib/types';
+import type { OrderFilters as OrderFiltersType, OrderChannel } from '@/lib/types';
 
 export interface OrderFiltersProps {
   filters: OrderFiltersType;
@@ -30,7 +30,7 @@ export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
   const handleChannelChange = (channel: string) => {
     onFiltersChange({
       ...filters,
-      channel: channel === 'all' ? null : (channel as 'mercadolibre' | 'wix'),
+      channel: channel === 'all' ? null : (channel as OrderChannel),
     });
   };
 
@@ -89,6 +89,7 @@ export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
           <SelectItem value="all">Todos los canales</SelectItem>
           <SelectItem value="mercadolibre">Mercado Libre</SelectItem>
           <SelectItem value="wix">Wix</SelectItem>
+          <SelectItem value="falabella">Falabella</SelectItem>
         </SelectContent>
       </Select>
 

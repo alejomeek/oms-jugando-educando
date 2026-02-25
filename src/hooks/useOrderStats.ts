@@ -32,6 +32,7 @@ export function useOrderStats(filters?: StatsFilters) {
                 { count: entregado },
                 { count: mercadolibre },
                 { count: wix },
+                { count: falabella },
             ] = await Promise.all([
                 filters?.status ? base().eq('status', filters.status) : base(),
                 base().eq('status', 'nuevo'),
@@ -40,6 +41,7 @@ export function useOrderStats(filters?: StatsFilters) {
                 base().eq('status', 'entregado'),
                 base().eq('channel', 'mercadolibre'),
                 base().eq('channel', 'wix'),
+                base().eq('channel', 'falabella'),
             ]);
 
             return {
@@ -50,6 +52,7 @@ export function useOrderStats(filters?: StatsFilters) {
                 entregado: entregado || 0,
                 mercadolibre: mercadolibre || 0,
                 wix: wix || 0,
+                falabella: falabella || 0,
             };
         },
         staleTime: 60 * 1000,

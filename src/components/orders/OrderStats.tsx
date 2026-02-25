@@ -71,6 +71,11 @@ export function OrderStats({ stats, isLoading }: OrderStatsProps) {
           <span className="font-medium">Wix</span>
           <span className="text-muted-foreground">({stats.wix})</span>
         </div>
+        <div className="flex items-center gap-1.5">
+          <span className="size-2.5 rounded-full bg-red-500" />
+          <span className="font-medium">Falabella</span>
+          <span className="text-muted-foreground">({stats.falabella || 0})</span>
+        </div>
       </div>
     </div>
   );

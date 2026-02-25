@@ -19,16 +19,14 @@ interface CustomerSheetProps {
   onClose: () => void;
 }
 
-function ChannelBadge({ channel }: { channel: 'mercadolibre' | 'wix' }) {
-  return channel === 'mercadolibre' ? (
-    <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">
-      Mercado Libre
-    </Badge>
-  ) : (
-    <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-100 border-teal-200">
-      Wix
-    </Badge>
-  );
+function ChannelBadge({ channel }: { channel: 'mercadolibre' | 'wix' | 'falabella' }) {
+  if (channel === 'mercadolibre') {
+    return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">Mercado Libre</Badge>;
+  }
+  if (channel === 'falabella') {
+    return <Badge className="bg-red-100 text-red-800 hover:bg-red-100 border-red-200">Falabella</Badge>;
+  }
+  return <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-100 border-teal-200">Wix</Badge>;
 }
 
 function StatusBadge({ status }: { status: string }) {

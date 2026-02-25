@@ -1,4 +1,4 @@
-import type { MLOrder, WixOrder, Order } from '@/lib/types';
+import type { MLOrder, WixOrder, FalabellaOrder, FalabellaOrderItem, Order, OrderStatus } from '@/lib/types';
 
 /**
  * Normaliza una orden de Mercado Libre al formato unificado
@@ -126,5 +126,107 @@ export function normalizeWixOrder(
     },
     tags: [],
     notes: null,
+  };
+}
+
+/**
+ * Normaliza una orden de Falabella al formato unificado
+ */
+function parseFalabellaDate(dateStr: string | undefined | null): string | null {
+  if (!dateStr) return null;
+  return new Date(dateStr.replace(' ', 'T') + 'Z').toISOString();
+}
+
+function parseVariationFb(variation: string | undefined | null): Array<{ name: string; value: string }> {
+  if (!variation) return [];
+  try {
+    const obj = JSON.parse(variation) as Record<string, unknown>;
+    return Object.entries(obj).map(([name, val]) => ({
+      name,
+      value: typeof val === 'object' && val !== null ? (val as Record<string, string>).name : String(val),
+    }));
+  } catch { return []; }
+}
+
+const FB_STATUS_PRIORITY = ['entregado', 'enviado', 'preparando', 'nuevo', 'cancelado'] as const;
+
+function mapFalabellaStatus(statuses: string[]): OrderStatus {
+  const mapped = statuses.map(s => {
+    const lower = s.toLowerCase();
+    if (lower === 'pending') return 'nuevo' as const;
+    if (lower === 'ready_to_ship') return 'preparando' as const;
+    if (lower === 'shipped') return 'enviado' as const;
+    if (lower === 'delivered') return 'entregado' as const;
+    if (lower === 'failed' || lower === 'canceled' || lower.startsWith('return_')) return 'cancelado' as const;
+    return 'nuevo' as const;
+  });
+  for (const p of FB_STATUS_PRIORITY) {
+    if (mapped.includes(p)) return p;
+  }
+  return 'nuevo';
+}
+
+export function normalizeFalabellaOrder(
+  order: FalabellaOrder,
+  items: FalabellaOrderItem[]
+): Omit<Order, 'id' | 'created_at' | 'updated_at'> {
+  const statusArray = ([] as string[]).concat(order.Statuses?.Status as string | string[] || ['pending']);
+
+  return {
+    order_id: String(order.OrderId),
+    channel: 'falabella',
+    pack_id: null,
+    shipping_id: null,
+    status: mapFalabellaStatus(statusArray),
+    order_date: parseFalabellaDate(order.CreatedAt) ?? new Date().toISOString(),
+    closed_date: null,
+    total_amount: parseFloat(order.GrandTotal || order.Price || '0'),
+    paid_amount: parseFloat(order.GrandTotal || order.Price || '0'),
+    currency: items[0]?.Currency || 'COP',
+    customer: {
+      source: 'falabella',
+      id: order.NationalRegistrationNumber || String(order.OrderId),
+      firstName: order.CustomerFirstName?.trim(),
+      lastName: order.CustomerLastName?.trim(),
+      email: order.AddressBilling?.CustomerEmail?.trim(),
+      phone: order.AddressShipping?.Phone?.trim() || order.AddressBilling?.Phone?.trim(),
+    },
+    shipping_address: {
+      street: [order.AddressShipping?.Address1, order.AddressShipping?.Address2, order.AddressShipping?.Address3]
+        .filter(Boolean).map(s => (s as string).trim()).join(', '),
+      city: order.AddressShipping?.City?.trim() || '',
+      state: order.AddressShipping?.Region?.trim() || order.AddressShipping?.Ward?.trim() || '',
+      country: order.AddressShipping?.Country?.trim() || '',
+      zipCode: order.AddressShipping?.PostCode?.trim() || '',
+      receiverName: [order.AddressShipping?.FirstName, order.AddressShipping?.LastName]
+        .filter(Boolean).map(s => (s as string).trim()).join(' ') || undefined,
+      receiverPhone: order.AddressShipping?.Phone?.trim() || undefined,
+    },
+    items: items.map(item => ({
+      sku: item.Sku?.trim() || item.ShopSku?.trim() || '',
+      title: item.Name?.trim() || '',
+      quantity: 1,
+      unitPrice: parseFloat(item.PaidPrice || item.ItemPrice || '0'),
+      fullPrice: parseFloat(item.PaidPrice || item.ItemPrice || '0'),
+      currency: item.Currency || 'COP',
+      orderItemId: item.OrderItemId?.trim(),
+      packageId: item.PackageId?.trim(),
+      trackingCode: item.TrackingCode?.trim() || item.TrackingCodePre?.trim(),
+      variationAttributes: parseVariationFb(item.Variation),
+    })),
+    payment_info: {
+      method: order.PaymentMethod?.trim(),
+      status: statusArray[0] || 'pending',
+      paidAmount: parseFloat(order.GrandTotal || order.Price || '0'),
+      shipping_cost: parseFloat(order.ShippingFeeTotal || '0'),
+      promised_shipping_time: items[0]?.PromisedShippingTime?.trim(),
+    },
+    tags: [order.ShippingType?.trim()].filter(Boolean) as string[],
+    notes: null,
+    logistic_type: order.ShippingType === 'Dropshipping' ? 'dropshipping'
+                 : order.ShippingType === 'Own Warehouse' ? 'own_warehouse'
+                 : null,
+    store_id: order.Warehouse?.SellerWarehouseId?.trim() || null,
+    store_name: order.Warehouse?.FacilityId?.trim() || null,
   };
 }
