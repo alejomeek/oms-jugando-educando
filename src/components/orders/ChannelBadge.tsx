@@ -18,7 +18,7 @@ const channelConfig: Record<OrderChannel, { label: string; className: string }> 
   },
   falabella: {
     label: 'Falabella',
-    className: 'bg-red-100 text-red-800 border-red-200',
+    className: 'bg-[rgba(170,214,62,0.18)] text-[#5a7a00] border-[#aad63e]',
   },
 };
 
