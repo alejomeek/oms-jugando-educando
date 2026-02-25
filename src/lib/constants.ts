@@ -32,5 +32,5 @@ export const ORDER_STATUSES: Record<OrderStatus, { label: string; color: string 
 export const CHANNELS: Record<OrderChannel, { label: string; color: string }> = {
   mercadolibre: { label: 'Mercado Libre', color: 'yellow' },
   wix: { label: 'Wix', color: 'purple' },
-  falabella: { label: 'Falabella', color: 'red' },
+  falabella: { label: 'Falabella', color: '#aad63e' },
 };

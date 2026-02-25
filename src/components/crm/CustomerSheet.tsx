@@ -10,23 +10,15 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CrmExportButton } from './CrmExportButton';
+import { ChannelBadge } from '@/components/orders/ChannelBadge';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { ORDER_STATUSES } from '@/lib/constants';
 import type { CustomerProfile } from '@/hooks/useCustomers';
+import type { OrderChannel } from '@/lib/types';
 
 interface CustomerSheetProps {
   customer: CustomerProfile | null;
   onClose: () => void;
-}
-
-function ChannelBadge({ channel }: { channel: 'mercadolibre' | 'wix' | 'falabella' }) {
-  if (channel === 'mercadolibre') {
-    return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">Mercado Libre</Badge>;
-  }
-  if (channel === 'falabella') {
-    return <Badge className="bg-red-100 text-red-800 hover:bg-red-100 border-red-200">Falabella</Badge>;
-  }
-  return <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-100 border-teal-200">Wix</Badge>;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -183,15 +175,7 @@ export function CustomerSheet({ customer, onClose }: CustomerSheetProps) {
                         <span className="font-mono text-xs font-medium">
                           #{order.order_id}
                         </span>
-                        {order.channel === 'mercadolibre' ? (
-                          <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200 text-[10px] px-1 py-0">
-                            ML
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-100 border-teal-200 text-[10px] px-1 py-0">
-                            Wix
-                          </Badge>
-                        )}
+                        <ChannelBadge channel={order.channel as OrderChannel} className="text-[10px] px-1 py-0" />
                       </div>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         {formatDate(order.order_date, 'dd MMM yyyy')}

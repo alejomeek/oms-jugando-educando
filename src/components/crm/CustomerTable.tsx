@@ -23,7 +23,7 @@ interface CustomerTableProps {
 
 type SortField = 'orderCount' | 'ltv' | 'avgTicket' | 'lastOrderDate';
 type SortDir = 'asc' | 'desc';
-type ChannelFilter = 'all' | 'mercadolibre' | 'wix';
+type ChannelFilter = 'all' | 'mercadolibre' | 'wix' | 'falabella';
 
 function SkeletonRow() {
   return (
@@ -77,7 +77,11 @@ function ChannelBadge({ channel }: { channel: 'mercadolibre' | 'wix' | 'falabell
     return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">ML</Badge>;
   }
   if (channel === 'falabella') {
-    return <Badge className="bg-red-100 text-red-800 hover:bg-red-100 border-red-200">Fal</Badge>;
+    return (
+      <Badge className="hover:opacity-90" style={{ backgroundColor: 'rgba(170,214,62,0.18)', color: '#5a7a00', borderColor: '#aad63e' }}>
+        Fal
+      </Badge>
+    );
   }
   return <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-100 border-teal-200">Wix</Badge>;
 }
@@ -191,7 +195,7 @@ export function CustomerTable({
         />
 
         <div className="flex rounded-lg border bg-muted p-0.5">
-          {(['all', 'mercadolibre', 'wix'] as ChannelFilter[]).map((ch) => (
+          {(['all', 'mercadolibre', 'wix', 'falabella'] as ChannelFilter[]).map((ch) => (
             <button
               key={ch}
               onClick={() => setChannelFilter(ch)}
@@ -202,7 +206,7 @@ export function CustomerTable({
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              {ch === 'all' ? 'Todos' : ch === 'mercadolibre' ? 'Mercado Libre' : 'Wix'}
+              {ch === 'all' ? 'Todos' : ch === 'mercadolibre' ? 'Mercado Libre' : ch === 'wix' ? 'Wix' : 'Falabella'}
             </button>
           ))}
         </div>

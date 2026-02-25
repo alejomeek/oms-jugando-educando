@@ -87,6 +87,13 @@ function getDateRange(key: DateRangeKey): { from: Date; to: Date } | undefined {
 const CHANNEL_COLORS: Record<string, string> = {
   mercadolibre: '#FFE600',
   wix: '#00A9E0',
+  falabella: '#aad63e',
+};
+
+const CHANNEL_LABELS: Record<string, string> = {
+  mercadolibre: 'Mercado Libre',
+  wix: 'Wix',
+  falabella: 'Falabella',
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -287,7 +294,7 @@ export function Analytics() {
   const channelChartData = useMemo(() => {
     if (!analytics) return [];
     return analytics.byChannel.map((c) => ({
-      name: c.channel === 'mercadolibre' ? 'Mercado Libre' : 'Wix',
+      name: CHANNEL_LABELS[c.channel] ?? c.channel,
       pedidos: c.orderCount,
       ingresos: c.totalRevenue,
       fill: CHANNEL_COLORS[c.channel] ?? '#9CA3AF',
@@ -432,6 +439,7 @@ export function Analytics() {
 
   const mlStats = analytics?.byChannel.find((c) => c.channel === 'mercadolibre');
   const wixStats = analytics?.byChannel.find((c) => c.channel === 'wix');
+  const falabellaStats = analytics?.byChannel.find((c) => c.channel === 'falabella');
 
   return (
     <>
@@ -481,7 +489,7 @@ export function Analytics() {
         {!isLoading && analytics && (
           <>
             {/* Row 1: KPI Cards */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <SummaryCard
                 title="Total Pedidos"
                 value={String(analytics.totalOrders)}
@@ -502,6 +510,12 @@ export function Analytics() {
                 value={String(wixStats?.orderCount ?? 0)}
                 subtitle={formatCOP(wixStats?.totalRevenue ?? 0)}
                 accentColor="#00A9E0"
+              />
+              <SummaryCard
+                title="Pedidos Falabella"
+                value={String(falabellaStats?.orderCount ?? 0)}
+                subtitle={formatCOP(falabellaStats?.totalRevenue ?? 0)}
+                accentColor="#aad63e"
               />
             </div>
 
@@ -1175,6 +1189,10 @@ export function Analytics() {
                         {customer.channel === 'mercadolibre' ? (
                           <Badge className="border-yellow-200 bg-yellow-100 px-1 py-0 text-[10px] text-yellow-800 hover:bg-yellow-100">
                             ML
+                          </Badge>
+                        ) : customer.channel === 'falabella' ? (
+                          <Badge className="px-1 py-0 text-[10px] hover:opacity-90" style={{ backgroundColor: 'rgba(170,214,62,0.18)', color: '#5a7a00', borderColor: '#aad63e' }}>
+                            Fal
                           </Badge>
                         ) : (
                           <Badge className="border-teal-200 bg-teal-100 px-1 py-0 text-[10px] text-teal-800 hover:bg-teal-100">

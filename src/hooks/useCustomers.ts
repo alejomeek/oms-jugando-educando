@@ -87,14 +87,16 @@ export function useCustomers(orders: Order[]): UseCustomersResult {
       const c = order.customer;
       const key = c.source === 'mercadolibre'
         ? `ml:${c.id}`
-        : `wix:${(c.email || c.id).toLowerCase()}`;
+        : c.source === 'falabella'
+          ? `fal:${c.id}`
+          : `wix:${(c.email || c.id).toLowerCase()}`;
 
       const existing = profileMap.get(key);
       if (existing) {
         existing.orders.push(order);
         existing.ltv += order.total_amount;
       } else {
-        const displayName = c.source === 'wix'
+        const displayName = c.source === 'wix' || c.source === 'falabella'
           ? ([c.firstName, c.lastName].filter(Boolean).join(' ') || c.email || c.id)
           : (order.shipping_address?.receiverName || c.nickname || `ML-${c.id}`);
         profileMap.set(key, {

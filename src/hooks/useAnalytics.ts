@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { Order } from '@/lib/types';
 
 export interface ChannelStats {
-  channel: 'mercadolibre' | 'wix';
+  channel: 'mercadolibre' | 'wix' | 'falabella';
   orderCount: number;
   totalRevenue: number;
   avgTicket: number;
@@ -295,7 +295,9 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
         const c = order.customer;
         const customerKey = c.source === 'mercadolibre'
           ? `ml:${c.id}`
-          : `wix:${(c.email || c.id).toLowerCase()}`;
+          : c.source === 'falabella'
+            ? `fal:${c.id}`
+            : `wix:${(c.email || c.id).toLowerCase()}`;
         customerOrders.set(customerKey, (customerOrders.get(customerKey) || 0) + 1);
       }
     }
@@ -305,7 +307,7 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
 
     // byChannel
     const byChannel: ChannelStats[] = Array.from(channelMap.entries()).map(([channel, stats]) => ({
-      channel: channel as 'mercadolibre' | 'wix',
+      channel: channel as 'mercadolibre' | 'wix' | 'falabella',
       orderCount: stats.orderCount,
       totalRevenue: stats.totalRevenue,
       avgTicket: stats.orderCount > 0 ? stats.totalRevenue / stats.orderCount : 0,
@@ -471,11 +473,16 @@ export function useAnalytics(orders: Order[], dateRange?: { from: Date; to: Date
     }
 
     // 2. Best channel by avg ticket
+    const CHANNEL_LABELS_MAP: Record<string, string> = {
+      mercadolibre: 'Mercado Libre',
+      wix: 'Wix',
+      falabella: 'Falabella',
+    };
     if (byChannel.length >= 2) {
       const best = [...byChannel].sort((a, b) => b.avgTicket - a.avgTicket)[0];
       keyInsights.push({
         label: 'Canal con ticket promedio más alto',
-        value: best.channel === 'mercadolibre' ? 'Mercado Libre' : 'Wix',
+        value: CHANNEL_LABELS_MAP[best.channel] ?? best.channel,
         trend: 'up',
         detail: `$${best.avgTicket.toFixed(0)} promedio por pedido`,
       });
