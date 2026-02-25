@@ -8,6 +8,7 @@ import {
   ChevronDown,
   GraduationCap,
   Users,
+  Type,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,26 @@ export function Sidebar({
     pedidos: true,
     canales: false,
   });
+
+  const [font, setFont] = useState<'jakarta' | 'satoshi'>(() => {
+    try {
+      return localStorage.getItem('oms-font') === 'satoshi' ? 'satoshi' : 'jakarta';
+    } catch { return 'jakarta'; }
+  });
+
+  const toggleFont = () => {
+    const next = font === 'jakarta' ? 'satoshi' : 'jakarta';
+    setFont(next);
+    try {
+      if (next === 'satoshi') {
+        document.documentElement.classList.add('font-satoshi');
+        localStorage.setItem('oms-font', 'satoshi');
+      } else {
+        document.documentElement.classList.remove('font-satoshi');
+        localStorage.setItem('oms-font', 'jakarta');
+      }
+    } catch { /* noop */ }
+  };
 
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -210,11 +231,19 @@ export function Sidebar({
         </div>
       </nav>
 
-      {/* Bottom sync status placeholder */}
+      {/* Bottom: sync status + font toggle */}
       <div className="border-t px-4 py-3">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span className="size-2 rounded-full bg-green-500" />
           Sistema conectado
+          <button
+            onClick={toggleFont}
+            title={font === 'jakarta' ? 'Cambiar a Satoshi' : 'Cambiar a Plus Jakarta Sans'}
+            className="ml-auto flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground/50 transition-colors hover:bg-muted hover:text-muted-foreground"
+          >
+            <Type className="size-3" />
+            {font === 'satoshi' ? 'Satoshi' : 'Jakarta'}
+          </button>
         </div>
       </div>
     </aside>
