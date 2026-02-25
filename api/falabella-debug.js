@@ -63,18 +63,34 @@ export default async function handler(req, res) {
   const allOrders = ordersResult.parsed?.SuccessResponse?.Body?.Orders || [];
   const targetOrder = allOrders.find(w => String(w.Order?.OrderId) === String(targetOrderId));
 
+  // Try treating 1654373478 as an OrderId → GetOrderItems
+  const unknownIdResult = await falabellaCall({
+    Action: 'GetOrderItems',
+    Format: 'JSON',
+    Timestamp: timestamp(),
+    UserID: userId,
+    Version: '1.0',
+    OrderId: '1654373478',
+  }, apiKey, userId);
+
+  // Also search in the orders list for OrderNumber = 1654373478
+  const matchByOrderNumber = allOrders.find(w => w.Order?.OrderNumber === '1654373478');
+
   return res.json({
     targetOrderId,
-    // Full order object — look for OrderNumber and NationalRegistrationNumber
     targetOrderFull: targetOrder?.Order ?? 'NOT FOUND in last 3 days',
-    // Items for the order
     orderItems: itemsResult.parsed?.SuccessResponse?.Body?.OrderItems,
-    // Status structure sample from first 3 orders
     statusSample: allOrders.slice(0, 3).map(w => ({
       orderId: w.Order?.OrderId,
       orderNumber: w.Order?.OrderNumber,
       nationalId: w.Order?.NationalRegistrationNumber,
       statuses: w.Order?.Statuses,
     })),
+    // Investigation for 1654373478
+    unknownId_1654373478: {
+      asOrderId_items: unknownIdResult.parsed?.SuccessResponse?.Body?.OrderItems
+        ?? unknownIdResult.parsed?.ErrorResponse?.Head ?? 'error',
+      asOrderNumber_found: matchByOrderNumber?.Order ?? 'NOT FOUND in last 3 days',
+    },
   });
 }
