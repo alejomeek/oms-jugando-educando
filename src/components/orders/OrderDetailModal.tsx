@@ -119,16 +119,27 @@ export function OrderDetailModal({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al migrar');
 
-      // Guardar serial en Supabase para prevenir duplicados futuros
-      const targetId = order.subOrders?.[0]?.id ?? order.id;
-      await supabase
+      // Guardar serial en Supabase — para packs actualizar por shipping_id
+      // (mismo comportamiento que el backfill del CSV)
+      let updateQuery = supabase
         .from('orders')
-        .update({ halcon_serial: data.numero_serial })
-        .eq('id', targetId);
+        .update({ halcon_serial: data.numero_serial });
+
+      if (order.channel === 'mercadolibre' && order.shipping_id) {
+        updateQuery = updateQuery.eq('shipping_id', order.shipping_id);
+      } else {
+        updateQuery = updateQuery.eq('id', order.id);
+      }
+
+      const { error: supabaseError } = await updateQuery;
+      if (supabaseError) throw new Error(`Error guardando en Supabase: ${supabaseError.message}`);
 
       // Actualizar UI inmediatamente y refrescar cache
       setHalconSerial(data.numero_serial);
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['orders-all'] }),
+      ]);
 
       toast.success(`Pedido #${data.numero_serial} creado en Halcon`);
     } catch (err) {

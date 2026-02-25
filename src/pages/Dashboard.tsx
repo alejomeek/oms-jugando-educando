@@ -174,7 +174,7 @@ export function Dashboard() {
         )}
 
         {/* ── Fila 1: Resumen general + Historial de actividad ───────────── */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
           {/* Resumen general */}
           <Card>
             <CardHeader className="pb-4">

@@ -41,7 +41,7 @@ export function OrderStats({ stats, isLoading }: OrderStatsProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4">
         {statCards.map((stat) => (
           <Card key={stat.label} className="py-4">
             <CardContent className="flex items-center gap-4">
