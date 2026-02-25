@@ -91,10 +91,12 @@ export function useCustomers(orders: Order[]): UseCustomersResult {
           ? `fal:${c.id}`
           : `wix:${(c.email || c.id).toLowerCase()}`;
 
+      const isCancelled = order.status === 'cancelado';
+
       const existing = profileMap.get(key);
       if (existing) {
         existing.orders.push(order);
-        existing.ltv += order.total_amount;
+        if (!isCancelled) existing.ltv += order.total_amount;
       } else {
         const displayName = c.source === 'wix' || c.source === 'falabella'
           ? ([c.firstName, c.lastName].filter(Boolean).join(' ') || c.email || c.id)
@@ -107,7 +109,7 @@ export function useCustomers(orders: Order[]): UseCustomersResult {
           nickname: c.nickname,
           customerId: c.id,
           orders: [order],
-          ltv: order.total_amount,
+          ltv: isCancelled ? 0 : order.total_amount,
         });
       }
     }
@@ -119,9 +121,12 @@ export function useCustomers(orders: Order[]): UseCustomersResult {
         (a, b) => new Date(a.order_date).getTime() - new Date(b.order_date).getTime()
       );
 
-      // Most purchased product
+      // Active orders: exclude cancelled (used for stats but not history display)
+      const activeOrders = data.orders.filter(o => o.status !== 'cancelado');
+
+      // Most purchased product (only from non-cancelled orders)
       const itemFreq = new Map<string, number>();
-      for (const o of data.orders) {
+      for (const o of activeOrders) {
         for (const item of o.items || []) {
           itemFreq.set(item.title, (itemFreq.get(item.title) || 0) + item.quantity);
         }
@@ -139,7 +144,7 @@ export function useCustomers(orders: Order[]): UseCustomersResult {
         .sort((a, b) => b[1] - a[1])[0]?.[0];
 
       // Deduplicated purchase event count: pack rows share one event key.
-      const eventCount = countPurchaseEvents(data.orders);
+      const eventCount = countPurchaseEvents(activeOrders);
       // Combine pack rows into events for the order history timeline.
       const eventOrders = groupToEvents(sortedOrders);
 
