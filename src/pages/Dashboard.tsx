@@ -14,6 +14,7 @@ import { OrderStats } from '@/components/orders/OrderStats';
 import { OrderFilters } from '@/components/orders/OrderFilters';
 import { OrdersTable } from '@/components/orders/OrdersTable';
 import { OrderDetailModal } from '@/components/orders/OrderDetailModal';
+import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import type { Order, OrderFilters as OrderFiltersType, OrderStatus } from '@/lib/types';
 
 export function Dashboard() {
@@ -172,26 +173,39 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* Stats */}
-        <OrderStats
-          stats={stats || {
-            total: 0,
-            nuevo: 0,
-            preparando: 0,
-            entregado: 0,
-            enviado: 0,
-            mercadolibre: 0,
-            wix: 0,
-            falabella: 0
-          }}
-          isLoading={isLoadingStats}
-        />
+        {/* ── Fila 1: Resumen general + Historial de actividad ───────────── */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
+          {/* Resumen general */}
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle>Resumen general</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-5">
+              <OrderStats
+                stats={stats || {
+                  total: 0,
+                  nuevo: 0,
+                  preparando: 0,
+                  entregado: 0,
+                  enviado: 0,
+                  mercadolibre: 0,
+                  wix: 0,
+                  falabella: 0,
+                }}
+                isLoading={isLoadingStats}
+              />
+            </CardContent>
+          </Card>
 
-        {/* Filters + Table */}
+          {/* Historial de actividad */}
+          <ActivityFeed />
+        </div>
+
+        {/* ── Fila 2: Resumen de pedidos ─────────────────────────────────── */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle>Pedidos ({totalCount})</CardTitle>
+              <CardTitle>Resumen de pedidos ({totalCount})</CardTitle>
               {isUpdatingStatus && (
                 <span className="animate-pulse text-sm text-primary">
                   Actualizando estado...
@@ -209,8 +223,8 @@ export function Dashboard() {
               isLoading={isLoading}
             />
 
-            {/* Pagination Controls */}
-            <div className="flex items-center justify-between pt-4 border-t mt-4">
+            {/* Paginación */}
+            <div className="mt-4 flex items-center justify-between border-t pt-4">
               <div className="text-sm text-muted-foreground">
                 Página {page} de {Math.ceil(totalCount / pageSize) || 1}
                 <span className="ml-2">({totalCount} pedidos)</span>
@@ -234,7 +248,6 @@ export function Dashboard() {
                 </Button>
               </div>
             </div>
-
           </CardContent>
         </Card>
 

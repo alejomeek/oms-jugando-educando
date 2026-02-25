@@ -182,3 +182,104 @@ END $$;
 -- Agregar constraint actualizado con 'falabella'
 ALTER TABLE orders ADD CONSTRAINT orders_channel_check
   CHECK (channel IN ('mercadolibre', 'wix', 'falabella'));
+
+-- ============================================
+-- MIGRACIÓN: Historial de actividad (order_events)
+-- Ejecutar en Supabase SQL Editor
+-- ============================================
+
+-- Tabla de eventos de órdenes
+CREATE TABLE IF NOT EXISTS order_events (
+  id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id          UUID        NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  order_external_id TEXT        NOT NULL,  -- order_id legible para mostrar en UI
+  channel           TEXT        NOT NULL,
+  event_type        TEXT        NOT NULL CHECK (event_type IN (
+    'order_created', 'status_changed', 'remision_assigned', 'halcon_assigned'
+  )),
+  old_value         TEXT,
+  new_value         TEXT,
+  description       TEXT        NOT NULL,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_order_events_order_id   ON order_events(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_events_created_at ON order_events(created_at DESC);
+
+-- RLS permisivo (igual que orders, MVP)
+ALTER TABLE order_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all access to order_events"
+  ON order_events FOR ALL USING (true);
+
+-- ============================================
+-- FUNCIÓN: fn_orders_activity_event
+-- Inserta un evento en order_events cuando una
+-- orden es creada o se actualizan campos clave.
+-- ============================================
+
+CREATE OR REPLACE FUNCTION fn_orders_activity_event()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    INSERT INTO order_events
+      (order_id, order_external_id, channel, event_type, new_value, description)
+    VALUES (
+      NEW.id, NEW.order_id, NEW.channel,
+      'order_created',
+      NEW.status,
+      'Pedido creado · estado ' || NEW.status
+    );
+
+  ELSIF TG_OP = 'UPDATE' THEN
+
+    -- Cambio de estado
+    IF OLD.status IS DISTINCT FROM NEW.status THEN
+      INSERT INTO order_events
+        (order_id, order_external_id, channel, event_type, old_value, new_value, description)
+      VALUES (
+        NEW.id, NEW.order_id, NEW.channel,
+        'status_changed',
+        OLD.status, NEW.status,
+        'Estado: ' || OLD.status || ' → ' || NEW.status
+      );
+    END IF;
+
+    -- Remisión TBC asignada (primera vez)
+    IF OLD.remision_tbc IS NULL AND NEW.remision_tbc IS NOT NULL THEN
+      INSERT INTO order_events
+        (order_id, order_external_id, channel, event_type, new_value, description)
+      VALUES (
+        NEW.id, NEW.order_id, NEW.channel,
+        'remision_assigned',
+        NEW.remision_tbc,
+        'Remisión TBC: ' || NEW.remision_tbc
+      );
+    END IF;
+
+    -- Serial Halcón asignado (primera vez)
+    IF OLD.halcon_serial IS NULL AND NEW.halcon_serial IS NOT NULL THEN
+      INSERT INTO order_events
+        (order_id, order_external_id, channel, event_type, new_value, description)
+      VALUES (
+        NEW.id, NEW.order_id, NEW.channel,
+        'halcon_assigned',
+        NEW.halcon_serial::TEXT,
+        'Serial Halcón: ' || NEW.halcon_serial::TEXT
+      );
+    END IF;
+
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+-- Trigger sobre orders
+CREATE TRIGGER trg_orders_activity
+  AFTER INSERT OR UPDATE ON orders
+  FOR EACH ROW EXECUTE FUNCTION fn_orders_activity_event();
+
+-- Habilitar Supabase Realtime para order_events
+-- La publicación supabase_realtime ya existe en todo proyecto Supabase.
+ALTER PUBLICATION supabase_realtime ADD TABLE order_events;

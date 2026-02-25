@@ -101,6 +101,24 @@ export interface OrderStatusHistory {
   notes?: string;
 }
 
+export type OrderEventType =
+  | 'order_created'
+  | 'status_changed'
+  | 'remision_assigned'
+  | 'halcon_assigned';
+
+export interface OrderEvent {
+  id: string;
+  order_id: string;           // UUID de orders
+  order_external_id: string;  // order_id legible (ej: "2433", "123456")
+  channel: OrderChannel;
+  event_type: OrderEventType;
+  old_value?: string | null;
+  new_value?: string | null;
+  description: string;
+  created_at: string;
+}
+
 // ============================================
 // FILTROS Y QUERIES
 // ============================================
