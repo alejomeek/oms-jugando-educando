@@ -34,63 +34,80 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Faltan credenciales' });
   }
 
-  const targetOrderId = req.query.orderId || '1144027921';
   const timestamp = () => new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 
-  // GetOrderItems — for item-level status and IDs
-  const itemsResult = await falabellaCall({
-    Action: 'GetOrderItems',
-    Format: 'JSON',
-    Timestamp: timestamp(),
-    UserID: userId,
-    Version: '1.0',
-    OrderId: String(targetOrderId),
-  }, apiKey, userId);
+  // Search all orders (6 months, up to 3 pages = 300 orders) to find these specific OrderNumbers
+  const TARGET_ORDER_NUMBERS = ['3214327430', '3212879369', '21019387380'];
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-  // GetOrders filtered to last 3 days to find the full order object (OrderNumber, NationalRegistrationNumber)
-  const threeDaysAgo = new Date();
-  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-  const ordersResult = await falabellaCall({
-    Action: 'GetOrders',
-    Format: 'JSON',
-    Timestamp: timestamp(),
-    UserID: userId,
-    Version: '2.0',
-    UpdatedAfter: threeDaysAgo.toISOString(),
-    Limit: '20',
-  }, apiKey, userId);
+  const found = {};
+  let offset = 0;
+  const pageLimit = 100;
 
-  const allOrders = ordersResult.parsed?.SuccessResponse?.Body?.Orders || [];
-  const targetOrder = allOrders.find(w => String(w.Order?.OrderId) === String(targetOrderId));
+  for (let page = 0; page < 3; page++) {
+    const result = await falabellaCall({
+      Action: 'GetOrders',
+      Format: 'JSON',
+      Timestamp: timestamp(),
+      UserID: userId,
+      Version: '2.0',
+      UpdatedAfter: sixMonthsAgo.toISOString(),
+      Limit: String(pageLimit),
+      Offset: String(offset),
+    }, apiKey, userId);
 
-  // Try treating 1654373478 as an OrderId → GetOrderItems
-  const unknownIdResult = await falabellaCall({
-    Action: 'GetOrderItems',
-    Format: 'JSON',
-    Timestamp: timestamp(),
-    UserID: userId,
-    Version: '1.0',
-    OrderId: '1654373478',
-  }, apiKey, userId);
+    const orders = result.parsed?.SuccessResponse?.Body?.Orders || [];
+    if (!orders.length) break;
 
-  // Also search in the orders list for OrderNumber = 1654373478
-  const matchByOrderNumber = allOrders.find(w => w.Order?.OrderNumber === '1654373478');
+    for (const wrapper of orders) {
+      const o = wrapper.Order;
+      if (TARGET_ORDER_NUMBERS.includes(String(o?.OrderNumber))) {
+        found[String(o.OrderNumber)] = {
+          orderNumber: o.OrderNumber,
+          orderId: o.OrderId,
+          statuses: o.Statuses,
+          createdAt: o.CreatedAt,
+          updatedAt: o.UpdatedAt,
+          shippingType: o.ShippingType,
+          grandTotal: o.GrandTotal,
+          // raw status string extracted
+          rawStatusValues: Array.isArray(o.Statuses)
+            ? o.Statuses.map(s => s.Status)
+            : [o.Statuses?.Status],
+        };
+      }
+    }
+
+    const totalCount = parseInt(result.parsed?.SuccessResponse?.Head?.TotalCount || '0', 10);
+    offset += pageLimit;
+    if (offset >= Math.min(totalCount, 300)) break;
+    if (Object.keys(found).length === TARGET_ORDER_NUMBERS.length) break;
+  }
+
+  // For any found orders, also get their items to see item-level status
+  const itemsByOrderNumber = {};
+  for (const [orderNumber, order] of Object.entries(found)) {
+    const itemsResult = await falabellaCall({
+      Action: 'GetOrderItems',
+      Format: 'JSON',
+      Timestamp: timestamp(),
+      UserID: userId,
+      Version: '1.0',
+      OrderId: String(order.orderId),
+    }, apiKey, userId);
+    const rawItems = itemsResult.parsed?.SuccessResponse?.Body?.OrderItems?.OrderItem;
+    itemsByOrderNumber[orderNumber] = rawItems
+      ? [].concat(rawItems).map(i => ({ status: i.Status, sku: i.Sku, name: i.Name }))
+      : itemsResult.parsed?.ErrorResponse?.Head ?? 'error';
+  }
 
   return res.json({
-    targetOrderId,
-    targetOrderFull: targetOrder?.Order ?? 'NOT FOUND in last 3 days',
-    orderItems: itemsResult.parsed?.SuccessResponse?.Body?.OrderItems,
-    statusSample: allOrders.slice(0, 3).map(w => ({
-      orderId: w.Order?.OrderId,
-      orderNumber: w.Order?.OrderNumber,
-      nationalId: w.Order?.NationalRegistrationNumber,
-      statuses: w.Order?.Statuses,
-    })),
-    // Investigation for 1654373478
-    unknownId_1654373478: {
-      asOrderId_items: unknownIdResult.parsed?.SuccessResponse?.Body?.OrderItems
-        ?? unknownIdResult.parsed?.ErrorResponse?.Head ?? 'error',
-      asOrderNumber_found: matchByOrderNumber?.Order ?? 'NOT FOUND in last 3 days',
-    },
+    searched: TARGET_ORDER_NUMBERS,
+    foundCount: Object.keys(found).length,
+    orders: found,
+    itemStatuses: itemsByOrderNumber,
+    // Show all distinct status values found across all fetched orders (to map any missing ones)
+    note: 'rawStatusValues shows what Falabella actually returns — if not in mapping it falls back to nuevo',
   });
 }
