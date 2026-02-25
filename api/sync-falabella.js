@@ -46,7 +46,7 @@ function normalizeFalabellaOrderWithItems(order, items) {
     : [].concat(order.Statuses?.Status || ['pending']);
 
   return {
-    order_id: String(order.OrderId),
+    order_id: String(order.OrderNumber),
     channel: 'falabella',
     pack_id: null,
     shipping_id: null,
