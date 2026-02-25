@@ -21,7 +21,7 @@ async function falabellaCall(allParams, apiKey, userId) {
   const text = await response.text();
   let parsed = null;
   try { parsed = JSON.parse(text); } catch (_) {}
-  return { status: response.status, text: text.slice(0, 4000), parsed };
+  return { status: response.status, parsed };
 }
 
 export default async function handler(req, res) {
@@ -31,53 +31,50 @@ export default async function handler(req, res) {
   const apiKey = process.env.VITE_FALABELLA_API_KEY;
 
   if (!userId || !apiKey) {
-    return res.status(400).json({ error: 'Faltan credenciales', userId: !!userId, apiKey: !!apiKey });
+    return res.status(400).json({ error: 'Faltan credenciales' });
   }
 
-  const timestamp = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
   const targetOrderId = req.query.orderId || '1144027921';
+  const timestamp = () => new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 
-  // Call 1: GetOrderItems for the target order
+  // GetOrderItems — for item-level status and IDs
   const itemsResult = await falabellaCall({
     Action: 'GetOrderItems',
     Format: 'JSON',
-    Timestamp: timestamp,
+    Timestamp: timestamp(),
     UserID: userId,
     Version: '1.0',
     OrderId: String(targetOrderId),
   }, apiKey, userId);
 
-  // Call 2: GetOrders with limit=5 to see raw status structure
-  const timestamp2 = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  // GetOrders filtered to last 3 days to find the full order object (OrderNumber, NationalRegistrationNumber)
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
   const ordersResult = await falabellaCall({
     Action: 'GetOrders',
     Format: 'JSON',
-    Timestamp: timestamp2,
+    Timestamp: timestamp(),
     UserID: userId,
     Version: '2.0',
-    UpdatedAfter: sixMonthsAgo.toISOString(),
-    Limit: '3',
+    UpdatedAfter: threeDaysAgo.toISOString(),
+    Limit: '20',
   }, apiKey, userId);
+
+  const allOrders = ordersResult.parsed?.SuccessResponse?.Body?.Orders || [];
+  const targetOrder = allOrders.find(w => String(w.Order?.OrderId) === String(targetOrderId));
 
   return res.json({
     targetOrderId,
-    orderItems: {
-      httpStatus: itemsResult.status,
-      parsed: itemsResult.parsed,
-    },
-    sampleOrders: {
-      httpStatus: ordersResult.status,
-      // Show raw Statuses structure of first few orders
-      statusesPreview: ordersResult.parsed?.SuccessResponse?.Body?.Orders
-        ?.slice(0, 3)
-        ?.map(w => ({
-          orderId: w.Order?.OrderId,
-          statuses: w.Order?.Statuses,
-          grandTotal: w.Order?.GrandTotal,
-        })),
-      rawResponse: ordersResult.text,
-    },
+    // Full order object — look for OrderNumber and NationalRegistrationNumber
+    targetOrderFull: targetOrder?.Order ?? 'NOT FOUND in last 3 days',
+    // Items for the order
+    orderItems: itemsResult.parsed?.SuccessResponse?.Body?.OrderItems,
+    // Status structure sample from first 3 orders
+    statusSample: allOrders.slice(0, 3).map(w => ({
+      orderId: w.Order?.OrderId,
+      orderNumber: w.Order?.OrderNumber,
+      nationalId: w.Order?.NationalRegistrationNumber,
+      statuses: w.Order?.Statuses,
+    })),
   });
 }

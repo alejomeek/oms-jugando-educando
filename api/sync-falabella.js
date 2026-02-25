@@ -40,7 +40,10 @@ function parseAmount(v) {
 }
 
 function normalizeFalabellaOrderWithItems(order, items) {
-  const statusArray = [].concat(order.Statuses?.Status || ['pending']);
+  // Statuses is [{Status:"delivered"}, ...] — extract the string from each wrapper
+  const statusArray = Array.isArray(order.Statuses)
+    ? order.Statuses.map(s => s.Status).filter(Boolean)
+    : [].concat(order.Statuses?.Status || ['pending']);
 
   return {
     order_id: String(order.OrderId),
@@ -120,7 +123,7 @@ export default async function handler(req, res) {
   console.log('\n🔴 [Falabella] Iniciando sincronización...');
 
   try {
-    const { config, dateFrom, limit: bodyLimit } = req.body;
+    const { config, dateFrom } = req.body;
 
     const userId = config?.userId || process.env.VITE_FALABELLA_USER_ID;
     const apiKey = config?.apiKey || process.env.VITE_FALABELLA_API_KEY;
