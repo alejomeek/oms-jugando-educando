@@ -84,7 +84,7 @@ function getEffectiveConfigKey(event: OrderEvent): EventConfigKey {
 function getDisplayId(event: OrderEvent): string {
   if (event.channel === 'mercadolibre') {
     const packId = event.orders?.pack_id;
-    if (packId) return `Pack ${packId}`;
+    if (packId) return `#${packId}`;
   }
   return `#${event.order_external_id}`;
 }
