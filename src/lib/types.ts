@@ -117,6 +117,8 @@ export interface OrderEvent {
   new_value?: string | null;
   description: string;
   created_at: string;
+  // Campo enriquecido vía join con orders (presente en queries, no en Realtime raw)
+  orders?: { pack_id?: string | null } | null;
 }
 
 // ============================================
