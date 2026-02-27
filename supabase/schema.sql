@@ -223,12 +223,13 @@ RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN
   IF TG_OP = 'INSERT' THEN
     INSERT INTO order_events
-      (order_id, order_external_id, channel, event_type, new_value, description)
+      (order_id, order_external_id, channel, event_type, new_value, description, created_at)
     VALUES (
       NEW.id, NEW.order_id, NEW.channel,
       'order_created',
       NEW.status,
-      'Pedido creado · estado ' || NEW.status
+      'Pedido creado · estado ' || NEW.status,
+      NEW.order_date  -- fecha real de compra de la API, no hora de sync
     );
 
   ELSIF TG_OP = 'UPDATE' THEN
