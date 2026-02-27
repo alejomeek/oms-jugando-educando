@@ -74,7 +74,7 @@ function SortHeader({
 
 function ChannelBadge({ channel }: { channel: 'mercadolibre' | 'wix' | 'falabella' }) {
   if (channel === 'mercadolibre') {
-    return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">ML</Badge>;
+    return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">Meli</Badge>;
   }
   if (channel === 'falabella') {
     return (

@@ -500,7 +500,7 @@ export function Analytics() {
                 value={formatCOP(analytics.totalRevenue)}
               />
               <SummaryCard
-                title="Pedidos ML"
+                title="Pedidos Meli"
                 value={String(mlStats?.orderCount ?? 0)}
                 subtitle={formatCOP(mlStats?.totalRevenue ?? 0)}
                 accentColor="#FFE600"
@@ -705,7 +705,7 @@ export function Analytics() {
               <div className="flex items-center gap-3">
                 <div className="h-1 w-8 rounded-full bg-yellow-400" />
                 <h2 className="text-base font-semibold">Logística · Mercado Libre</h2>
-                <span className="text-sm text-muted-foreground">Solo órdenes ML</span>
+                <span className="text-sm text-muted-foreground">Solo órdenes Meli</span>
               </div>
 
               {/* KPI strip */}
@@ -1188,7 +1188,7 @@ export function Analytics() {
                         </span>
                         {customer.channel === 'mercadolibre' ? (
                           <Badge className="border-yellow-200 bg-yellow-100 px-1 py-0 text-[10px] text-yellow-800 hover:bg-yellow-100">
-                            ML
+                            Meli
                           </Badge>
                         ) : customer.channel === 'falabella' ? (
                           <Badge className="px-1 py-0 text-[10px] hover:opacity-90" style={{ backgroundColor: 'rgba(170,214,62,0.18)', color: '#5a7a00', borderColor: '#aad63e' }}>

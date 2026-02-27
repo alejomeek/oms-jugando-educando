@@ -417,7 +417,7 @@ export function OrderDetailModal({
               <Button variant="outline" size="sm" asChild>
                 <a href={mlLabelUrl} download>
                   <Download className="size-4 mr-2" />
-                  Descargar Etiqueta ML
+                  Descargar Etiqueta Meli
                 </a>
               </Button>
             )}

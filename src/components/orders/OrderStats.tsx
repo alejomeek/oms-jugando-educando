@@ -13,25 +13,21 @@ export function OrderStats({ stats, isLoading }: OrderStatsProps) {
       label: 'Total pedidos',
       value: stats.total,
       icon: ShoppingCart,
-      iconBg: 'bg-blue-100 text-blue-600',
     },
     {
       label: 'Nuevos',
       value: stats.nuevo,
       icon: Clock,
-      iconBg: 'bg-sky-100 text-sky-600',
     },
     {
       label: 'Preparando',
       value: stats.preparando,
       icon: Package,
-      iconBg: 'bg-amber-100 text-amber-600',
     },
     {
       label: 'Entregados',
       value: stats.entregado,
       icon: Truck,
-      iconBg: 'bg-green-100 text-green-600',
     },
   ];
 
@@ -40,18 +36,17 @@ export function OrderStats({ stats, isLoading }: OrderStatsProps) {
   }
 
   return (
-    <div className="flex h-full flex-col gap-4">
-      <div className="grid flex-1 grid-cols-2 gap-4">
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {statCards.map((stat) => (
-          <Card key={stat.label} className="flex flex-col">
-            <CardContent className="flex flex-1 items-center gap-4 py-0">
-              <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${stat.iconBg}`}>
-                <stat.icon className="size-5" />
+          <Card key={stat.label}>
+            <CardContent className="flex items-center gap-4 py-5">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-violet-50">
+                <stat.icon className="size-5 text-violet-600" strokeWidth={1.5} />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
                 <p className="text-2xl font-bold">{stat.value}</p>
-                <p className="text-xs text-muted-foreground">Hoy</p>
               </div>
             </CardContent>
           </Card>
@@ -59,20 +54,20 @@ export function OrderStats({ stats, isLoading }: OrderStatsProps) {
       </div>
 
       {/* Channel breakdown */}
-      <div className="flex items-center gap-4 text-sm">
+      <div className="flex items-center gap-5 text-base">
         <span className="text-muted-foreground">Por canal:</span>
-        <div className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-full bg-yellow-400" />
+        <div className="flex items-center gap-2">
+          <span className="size-3 rounded-full bg-yellow-400" />
           <span className="font-medium">Mercado Libre</span>
           <span className="text-muted-foreground">({stats.mercadolibre})</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-full bg-purple-500" />
+        <div className="flex items-center gap-2">
+          <span className="size-3 rounded-full bg-purple-500" />
           <span className="font-medium">Wix</span>
           <span className="text-muted-foreground">({stats.wix})</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-full bg-[rgb(170,214,62)]" />
+        <div className="flex items-center gap-2">
+          <span className="size-3 rounded-full bg-[rgb(170,214,62)]" />
           <span className="font-medium">Falabella</span>
           <span className="text-muted-foreground">({stats.falabella || 0})</span>
         </div>

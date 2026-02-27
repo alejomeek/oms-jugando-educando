@@ -41,7 +41,7 @@ export function TopBar({
           disabled={isSyncingML}
         >
           <RefreshCw className={isSyncingML ? 'animate-spin' : ''} />
-          Sincronizar ML
+          Sincronizar Meli
         </Button>
         <Button
           variant="outline"

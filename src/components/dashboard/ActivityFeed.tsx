@@ -65,7 +65,7 @@ const CHANNEL_COLORS: Record<string, string> = {
 };
 
 const CHANNEL_LABELS: Record<string, string> = {
-  mercadolibre: 'ML',
+  mercadolibre: 'Meli',
   wix: 'Wix',
   falabella: 'Fal',
 };
@@ -178,7 +178,7 @@ export function ActivityFeed() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
             <span className="relative inline-flex size-2.5 rounded-full bg-green-500" />
           </span>
-          <CardTitle className="text-base">Historial de actividad</CardTitle>
+          <CardTitle className="text-xl">Historial de actividad</CardTitle>
           {events.length > 0 && (
             <span className="ml-auto text-xs text-muted-foreground">{events.length} eventos</span>
           )}
@@ -208,7 +208,7 @@ export function ActivityFeed() {
             <p className="mt-1 text-center text-xs">Los eventos aparecen aquí en tiempo real</p>
           </div>
         ) : (
-          <ScrollArea className="h-[480px]">
+          <ScrollArea className="h-[356px]">
             <div className="px-6">
               {events.map((event) => (
                 <EventRow key={event.id} event={event} />

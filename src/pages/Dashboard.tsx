@@ -176,11 +176,11 @@ export function Dashboard() {
         {/* ── Fila 1: Resumen general + Historial de actividad ───────────── */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
           {/* Resumen general */}
-          <Card className="flex flex-col">
-            <CardHeader className="shrink-0 pb-4">
-              <CardTitle>Resumen general</CardTitle>
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl">Resumen general (hoy)</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-1 flex-col pb-5">
+            <CardContent>
               <OrderStats
                 stats={stats || {
                   total: 0,
@@ -205,7 +205,7 @@ export function Dashboard() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle>Resumen de pedidos ({totalCount})</CardTitle>
+              <CardTitle className="text-xl">Resumen de pedidos ({totalCount})</CardTitle>
               {isUpdatingStatus && (
                 <span className="animate-pulse text-sm text-primary">
                   Actualizando estado...
