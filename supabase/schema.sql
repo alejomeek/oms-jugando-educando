@@ -236,12 +236,17 @@ BEGIN
     -- Cambio de estado
     IF OLD.status IS DISTINCT FROM NEW.status THEN
       INSERT INTO order_events
-        (order_id, order_external_id, channel, event_type, old_value, new_value, description)
+        (order_id, order_external_id, channel, event_type, old_value, new_value, description, created_at)
       VALUES (
         NEW.id, NEW.order_id, NEW.channel,
         'status_changed',
         OLD.status, NEW.status,
-        'Estado: ' || OLD.status || ' → ' || NEW.status
+        'Estado: ' || OLD.status || ' → ' || NEW.status,
+        -- Para entregado: usar closed_date de ML (fecha real). Para otros estados: NOW().
+        CASE
+          WHEN NEW.status = 'entregado' AND NEW.closed_date IS NOT NULL THEN NEW.closed_date
+          ELSE NOW()
+        END
       );
     END IF;
 
