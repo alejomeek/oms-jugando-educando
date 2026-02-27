@@ -176,11 +176,11 @@ export function Dashboard() {
         {/* ── Fila 1: Resumen general + Historial de actividad ───────────── */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
           {/* Resumen general */}
-          <Card>
-            <CardHeader className="pb-4">
+          <Card className="flex flex-col">
+            <CardHeader className="shrink-0 pb-4">
               <CardTitle>Resumen general</CardTitle>
             </CardHeader>
-            <CardContent className="pb-5">
+            <CardContent className="flex flex-1 flex-col pb-5">
               <OrderStats
                 stats={stats || {
                   total: 0,

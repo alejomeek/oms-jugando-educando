@@ -40,12 +40,12 @@ export function OrderStats({ stats, isLoading }: OrderStatsProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <div className="flex h-full flex-col gap-4">
+      <div className="grid flex-1 grid-cols-2 gap-4">
         {statCards.map((stat) => (
-          <Card key={stat.label} className="py-4">
-            <CardContent className="flex items-center gap-4">
-              <div className={`flex size-10 items-center justify-center rounded-lg ${stat.iconBg}`}>
+          <Card key={stat.label} className="flex flex-col">
+            <CardContent className="flex flex-1 items-center gap-4 py-0">
+              <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${stat.iconBg}`}>
                 <stat.icon className="size-5" />
               </div>
               <div>
