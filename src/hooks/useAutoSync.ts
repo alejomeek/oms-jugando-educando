@@ -15,9 +15,9 @@ import { supabase } from '@/services/supabase';
 export interface AutoSyncConfig {
   intervalMinutes: number;
   enabled: boolean;
-  onSyncStart?: (channel: 'mercadolibre' | 'wix') => void;
-  onSyncComplete?: (channel: 'mercadolibre' | 'wix', newOrderCount: number) => void;
-  onSyncError?: (channel: 'mercadolibre' | 'wix', error: Error) => void;
+  onSyncStart?: (channel: 'mercadolibre' | 'wix' | 'falabella') => void;
+  onSyncComplete?: (channel: 'mercadolibre' | 'wix' | 'falabella', newOrderCount: number) => void;
+  onSyncError?: (channel: 'mercadolibre' | 'wix' | 'falabella', error: Error) => void;
 }
 
 export function useAutoSync(config: AutoSyncConfig) {
@@ -28,10 +28,6 @@ export function useAutoSync(config: AutoSyncConfig) {
 
   const performSync = useCallback(async () => {
     const { onSyncStart, onSyncComplete, onSyncError } = configRef.current;
-
-    // Get current order count before sync
-    const currentData = queryClient.getQueryData<unknown[]>(['orders']);
-    const countBefore = Array.isArray(currentData) ? currentData.length : 0;
 
     // Build configs from env vars (same pattern as useSyncML / useSyncWix)
     const mlConfig = {
@@ -45,14 +41,45 @@ export function useAutoSync(config: AutoSyncConfig) {
       apiKey: import.meta.env.VITE_WIX_API_KEY,
       siteId: import.meta.env.VITE_WIX_SITE_ID,
     };
+    const falabellaConfig = {
+      userId: import.meta.env.VITE_FALABELLA_USER_ID,
+      apiKey: import.meta.env.VITE_FALABELLA_API_KEY,
+    };
 
-    const channels = [
-      { channel: 'mercadolibre' as const, endpoint: '/api/sync-ml', body: { config: mlConfig, limit: 50, offset: 0 } },
-      { channel: 'wix' as const, endpoint: '/api/sync-wix', body: { config: wixConfig, limit: 50, cursor: null } },
+    const channels: Array<{
+      channel: 'mercadolibre' | 'wix' | 'falabella';
+      endpoint: string;
+      body: Record<string, unknown>;
+    }> = [
+      { channel: 'mercadolibre', endpoint: '/api/sync-ml', body: { config: mlConfig, limit: 50, offset: 0 } },
+      { channel: 'wix', endpoint: '/api/sync-wix', body: { config: wixConfig, limit: 50, cursor: null } },
+      { channel: 'falabella', endpoint: '/api/sync-falabella', body: { config: falabellaConfig } },
     ];
+
+    // countBefore se actualiza canal por canal para evitar conteo acumulado incorrecto
+    let countBefore = (() => {
+      const d = queryClient.getQueryData<unknown[]>(['orders']);
+      return Array.isArray(d) ? d.length : 0;
+    })();
 
     for (const { channel, endpoint, body } of channels) {
       try {
+        // dateFrom incremental para Falabella: se calcula dentro del try/catch
+        // para que un fallo de Supabase no rompa la sincronización de los otros canales
+        if (channel === 'falabella') {
+          const { data: lastFalabellaOrder } = await supabase
+            .from('orders')
+            .select('order_date')
+            .eq('channel', 'falabella')
+            .order('order_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (lastFalabellaOrder?.order_date) {
+            const lastDate = new Date(lastFalabellaOrder.order_date);
+            body.dateFrom = new Date(lastDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
+          }
+        }
+
         onSyncStart?.(channel);
 
         const response = await fetch(endpoint, {
@@ -70,10 +97,11 @@ export function useAutoSync(config: AutoSyncConfig) {
         const syncedOrders = result.orders || [];
 
         if (syncedOrders.length > 0) {
-          await supabase.from('orders').upsert(syncedOrders, {
+          const { error: upsertError } = await supabase.from('orders').upsert(syncedOrders, {
             onConflict: 'channel,order_id',
             ignoreDuplicates: false,
           });
+          if (upsertError) throw new Error(upsertError.message);
         }
 
         await queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -82,6 +110,7 @@ export function useAutoSync(config: AutoSyncConfig) {
         const newData = queryClient.getQueryData<unknown[]>(['orders']);
         const countAfter = Array.isArray(newData) ? newData.length : 0;
         const newOrders = Math.max(0, countAfter - countBefore);
+        countBefore = countAfter; // Actualizar base para el siguiente canal
 
         onSyncComplete?.(channel, newOrders);
       } catch (err) {

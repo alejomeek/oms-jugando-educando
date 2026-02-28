@@ -54,7 +54,7 @@ export function Dashboard() {
 
   const { settings: autoSyncSettings, updateSettings: updateAutoSyncSettings } = useAutoSyncSettings();
 
-  const onSyncComplete = useCallback((_channel: 'mercadolibre' | 'wix', newOrderCount: number) => {
+  const onSyncComplete = useCallback((_channel: 'mercadolibre' | 'wix' | 'falabella', newOrderCount: number) => {
     if (newOrderCount > 0) {
       toast.success(`${newOrderCount} nuevos pedidos!`, {
         description: 'Sincronizacion automatica completada',
@@ -62,7 +62,7 @@ export function Dashboard() {
     }
   }, []);
 
-  const onSyncError = useCallback((_channel: 'mercadolibre' | 'wix', err: Error) => {
+  const onSyncError = useCallback((_channel: 'mercadolibre' | 'wix' | 'falabella', err: Error) => {
     toast.error('Error al sincronizar', { description: err.message });
   }, []);
 

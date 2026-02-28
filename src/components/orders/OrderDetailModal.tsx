@@ -242,7 +242,7 @@ export function OrderDetailModal({
             <div className="grid grid-cols-2 gap-3">
               {order.customer.source === 'mercadolibre' ? (
                 <>
-                  <InfoField label="Nickname" value={order.customer.nickname} />
+                  <InfoField label="Nombre" value={order.shipping_address?.receiverName || order.customer.nickname} />
                   <InfoField label="ID" value={order.customer.id} mono />
                 </>
               ) : (
