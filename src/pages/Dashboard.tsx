@@ -146,10 +146,10 @@ export function Dashboard() {
               <span className="text-muted-foreground">Cada</span>
               <input
                 type="number"
-                min={1}
+                min={15}
                 max={60}
                 value={autoSyncSettings.intervalMinutes}
-                onChange={(e) => updateAutoSyncSettings({ intervalMinutes: Math.max(1, Number(e.target.value)) })}
+                onChange={(e) => updateAutoSyncSettings({ intervalMinutes: Math.max(15, Number(e.target.value)) })}
                 className="w-16 rounded-md border border-input bg-background px-2 py-1 text-sm focus:ring-1 focus:ring-primary"
               />
               <span className="text-muted-foreground">minutos</span>
