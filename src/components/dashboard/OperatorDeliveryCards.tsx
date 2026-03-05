@@ -46,10 +46,8 @@ function OperatorCard({ label, orders, colorClasses, onOrderClick }: OperatorCar
           ) : (
             orders.map((order) => {
               const name =
+                order.shipping_address?.receiverName ||
                 order.customer?.nickname ||
-                (order.customer?.firstName
-                  ? `${order.customer.firstName} ${order.customer.lastName ?? ''}`.trim()
-                  : order.customer?.email) ||
                 'Sin nombre';
               return (
                 <button
@@ -60,9 +58,7 @@ function OperatorCard({ label, orders, colorClasses, onOrderClick }: OperatorCar
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-xs font-medium text-gray-800 truncate">{name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {order.shipping_address?.city ?? '—'} · #{String(order.order_id).slice(-8)}
-                      </p>
+                      <p className="text-xs text-muted-foreground">#{order.order_id}</p>
                     </div>
                     <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize
                       ${order.status === 'nuevo' ? 'bg-blue-50 text-blue-700' : 'bg-yellow-50 text-yellow-700'}`}>

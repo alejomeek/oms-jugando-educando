@@ -21,6 +21,7 @@ export function useOperatorOrders() {
         .select('*')
         .gte('order_date', todayStart.toISOString())
         .eq('channel', 'mercadolibre')
+        .in('store_name', ['BULEVAR', 'AVENIDA 19'])
         .in('logistic_type', ['self_service', 'cross_docking'])
         .in('status', ['nuevo', 'preparando'])
         .order('order_date', { ascending: false });
