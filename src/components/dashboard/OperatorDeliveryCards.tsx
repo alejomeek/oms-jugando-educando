@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Truck } from 'lucide-react';
-import { useOperatorOrders } from '@/hooks/useOperatorOrders';
+import { ChevronDown, ChevronUp, Truck, MapPin } from 'lucide-react';
+import { useOperatorOrders, type Sede } from '@/hooks/useOperatorOrders';
 import type { Order } from '@/lib/types';
+
+const SEDE_KEY = 'operatorCards_sede';
 
 interface OperatorCardProps {
   label: string;
   orders: Order[];
+  fullWidth?: boolean;
   colorClasses: {
     border: string;
     bg: string;
@@ -17,11 +20,11 @@ interface OperatorCardProps {
   onOrderClick: (order: Order) => void;
 }
 
-function OperatorCard({ label, orders, colorClasses, onOrderClick }: OperatorCardProps) {
+function OperatorCard({ label, orders, fullWidth, colorClasses, onOrderClick }: OperatorCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className={`rounded-lg border ${colorClasses.border} ${colorClasses.bg} overflow-hidden`}>
+    <div className={`rounded-lg border ${colorClasses.border} ${colorClasses.bg} overflow-hidden ${fullWidth ? 'col-span-3' : ''}`}>
       <button
         className="w-full flex items-center justify-between px-4 py-3"
         onClick={() => setExpanded((e) => !e)}
@@ -80,63 +83,116 @@ interface OperatorDeliveryCardsProps {
 }
 
 export function OperatorDeliveryCards({ onOrderClick }: OperatorDeliveryCardsProps) {
-  const { data, isLoading } = useOperatorOrders();
+  const [sede, setSede] = useState<Sede>(
+    () => (localStorage.getItem(SEDE_KEY) as Sede | null) ?? 'bulevar'
+  );
 
-  if (isLoading) {
-    return (
-      <div className="mt-4 grid grid-cols-3 gap-3">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-12 animate-pulse rounded-lg bg-gray-100" />
-        ))}
-      </div>
-    );
-  }
+  const { data, isLoading } = useOperatorOrders(sede);
+
+  const handleSede = (s: Sede) => {
+    setSede(s);
+    localStorage.setItem(SEDE_KEY, s);
+  };
 
   const sanchez = data?.sanchez ?? [];
   const gggo = data?.gggo ?? [];
   const colecta = data?.colecta ?? [];
 
   return (
-    <div className="mt-4 grid grid-cols-3 gap-3">
-      <OperatorCard
-        label="Sánchez"
-        orders={sanchez}
-        onOrderClick={onOrderClick}
-        colorClasses={{
-          border: 'border-violet-200',
-          bg: 'bg-violet-50',
-          text: 'text-violet-700',
-          divider: 'border-violet-100',
-          rowHover: 'hover:bg-violet-100/60',
-          dot: 'bg-violet-500',
-        }}
-      />
-      <OperatorCard
-        label="GG Go"
-        orders={gggo}
-        onOrderClick={onOrderClick}
-        colorClasses={{
-          border: 'border-orange-200',
-          bg: 'bg-orange-50',
-          text: 'text-orange-700',
-          divider: 'border-orange-100',
-          rowHover: 'hover:bg-orange-100/60',
-          dot: 'bg-orange-500',
-        }}
-      />
-      <OperatorCard
-        label="Colecta"
-        orders={colecta}
-        onOrderClick={onOrderClick}
-        colorClasses={{
-          border: 'border-amber-200',
-          bg: 'bg-amber-50',
-          text: 'text-amber-700',
-          divider: 'border-amber-100',
-          rowHover: 'hover:bg-amber-100/60',
-          dot: 'bg-amber-500',
-        }}
-      />
+    <div className="mt-4">
+      {/* Encabezado con segmented control */}
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-sm font-medium text-gray-700">Entregas hoy</p>
+        <div className="inline-flex items-center gap-1 rounded-full bg-gray-100 p-0.5">
+          <button
+            onClick={() => handleSede('bulevar')}
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors
+              ${sede === 'bulevar'
+                ? 'bg-white text-gray-800 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <MapPin className="size-3" />
+            Bulevar
+          </button>
+          <button
+            onClick={() => handleSede('cedi')}
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors
+              ${sede === 'cedi'
+                ? 'bg-white text-gray-800 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <MapPin className="size-3" />
+            CEDI
+          </button>
+        </div>
+      </div>
+
+      {/* Cards */}
+      {isLoading ? (
+        <div className={`grid gap-3 ${sede === 'bulevar' ? 'grid-cols-3' : 'grid-cols-1'}`}>
+          {(sede === 'bulevar' ? [1, 2, 3] : [1]).map((i) => (
+            <div key={i} className="h-12 animate-pulse rounded-lg bg-gray-100" />
+          ))}
+        </div>
+      ) : sede === 'bulevar' ? (
+        <div className="grid grid-cols-3 gap-3">
+          <OperatorCard
+            label="Sánchez"
+            orders={sanchez}
+            onOrderClick={onOrderClick}
+            colorClasses={{
+              border: 'border-violet-200',
+              bg: 'bg-violet-50',
+              text: 'text-violet-700',
+              divider: 'border-violet-100',
+              rowHover: 'hover:bg-violet-100/60',
+              dot: 'bg-violet-500',
+            }}
+          />
+          <OperatorCard
+            label="GG Go"
+            orders={gggo}
+            onOrderClick={onOrderClick}
+            colorClasses={{
+              border: 'border-orange-200',
+              bg: 'bg-orange-50',
+              text: 'text-orange-700',
+              divider: 'border-orange-100',
+              rowHover: 'hover:bg-orange-100/60',
+              dot: 'bg-orange-500',
+            }}
+          />
+          <OperatorCard
+            label="Colecta"
+            orders={colecta}
+            onOrderClick={onOrderClick}
+            colorClasses={{
+              border: 'border-amber-200',
+              bg: 'bg-amber-50',
+              text: 'text-amber-700',
+              divider: 'border-amber-100',
+              rowHover: 'hover:bg-amber-100/60',
+              dot: 'bg-amber-500',
+            }}
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-3">
+          <OperatorCard
+            label="Colecta"
+            orders={colecta}
+            onOrderClick={onOrderClick}
+            colorClasses={{
+              border: 'border-amber-200',
+              bg: 'bg-amber-50',
+              text: 'text-amber-700',
+              divider: 'border-amber-100',
+              rowHover: 'hover:bg-amber-100/60',
+              dot: 'bg-amber-500',
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
