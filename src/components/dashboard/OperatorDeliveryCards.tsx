@@ -61,7 +61,13 @@ function OperatorCard({ label, orders, fullWidth, colorClasses, onOrderClick }: 
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-xs font-medium text-gray-800 truncate">{name}</p>
-                      <p className="text-xs text-muted-foreground">#{order.order_id}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className={`rounded px-1 py-0 text-[10px] font-medium
+                          ${order.channel === 'wix' ? 'bg-purple-100 text-purple-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                          {order.channel === 'wix' ? 'Wix' : 'Meli'}
+                        </span>
+                        <p className="text-xs text-muted-foreground">#{order.order_id}</p>
+                      </div>
                     </div>
                     <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize
                       ${order.status === 'nuevo' ? 'bg-blue-50 text-blue-700' : 'bg-yellow-50 text-yellow-700'}`}>
