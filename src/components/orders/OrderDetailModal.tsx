@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { normalizeStr, BOGOTA_STATE_NORM, SANCHEZ_LOCALIDADES_NORM, GGGO_LOCALIDADES_NORM } from '@/lib/constants';
 import { ImageOff, Download, ArrowRightLeft, CheckCircle2, FileText, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -104,9 +105,17 @@ export function OrderDetailModal({
     ? `/api/download-ml-label?shipment_id=${order.shipping_id}`
     : null;
 
+  const isBogotaState = normalizeStr(order.shipping_address?.state ?? '') === BOGOTA_STATE_NORM;
+  const cityNorm = normalizeStr(order.shipping_address?.city ?? '');
+
   const isHalconEligible =
     order.channel === 'wix' ||
-    (order.channel === 'mercadolibre' && order.logistic_type === 'self_service');
+    (order.channel === 'mercadolibre' && order.logistic_type === 'self_service' &&
+      isBogotaState && SANCHEZ_LOCALIDADES_NORM.has(cityNorm));
+
+  const isGGGo =
+    order.channel === 'mercadolibre' && order.logistic_type === 'self_service' &&
+    isBogotaState && GGGO_LOCALIDADES_NORM.has(cityNorm);
 
   const handleMigrateToHalcon = async () => {
     setMigratingToHalcon(true);
@@ -444,6 +453,11 @@ export function OrderDetailModal({
                   {migratingToHalcon ? 'Migrando...' : 'Migrar a Halcon'}
                 </Button>
               )
+            )}
+            {isGGGo && (
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-xs font-medium text-orange-700">
+                Pedido para GG Go
+              </span>
             )}
             {falabellaLabelUrl && (
               <Button variant="outline" size="sm" asChild>

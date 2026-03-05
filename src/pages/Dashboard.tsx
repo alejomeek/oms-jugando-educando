@@ -15,6 +15,7 @@ import { OrderFilters } from '@/components/orders/OrderFilters';
 import { OrdersTable } from '@/components/orders/OrdersTable';
 import { OrderDetailModal } from '@/components/orders/OrderDetailModal';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
+import { OperatorDeliveryCards } from '@/components/dashboard/OperatorDeliveryCards';
 import type { Order, OrderFilters as OrderFiltersType, OrderStatus } from '@/lib/types';
 
 export function Dashboard() {
@@ -194,6 +195,7 @@ export function Dashboard() {
                 }}
                 isLoading={isLoadingStats}
               />
+              <OperatorDeliveryCards onOrderClick={handleOrderClick} />
             </CardContent>
           </Card>
 

@@ -1,6 +1,24 @@
 import type { OrderStatus, OrderChannel } from './types';
 
 // ============================================
+// OPERADORES LOGÍSTICOS BOGOTÁ (mismo día)
+// ============================================
+
+export const normalizeStr = (s: string) =>
+  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+export const BOGOTA_STATE_NORM = normalizeStr('Bogotá D.C.');
+
+export const SANCHEZ_LOCALIDADES_NORM = new Set(
+  ['Suba', 'Usaquén', 'Fontibón', 'Engativá', 'Barrios Unidos', 'Teusaquillo', 'Chapinero'].map(normalizeStr)
+);
+
+export const GGGO_LOCALIDADES_NORM = new Set(
+  ['Santa Fe', 'San Cristóbal', 'La Candelaria', 'Kennedy', 'Tunjuelito', 'Los Mártires',
+   'Bosa', 'Antonio Nariño', 'Rafael Uribe', 'Puente Aranda', 'Soacha', 'Ciudad Bolívar', 'Usme'].map(normalizeStr)
+);
+
+// ============================================
 // TIENDAS / BODEGAS ML
 // ============================================
 
