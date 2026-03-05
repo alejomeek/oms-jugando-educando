@@ -6,7 +6,6 @@ import {
   Store,
   BarChart3,
   ChevronDown,
-  GraduationCap,
   Users,
   Type,
 } from 'lucide-react';
@@ -62,9 +61,11 @@ export function Sidebar({
     <aside className="flex h-screen w-60 flex-col border-r bg-sidebar text-sidebar-foreground">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <GraduationCap className="size-5" />
-        </div>
+        <img
+          src="/logo-jye.jpg"
+          alt="Logo Jugando y Educando"
+          className="size-9 rounded-lg object-contain"
+        />
         <div className="leading-tight">
           <p className="text-sm font-semibold">Jugando y</p>
           <p className="text-sm font-semibold">Educando</p>
