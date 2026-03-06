@@ -98,7 +98,7 @@ export function useOrders(filters?: OrderFilters) {
   });
 }
 
-function groupPackOrders(orders: Order[]): Order[] {
+export function groupPackOrders(orders: Order[]): Order[] {
   const result: Order[] = [];
   const packMap = new Map<string, Order>();
 

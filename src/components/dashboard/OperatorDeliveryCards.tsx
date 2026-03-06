@@ -58,21 +58,26 @@ function OperatorCard({ label, orders, fullWidth, colorClasses, onOrderClick }: 
                   className={`w-full text-left px-4 py-2.5 border-b last:border-b-0 ${colorClasses.divider} ${colorClasses.rowHover} transition-colors`}
                   onClick={() => onOrderClick(order)}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-gray-800 truncate">{name}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className={`rounded px-1 py-0 text-[10px] font-medium
-                          ${order.channel === 'wix' ? 'bg-purple-100 text-purple-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                          {order.channel === 'wix' ? 'Wix' : 'Meli'}
-                        </span>
-                        <p className="text-xs text-muted-foreground">#{order.order_id}</p>
-                      </div>
+                  <div className="min-w-0 w-full">
+                    <p className="text-xs font-medium text-gray-800 truncate">{name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      <span className={`rounded px-1 py-0 text-[10px] font-medium shrink-0
+                        ${order.channel === 'wix' ? 'bg-purple-100 text-purple-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {order.channel === 'wix' ? 'Wix' : 'Meli'}
+                      </span>
+                      <span className={`rounded px-1 py-0 text-[10px] font-medium shrink-0
+                        ${order.status === 'nuevo' ? 'bg-blue-50 text-blue-700'
+                          : order.status === 'preparando' ? 'bg-yellow-50 text-yellow-700'
+                          : order.status === 'enviado' ? 'bg-gray-100 text-gray-500'
+                          : order.status === 'entregado' ? 'bg-green-50 text-green-700'
+                          : 'bg-gray-100 text-gray-400'}`}>
+                        {order.status === 'preparando' ? 'Prep.'
+                          : order.status === 'enviado' ? 'Enviado'
+                          : order.status === 'entregado' ? 'Entregado'
+                          : 'Nuevo'}
+                      </span>
+                      <p className="text-xs text-muted-foreground truncate">#{order.order_id}</p>
                     </div>
-                    <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-medium capitalize
-                      ${order.status === 'nuevo' ? 'bg-blue-50 text-blue-700' : 'bg-yellow-50 text-yellow-700'}`}>
-                      {order.status}
-                    </span>
                   </div>
                 </button>
               );
