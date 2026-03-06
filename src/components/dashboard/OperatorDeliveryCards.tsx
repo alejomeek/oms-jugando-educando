@@ -146,7 +146,7 @@ export function OperatorDeliveryCards({ onOrderClick }: OperatorDeliveryCardsPro
           ))}
         </div>
       ) : sede === 'bulevar' ? (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3 items-start">
           <OperatorCard
             label="Sánchez"
             orders={sanchez}

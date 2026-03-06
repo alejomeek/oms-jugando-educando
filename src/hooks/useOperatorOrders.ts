@@ -12,6 +12,23 @@ export interface OperatorOrders {
   colecta: Order[];
 }
 
+// Bogotá = UTC-5
+// Sánchez: entrega mismo día si se ordena antes de las 4 PM Bogotá = 21:00 UTC
+// GG Go:   entrega mismo día si se ordena antes de la 1 PM Bogotá  = 18:00 UTC
+const SANCHEZ_CUTOFF_UTC = 21;
+const GGGO_CUTOFF_UTC = 18;
+
+function deliveryWindow(cutoffUtcHour: number): { start: Date; end: Date } {
+  const start = new Date();
+  start.setUTCDate(start.getUTCDate() - 1);
+  start.setUTCHours(cutoffUtcHour, 0, 0, 0);
+
+  const end = new Date();
+  end.setUTCHours(cutoffUtcHour, 0, 0, 0);
+
+  return { start, end };
+}
+
 export function useOperatorOrders(sede: Sede) {
   return useQuery({
     queryKey: ['operator-orders-today', sede],
@@ -33,12 +50,16 @@ export function useOperatorOrders(sede: Sede) {
         return { sanchez: [], gggo: [], colecta: groupPackOrders((data ?? []) as Order[]) };
       }
 
-      // Bulevar: ML (self_service + cross_docking) + Wix con halcon_serial
+      const sanchezWin = deliveryWindow(SANCHEZ_CUTOFF_UTC); // [ayer 21:00 UTC, hoy 21:00 UTC)
+      const gggoWin    = deliveryWindow(GGGO_CUTOFF_UTC);    // [ayer 18:00 UTC, hoy 18:00 UTC)
+      // Usamos la ventana más amplia (GG Go) como inicio de query
+      const queryStart = gggoWin.start;
+
       const [{ data: mlData, error: mlError }, { data: wixData, error: wixError }] = await Promise.all([
         supabase
           .from('orders')
           .select('*')
-          .gte('order_date', todayStart.toISOString())
+          .gte('order_date', queryStart.toISOString())
           .eq('channel', 'mercadolibre')
           .in('store_name', ['BULEVAR', 'AVENIDA 19'])
           .not('status', 'eq', 'cancelado')
@@ -46,7 +67,7 @@ export function useOperatorOrders(sede: Sede) {
         supabase
           .from('orders')
           .select('*')
-          .gte('order_date', todayStart.toISOString())
+          .gte('order_date', sanchezWin.start.toISOString())
           .eq('channel', 'wix')
           .not('halcon_serial', 'is', null)
           .not('status', 'eq', 'cancelado')
@@ -56,22 +77,33 @@ export function useOperatorOrders(sede: Sede) {
       if (mlError) throw new Error(mlError.message);
       if (wixError) throw new Error(wixError.message);
 
-      const sanchezRaw: Order[] = (wixData ?? []) as Order[];
+      // Wix → Sánchez: filtrar por ventana Sánchez en JS
+      const sanchezRaw: Order[] = ((wixData ?? []) as Order[]).filter(o => {
+        const d = new Date(o.order_date);
+        return d >= sanchezWin.start && d < sanchezWin.end;
+      });
       const gggoRaw: Order[] = [];
       const colectaRaw: Order[] = [];
 
       for (const order of (mlData ?? []) as Order[]) {
-        // cross_docking → siempre Colecta
+        const orderDate = new Date(order.order_date);
+
+        // cross_docking → Colecta (solo pedidos de hoy)
         if (order.logistic_type === 'cross_docking') {
-          colectaRaw.push(order);
+          if (orderDate >= todayStart) colectaRaw.push(order);
           continue;
         }
-        // self_service o null → clasificar por localidad de Bogotá
+
+        // self_service → clasificar por localidad de Bogotá y ventana de entrega
         const stateNorm = normalizeStr(order.shipping_address?.state ?? '');
         if (stateNorm !== BOGOTA_STATE_NORM) continue;
         const cityNorm = normalizeStr(order.shipping_address?.city ?? '');
-        if (SANCHEZ_LOCALIDADES_NORM.has(cityNorm)) sanchezRaw.push(order);
-        else if (GGGO_LOCALIDADES_NORM.has(cityNorm)) gggoRaw.push(order);
+
+        if (SANCHEZ_LOCALIDADES_NORM.has(cityNorm)) {
+          if (orderDate >= sanchezWin.start && orderDate < sanchezWin.end) sanchezRaw.push(order);
+        } else if (GGGO_LOCALIDADES_NORM.has(cityNorm)) {
+          if (orderDate >= gggoWin.start && orderDate < gggoWin.end) gggoRaw.push(order);
+        }
       }
 
       return {
