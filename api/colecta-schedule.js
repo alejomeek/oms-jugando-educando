@@ -1,16 +1,34 @@
 /**
- * Vercel Serverless Function: Horario de Colecta (cross_docking) de hoy
+ * Vercel Serverless Function: Horario de Colecta (cross_docking)
  *
  * Endpoint ML: GET /users/{sellerId}/shipping/schedule/cross_docking
- * Responde con la ventana de pickup de hoy: { from, to, cutoff }
+ * Retorna:
+ *   slots        — ventanas de pickup de HOY (vacío en fin de semana)
+ *   prevCutoffISO — hora de corte del último día hábil anterior (UTC ISO),
+ *                   usada como inicio de ventana en la card CEDI
  */
 
 const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
+function getBogotaNow() {
+  return new Date(Date.now() - 5 * 60 * 60 * 1000); // UTC proxy de Bogotá
+}
+
 function getTodayKeyBogota() {
-  // Bogotá = UTC-5
-  const bogotaDate = new Date(Date.now() - 5 * 60 * 60 * 1000);
-  return DAYS[bogotaDate.getUTCDay()];
+  return DAYS[getBogotaNow().getUTCDay()];
+}
+
+/** Índice del día hábil anterior (lun–vie) */
+function getPrevBusinessDayIdx(todayIdx) {
+  if (todayIdx === 0 || todayIdx === 1) return 5; // Dom/Lun → Vie
+  return todayIdx - 1;
+}
+
+/** Días de calendario hacia atrás hasta el día hábil anterior */
+function getDaysBackToPrevBusiness(todayIdx) {
+  if (todayIdx === 0) return 2; // Dom → Vie (2 días)
+  if (todayIdx === 1) return 3; // Lun → Vie (3 días)
+  return 1;                     // Mar–Sáb → ayer
 }
 
 async function refreshMLToken(config) {
@@ -35,6 +53,15 @@ async function fetchSchedule(accessToken, sellerId) {
     { headers: { Authorization: `Bearer ${accessToken}` } }
   );
   return { response, data: response.ok ? await response.json() : null };
+}
+
+/** Convierte "HH:mm" Bogotá en un Date UTC del día indicado (daysBack días atrás) */
+function bogotaCutoffToISO(cutoffHHmm, bogotaNow, daysBack) {
+  const [hh, mm] = cutoffHHmm.split(':').map(Number);
+  const d = new Date(bogotaNow);
+  d.setUTCDate(d.getUTCDate() - daysBack);
+  d.setUTCHours(hh + 5, mm, 0, 0); // Bogotá (UTC-5) → UTC
+  return d.toISOString();
 }
 
 export default async function handler(req, res) {
@@ -65,18 +92,35 @@ export default async function handler(req, res) {
       return res.status(response.status).json({ error: 'Error al obtener horario de Colecta de ML' });
     }
 
+    const bogotaNow = getBogotaNow();
+    const bogotaDay = bogotaNow.getUTCDay();
+
+    // ── Slots de hoy ──────────────────────────────────────────────────────
     const dayKey = getTodayKeyBogota();
     const todaySchedule = data?.schedule?.[dayKey];
+    const slots = (todaySchedule?.work && todaySchedule?.detail?.length)
+      ? todaySchedule.detail
+          .filter(s => s.facility_id === 'COXBG1')
+          .map(s => ({ from: s.from, to: s.to, cutoff: s.cutoff }))
+      : [];
 
-    if (!todaySchedule?.work || !todaySchedule?.detail?.length) {
-      return res.json({ slots: [], dayKey });
+    // ── Cutoff del día hábil anterior (ventana CEDI) ───────────────────────
+    const prevDayKey = DAYS[getPrevBusinessDayIdx(bogotaDay)];
+    const prevSchedule = data?.schedule?.[prevDayKey];
+    let prevCutoffISO = null;
+
+    if (prevSchedule?.work && prevSchedule?.detail?.length) {
+      const prevSlots = prevSchedule.detail
+        .filter(s => s.facility_id === 'COXBG1')
+        .sort((a, b) => a.cutoff.localeCompare(b.cutoff));
+
+      if (prevSlots.length > 0) {
+        const daysBack = getDaysBackToPrevBusiness(bogotaDay);
+        prevCutoffISO = bogotaCutoffToISO(prevSlots[prevSlots.length - 1].cutoff, bogotaNow, daysBack);
+      }
     }
 
-    const slots = todaySchedule.detail
-      .filter(s => s.facility_id === 'COXBG1')
-      .map(s => ({ from: s.from, to: s.to, cutoff: s.cutoff }));
-
-    return res.json({ slots, dayKey });
+    return res.json({ slots, dayKey, prevCutoffISO });
 
   } catch (error) {
     console.error('[colecta-schedule] Error:', error.message);

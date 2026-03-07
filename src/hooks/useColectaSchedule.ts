@@ -6,14 +6,15 @@ export interface ColectaSlot {
   cutoff: string; // "12:45" — hora límite en Bogotá para incluir un pedido en este pickup
 }
 
-export function useColectaSchedule() {
-  const bogotaDay = new Date(Date.now() - 5 * 3600 * 1000).getUTCDay(); // 0=Dom, 6=Sáb
-  const isWeekend = bogotaDay === 0 || bogotaDay === 6;
+export interface ColectaScheduleData {
+  slots: ColectaSlot[];
+  prevCutoffISO: string | null; // cutoff del último día hábil anterior (UTC ISO)
+}
 
+export function useColectaSchedule() {
   return useQuery({
     queryKey: ['colecta-schedule'],
-    enabled: !isWeekend,
-    queryFn: async (): Promise<ColectaSlot[]> => {
+    queryFn: async (): Promise<ColectaScheduleData> => {
       const config = {
         accessToken: import.meta.env.VITE_ML_ACCESS_TOKEN,
         refreshToken: import.meta.env.VITE_ML_REFRESH_TOKEN,
@@ -22,7 +23,7 @@ export function useColectaSchedule() {
         clientSecret: import.meta.env.VITE_ML_CLIENT_SECRET,
       };
 
-      if (!config.accessToken || !config.sellerId) return [];
+      if (!config.accessToken || !config.sellerId) return { slots: [], prevCutoffISO: null };
 
       const res = await fetch('/api/colecta-schedule', {
         method: 'POST',
@@ -30,9 +31,12 @@ export function useColectaSchedule() {
         body: JSON.stringify({ config }),
       });
 
-      if (!res.ok) return [];
+      if (!res.ok) return { slots: [], prevCutoffISO: null };
       const data = await res.json();
-      return data.slots ?? [];
+      return {
+        slots: data.slots ?? [],
+        prevCutoffISO: data.prevCutoffISO ?? null,
+      };
     },
     staleTime: 30 * 60 * 1000, // 30 min — el horario no cambia mid-day
     retry: false,

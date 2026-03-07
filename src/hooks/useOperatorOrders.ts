@@ -21,14 +21,13 @@ const SANCHEZ_CUTOFF_UTC = 21;
 const GGGO_CUTOFF_UTC = 18;
 
 /**
- * CEDI Colecta: ventana desde el último día hábil (lun–vie) a medianoche Bogotá.
- * Garantiza que los pedidos del fin de semana aparezcan el lunes.
+ * CEDI Colecta: lookback amplio de 5 días para garantizar que los pedidos del
+ * fin de semana siempre estén disponibles. El filtro preciso por hora de corte
+ * se aplica en OperatorDeliveryCards usando prevCutoffISO del schedule de ML.
  */
 function cediWindowStart(): Date {
-  const bogotaDay = new Date(Date.now() - 5 * 3600 * 1000).getUTCDay(); // 0=Dom, 6=Sáb
-  const daysBack = bogotaDay === 0 ? 2 : bogotaDay === 1 ? 3 : 1;
   const start = new Date();
-  start.setUTCDate(start.getUTCDate() - daysBack);
+  start.setUTCDate(start.getUTCDate() - 5);
   start.setUTCHours(5, 0, 0, 0); // medianoche Bogotá = 05:00 UTC
   return start;
 }
