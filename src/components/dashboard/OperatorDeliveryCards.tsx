@@ -20,6 +20,22 @@ function cutoffToUTC(cutoff: string): Date {
   return d;
 }
 
+/** Formatea order_date en fecha y hora colombiana: DD/MM/AAAA, H:MM a.m./p.m. */
+function formatBogotaTime(dateStr: string): string {
+  const d = new Date(dateStr);
+  const bogota = new Intl.DateTimeFormat('es-CO', {
+    timeZone: 'America/Bogota',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).formatToParts(d);
+  const get = (type: string) => bogota.find(p => p.type === type)?.value ?? '';
+  return `${get('day')}/${get('month')}/${get('year')}, ${get('hour')}:${get('minute')} ${get('dayPeriod')}`;
+}
+
 const SEDE_KEY = 'operatorCards_sede';
 
 interface OperatorCardProps {
@@ -76,7 +92,10 @@ function OperatorCard({ label, orders, fullWidth, colorClasses, onOrderClick }: 
                   onClick={() => onOrderClick(order)}
                 >
                   <div className="min-w-0 w-full">
-                    <p className="text-xs font-medium text-gray-800 truncate">{name}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-medium text-gray-800 truncate">{name}</p>
+                      <span className="text-[10px] text-gray-400 shrink-0 tabular-nums">{formatBogotaTime(order.order_date)}</span>
+                    </div>
                     <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                       <span className={`rounded px-1 py-0 text-[10px] font-medium shrink-0
                         ${order.channel === 'wix' ? 'bg-purple-100 text-purple-700' : 'bg-yellow-100 text-yellow-700'}`}>
@@ -196,7 +215,10 @@ function ColectaCard({ orders, slots, slotsLoading, colorClasses, onOrderClick }
                   onClick={() => onOrderClick(order)}
                 >
                   <div className="min-w-0 w-full">
-                    <p className="text-xs font-medium text-gray-800 truncate">{name}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-medium text-gray-800 truncate">{name}</p>
+                      <span className="text-[10px] text-gray-400 shrink-0 tabular-nums">{formatBogotaTime(order.order_date)}</span>
+                    </div>
                     <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                       <span className="rounded px-1 py-0 text-[10px] font-medium shrink-0 bg-yellow-100 text-yellow-700">
                         Meli
