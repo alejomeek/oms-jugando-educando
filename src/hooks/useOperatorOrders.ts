@@ -20,6 +20,19 @@ export interface OperatorOrders {
 const SANCHEZ_CUTOFF_UTC = 21;
 const GGGO_CUTOFF_UTC = 18;
 
+/**
+ * CEDI Colecta: ventana desde el último día hábil (lun–vie) a medianoche Bogotá.
+ * Garantiza que los pedidos del fin de semana aparezcan el lunes.
+ */
+function cediWindowStart(): Date {
+  const bogotaDay = new Date(Date.now() - 5 * 3600 * 1000).getUTCDay(); // 0=Dom, 6=Sáb
+  const daysBack = bogotaDay === 0 ? 2 : bogotaDay === 1 ? 3 : 1;
+  const start = new Date();
+  start.setUTCDate(start.getUTCDate() - daysBack);
+  start.setUTCHours(5, 0, 0, 0); // medianoche Bogotá = 05:00 UTC
+  return start;
+}
+
 function deliveryWindow(cutoffUtcHour: number): { start: Date; end: Date } {
   const start = new Date();
   start.setUTCDate(start.getUTCDate() - 1);
@@ -43,7 +56,7 @@ export function useOperatorOrders(sede: Sede) {
         const { data, error } = await supabase
           .from('orders')
           .select('*')
-          .gte('order_date', todayStart.toISOString())
+          .gte('order_date', cediWindowStart().toISOString())
           .eq('channel', 'mercadolibre')
           .eq('store_name', 'CEDI')
           .eq('logistic_type', 'cross_docking')

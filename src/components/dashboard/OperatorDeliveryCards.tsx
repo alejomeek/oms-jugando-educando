@@ -132,9 +132,10 @@ interface ColectaCardProps {
   slotsLoading: boolean;
   colorClasses: ColorClasses;
   onOrderClick: (order: Order) => void;
+  weekendNotice?: string;
 }
 
-function ColectaCard({ orders, slots, slotsLoading, colorClasses, onOrderClick }: ColectaCardProps) {
+function ColectaCard({ orders, slots, slotsLoading, colorClasses, onOrderClick, weekendNotice }: ColectaCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [selectedCutoff, setSelectedCutoff] = useState<string | null>(() => {
     return localStorage.getItem(`colecta-cutoff-${getTodayBogota()}`);
@@ -174,6 +175,15 @@ function ColectaCard({ orders, slots, slotsLoading, colorClasses, onOrderClick }
             : <ChevronDown className={`size-4 ${colorClasses.text}`} />}
         </div>
       </button>
+
+      {/* Aviso fin de semana — solo CEDI */}
+      {weekendNotice && (
+        <div className="px-4 pb-2">
+          <span className="text-xs font-medium text-amber-700 bg-amber-100 border border-amber-200 rounded px-2 py-0.5">
+            {weekendNotice}
+          </span>
+        </div>
+      )}
 
       {/* Slot picker */}
       <div className="flex gap-1.5 px-4 pb-3">
@@ -246,6 +256,22 @@ function ColectaCard({ orders, slots, slotsLoading, colorClasses, onOrderClick }
   );
 }
 
+/** Retorna el nombre del próximo lunes en Bogotá, p.ej. "Lunes, 9 de marzo de 2026" */
+function nextMondayLabel(): string {
+  const bogotaDay = new Date(Date.now() - 5 * 3600 * 1000).getUTCDay(); // 0=Dom, 6=Sáb
+  const daysToMonday = bogotaDay === 6 ? 2 : 1;
+  const monday = new Date();
+  monday.setDate(monday.getDate() + daysToMonday);
+  const label = monday.toLocaleDateString('es-CO', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'America/Bogota',
+  });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
 // ── Color presets ─────────────────────────────────────────────────────────
 
 const COLORS = {
@@ -298,9 +324,12 @@ export function OperatorDeliveryCards({ sede, onOrderClick }: OperatorDeliveryCa
 
   // ── CEDI ─────────────────────────────────────────────────────────────────
   if (sede === 'cedi') {
+    const bogotaDay = new Date(Date.now() - 5 * 3600 * 1000).getUTCDay();
+    const isWeekend = bogotaDay === 0 || bogotaDay === 6;
+    const weekendNotice = isWeekend ? `Próxima Colecta: ${nextMondayLabel()}` : undefined;
     return (
       <div className="grid grid-cols-1 gap-3">
-        <ColectaCard orders={colecta} slots={slots} slotsLoading={slotsLoading} colorClasses={COLORS.colecta} onOrderClick={onOrderClick} />
+        <ColectaCard orders={colecta} slots={slots} slotsLoading={slotsLoading} colorClasses={COLORS.colecta} onOrderClick={onOrderClick} weekendNotice={weekendNotice} />
       </div>
     );
   }
