@@ -15,7 +15,7 @@ export const SANCHEZ_LOCALIDADES_NORM = new Set(
 
 export const GGGO_LOCALIDADES_NORM = new Set(
   ['Santa Fe', 'San Cristóbal', 'La Candelaria', 'Kennedy', 'Tunjuelito', 'Los Mártires',
-   'Bosa', 'Antonio Nariño', 'Rafael Uribe', 'Puente Aranda', 'Soacha', 'Ciudad Bolívar', 'Usme'].map(normalizeStr)
+   'Bosa', 'Antonio Nariño', 'Rafael Uribe Uribe', 'Puente Aranda', 'Soacha', 'Ciudad Bolívar', 'Usme'].map(normalizeStr)
 );
 
 // ============================================
