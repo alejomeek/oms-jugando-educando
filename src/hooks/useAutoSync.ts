@@ -106,6 +106,8 @@ export function useAutoSync(config: AutoSyncConfig) {
 
         await queryClient.invalidateQueries({ queryKey: ['orders'] });
         await queryClient.invalidateQueries({ queryKey: ['analytics'] });
+        await queryClient.invalidateQueries({ queryKey: ['operator-orders-today'] });
+        await queryClient.invalidateQueries({ queryKey: ['order-stats'] });
 
         const newData = queryClient.getQueryData<unknown[]>(['orders']);
         const countAfter = Array.isArray(newData) ? newData.length : 0;
