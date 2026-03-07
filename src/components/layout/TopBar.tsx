@@ -44,7 +44,6 @@ export function TopBar({
           Sincronizar Meli
         </Button>
         <Button
-          variant="outline"
           size="sm"
           onClick={onSyncWix}
           disabled={isSyncingWix}
@@ -53,7 +52,6 @@ export function TopBar({
           Sincronizar Wix
         </Button>
         <Button
-          variant="outline"
           size="sm"
           onClick={onSyncFalabella}
           disabled={isSyncingFalabella}
