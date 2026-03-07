@@ -459,6 +459,11 @@ export function OrderDetailModal({
                 Pedido para GG Go
               </span>
             )}
+            {isHalconEligible && (
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-medium text-violet-700">
+                Pedido para Sánchez
+              </span>
+            )}
             {falabellaLabelUrl && (
               <Button variant="outline" size="sm" asChild>
                 <a href={falabellaLabelUrl} download>
