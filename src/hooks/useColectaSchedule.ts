@@ -7,8 +7,12 @@ export interface ColectaSlot {
 }
 
 export function useColectaSchedule() {
+  const bogotaDay = new Date(Date.now() - 5 * 3600 * 1000).getUTCDay(); // 0=Dom, 6=Sáb
+  const isWeekend = bogotaDay === 0 || bogotaDay === 6;
+
   return useQuery({
     queryKey: ['colecta-schedule'],
+    enabled: !isWeekend,
     queryFn: async (): Promise<ColectaSlot[]> => {
       const config = {
         accessToken: import.meta.env.VITE_ML_ACCESS_TOKEN,
