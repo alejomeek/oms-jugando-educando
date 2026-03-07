@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Truck, MapPin } from 'lucide-react';
+import { ChevronDown, ChevronUp, Truck } from 'lucide-react';
 import { useOperatorOrders, type Sede } from '@/hooks/useOperatorOrders';
 import { useColectaSchedule, type ColectaSlot } from '@/hooks/useColectaSchedule';
 import type { Order } from '@/lib/types';
@@ -36,28 +36,27 @@ function formatBogotaTime(dateStr: string): string {
   return `${get('day')}/${get('month')}/${get('year')}, ${get('hour')}:${get('minute')} ${get('dayPeriod')}`;
 }
 
-const SEDE_KEY = 'operatorCards_sede';
+interface ColorClasses {
+  border: string;
+  bg: string;
+  text: string;
+  divider: string;
+  rowHover: string;
+  dot: string;
+}
 
 interface OperatorCardProps {
   label: string;
   orders: Order[];
-  fullWidth?: boolean;
-  colorClasses: {
-    border: string;
-    bg: string;
-    text: string;
-    divider: string;
-    rowHover: string;
-    dot: string;
-  };
+  colorClasses: ColorClasses;
   onOrderClick: (order: Order) => void;
 }
 
-function OperatorCard({ label, orders, fullWidth, colorClasses, onOrderClick }: OperatorCardProps) {
+function OperatorCard({ label, orders, colorClasses, onOrderClick }: OperatorCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className={`rounded-lg border ${colorClasses.border} ${colorClasses.bg} overflow-hidden ${fullWidth ? 'col-span-3' : ''}`}>
+    <div className={`rounded-lg border ${colorClasses.border} ${colorClasses.bg} overflow-hidden`}>
       <button
         className="w-full flex items-center justify-between px-4 py-3"
         onClick={() => setExpanded((e) => !e)}
@@ -131,7 +130,7 @@ interface ColectaCardProps {
   orders: Order[];
   slots: ColectaSlot[];
   slotsLoading: boolean;
-  colorClasses: OperatorCardProps['colorClasses'];
+  colorClasses: ColorClasses;
   onOrderClick: (order: Order) => void;
 }
 
@@ -247,126 +246,72 @@ function ColectaCard({ orders, slots, slotsLoading, colorClasses, onOrderClick }
   );
 }
 
+// ── Color presets ─────────────────────────────────────────────────────────
+
+const COLORS = {
+  sanchez:    { border: 'border-violet-200', bg: 'bg-violet-50',  text: 'text-violet-700',  divider: 'border-violet-100',  rowHover: 'hover:bg-violet-100/60',  dot: 'bg-violet-500'  },
+  gggo:       { border: 'border-orange-200', bg: 'bg-orange-50',  text: 'text-orange-700',  divider: 'border-orange-100',  rowHover: 'hover:bg-orange-100/60',  dot: 'bg-orange-500'  },
+  juan:       { border: 'border-blue-200',   bg: 'bg-blue-50',    text: 'text-blue-700',    divider: 'border-blue-100',    rowHover: 'hover:bg-blue-100/60',    dot: 'bg-blue-500'    },
+  unassigned: { border: 'border-gray-200',   bg: 'bg-gray-50',    text: 'text-gray-600',    divider: 'border-gray-100',    rowHover: 'hover:bg-gray-100/60',    dot: 'bg-gray-400'    },
+  colecta:    { border: 'border-amber-200',  bg: 'bg-amber-50',   text: 'text-amber-700',   divider: 'border-amber-100',   rowHover: 'hover:bg-amber-100/60',   dot: 'bg-amber-500'   },
+};
+
 // ─────────────────────────────────────────────────────────────────────────
 
 interface OperatorDeliveryCardsProps {
+  sede: Sede;
   onOrderClick: (order: Order) => void;
 }
 
-export function OperatorDeliveryCards({ onOrderClick }: OperatorDeliveryCardsProps) {
-  const [sede, setSede] = useState<Sede>(
-    () => (localStorage.getItem(SEDE_KEY) as Sede | null) ?? 'bulevar'
-  );
-
+export function OperatorDeliveryCards({ sede, onOrderClick }: OperatorDeliveryCardsProps) {
   const { data, isLoading } = useOperatorOrders(sede);
   const { data: slots = [], isLoading: slotsLoading } = useColectaSchedule();
 
-  const handleSede = (s: Sede) => {
-    setSede(s);
-    localStorage.setItem(SEDE_KEY, s);
-  };
+  const sanchez    = data?.sanchez    ?? [];
+  const gggo       = data?.gggo       ?? [];
+  const colecta    = data?.colecta    ?? [];
+  const juan       = data?.juan       ?? [];
+  const unassigned = data?.unassigned ?? [];
 
-  const sanchez = data?.sanchez ?? [];
-  const gggo = data?.gggo ?? [];
-  const colecta = data?.colecta ?? [];
-
-  return (
-    <div className="mt-4">
-      {/* Encabezado con segmented control */}
-      <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm font-medium text-gray-700">Entregas hoy</p>
-        <div className="inline-flex items-center gap-1 rounded-full bg-gray-100 p-0.5">
-          <button
-            onClick={() => handleSede('bulevar')}
-            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors
-              ${sede === 'bulevar'
-                ? 'bg-white text-gray-800 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            <MapPin className="size-3" />
-            Bulevar
-          </button>
-          <button
-            onClick={() => handleSede('cedi')}
-            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors
-              ${sede === 'cedi'
-                ? 'bg-white text-gray-800 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            <MapPin className="size-3" />
-            CEDI
-          </button>
-        </div>
+  if (isLoading) {
+    const cols = sede === 'bulevar' ? 3 : sede === 'medellin' ? 2 : 1;
+    const count = sede === 'bulevar' ? 3 : sede === 'medellin' ? 4 : 1;
+    return (
+      <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+        {Array.from({ length: count }).map((_, i) => (
+          <div key={i} className="h-12 animate-pulse rounded-lg bg-gray-100" />
+        ))}
       </div>
+    );
+  }
 
-      {/* Cards */}
-      {isLoading ? (
-        <div className={`grid gap-3 ${sede === 'bulevar' ? 'grid-cols-3' : 'grid-cols-1'}`}>
-          {(sede === 'bulevar' ? [1, 2, 3] : [1]).map((i) => (
-            <div key={i} className="h-12 animate-pulse rounded-lg bg-gray-100" />
-          ))}
-        </div>
-      ) : sede === 'bulevar' ? (
-        <div className="grid grid-cols-3 gap-3 items-start">
-          <OperatorCard
-            label="Sánchez"
-            orders={sanchez}
-            onOrderClick={onOrderClick}
-            colorClasses={{
-              border: 'border-violet-200',
-              bg: 'bg-violet-50',
-              text: 'text-violet-700',
-              divider: 'border-violet-100',
-              rowHover: 'hover:bg-violet-100/60',
-              dot: 'bg-violet-500',
-            }}
-          />
-          <OperatorCard
-            label="GG Go"
-            orders={gggo}
-            onOrderClick={onOrderClick}
-            colorClasses={{
-              border: 'border-orange-200',
-              bg: 'bg-orange-50',
-              text: 'text-orange-700',
-              divider: 'border-orange-100',
-              rowHover: 'hover:bg-orange-100/60',
-              dot: 'bg-orange-500',
-            }}
-          />
-          <ColectaCard
-            orders={colecta}
-            slots={slots}
-            slotsLoading={slotsLoading}
-            onOrderClick={onOrderClick}
-            colorClasses={{
-              border: 'border-amber-200',
-              bg: 'bg-amber-50',
-              text: 'text-amber-700',
-              divider: 'border-amber-100',
-              rowHover: 'hover:bg-amber-100/60',
-              dot: 'bg-amber-500',
-            }}
-          />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-3">
-          <ColectaCard
-            orders={colecta}
-            slots={slots}
-            slotsLoading={slotsLoading}
-            onOrderClick={onOrderClick}
-            colorClasses={{
-              border: 'border-amber-200',
-              bg: 'bg-amber-50',
-              text: 'text-amber-700',
-              divider: 'border-amber-100',
-              rowHover: 'hover:bg-amber-100/60',
-              dot: 'bg-amber-500',
-            }}
-          />
-        </div>
-      )}
+  // ── Bulevar ──────────────────────────────────────────────────────────────
+  if (sede === 'bulevar') {
+    return (
+      <div className="grid grid-cols-3 gap-3 items-start">
+        <OperatorCard label="Sánchez"   orders={sanchez} colorClasses={COLORS.sanchez}  onOrderClick={onOrderClick} />
+        <OperatorCard label="GG Go"     orders={gggo}    colorClasses={COLORS.gggo}     onOrderClick={onOrderClick} />
+        <ColectaCard  orders={colecta}  slots={slots}    slotsLoading={slotsLoading}    colorClasses={COLORS.colecta} onOrderClick={onOrderClick} />
+      </div>
+    );
+  }
+
+  // ── CEDI ─────────────────────────────────────────────────────────────────
+  if (sede === 'cedi') {
+    return (
+      <div className="grid grid-cols-1 gap-3">
+        <ColectaCard orders={colecta} slots={slots} slotsLoading={slotsLoading} colorClasses={COLORS.colecta} onOrderClick={onOrderClick} />
+      </div>
+    );
+  }
+
+  // ── Medellín ─────────────────────────────────────────────────────────────
+  return (
+    <div className="grid grid-cols-2 gap-3 items-start">
+      <OperatorCard label="GG Go"        orders={gggo}       colorClasses={COLORS.gggo}       onOrderClick={onOrderClick} />
+      <OperatorCard label="Juan"         orders={juan}       colorClasses={COLORS.juan}        onOrderClick={onOrderClick} />
+      <OperatorCard label="Sin asignar"  orders={unassigned} colorClasses={COLORS.unassigned}  onOrderClick={onOrderClick} />
+      <ColectaCard  orders={colecta}     slots={slots}       slotsLoading={slotsLoading}       colorClasses={COLORS.colecta} onOrderClick={onOrderClick} />
     </div>
   );
 }

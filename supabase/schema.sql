@@ -137,6 +137,15 @@ CREATE POLICY "Allow all access to history"
   USING (true);
 
 -- ============================================
+-- MIGRACIÓN: Operador asignado para Medellín FLEX
+-- Ejecutar en Supabase SQL Editor si la DB ya existe
+-- ============================================
+
+-- Asignación manual de operador de entrega (null = sin asignar)
+-- Valores: 'gggo' | 'juan' — por ahora solo para store_name='MEDELLÍN', logistic_type='self_service'
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS assigned_operator TEXT;
+
+-- ============================================
 -- FIN DEL SCHEMA
 -- ============================================
 

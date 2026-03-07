@@ -42,6 +42,8 @@ export function OrderDetailModal({
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | ''>('');
   const [migratingToHalcon, setMigratingToHalcon] = useState(false);
   const [halconSerial, setHalconSerial] = useState<number | null>(order?.halcon_serial ?? null);
+  const [assignedOperator, setAssignedOperator] = useState<string | null>(order?.assigned_operator ?? null);
+  const [savingOperator, setSavingOperator] = useState(false);
 
   // Remisión TBC
   const [remisionAssigned, setRemisionAssigned] = useState<{ remision: string; fecha: string } | null>(
@@ -59,6 +61,7 @@ export function OrderDetailModal({
     if (order) {
       setSelectedStatus(order.status);
       setHalconSerial(order.halcon_serial ?? null);
+      setAssignedOperator(order.assigned_operator ?? null);
       if (order.remision_tbc) {
         setRemisionAssigned({ remision: order.remision_tbc, fecha: order.fecha_remision_tbc ?? '' });
         setRemisionInput(order.remision_tbc);
@@ -116,6 +119,32 @@ export function OrderDetailModal({
   const isGGGo =
     order.channel === 'mercadolibre' && order.logistic_type === 'self_service' &&
     isBogotaState && GGGO_LOCALIDADES_NORM.has(cityNorm);
+
+  const isMedellinFlex =
+    order.channel === 'mercadolibre' &&
+    order.logistic_type === 'self_service' &&
+    order.store_name === 'MEDELLÍN';
+
+  const handleAssignOperator = async (operator: string | null) => {
+    if (operator === assignedOperator) return;
+    setSavingOperator(true);
+    try {
+      const ordersToProcess = (order.subOrders?.length ?? 0) > 0 ? order.subOrders! : [order];
+      const ids = ordersToProcess.map(o => o.id);
+      const { error } = await supabase.from('orders').update({ assigned_operator: operator }).in('id', ids);
+      if (error) throw new Error(error.message);
+      setAssignedOperator(operator);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['orders'] }),
+        queryClient.invalidateQueries({ queryKey: ['operator-orders-today'] }),
+      ]);
+      toast.success(operator ? `Asignado a ${operator === 'gggo' ? 'GG Go' : 'Juan'}` : 'Asignación removida');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al asignar operador');
+    } finally {
+      setSavingOperator(false);
+    }
+  };
 
   const handleMigrateToHalcon = async () => {
     setMigratingToHalcon(true);
@@ -510,6 +539,51 @@ export function OrderDetailModal({
               </SelectContent>
             </Select>
           </section>
+
+          {/* Operador de entrega — solo FLEX Medellín */}
+          {isMedellinFlex && (
+            <>
+              <Separator />
+              <section>
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Operador de entrega
+                </h3>
+                <div className="flex items-center gap-2">
+                  <div className="inline-flex items-center gap-1 rounded-lg border bg-muted/30 p-1">
+                    <button
+                      onClick={() => void handleAssignOperator('gggo')}
+                      disabled={savingOperator}
+                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors
+                        ${assignedOperator === 'gggo'
+                          ? 'bg-orange-500 text-white shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                      GG Go
+                    </button>
+                    <button
+                      onClick={() => void handleAssignOperator('juan')}
+                      disabled={savingOperator}
+                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors
+                        ${assignedOperator === 'juan'
+                          ? 'bg-blue-500 text-white shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                      Juan
+                    </button>
+                  </div>
+                  {assignedOperator && (
+                    <button
+                      onClick={() => void handleAssignOperator(null)}
+                      disabled={savingOperator}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Quitar
+                    </button>
+                  )}
+                </div>
+              </section>
+            </>
+          )}
 
           {/* Remisión TBC — solo órdenes ML */}
           {order.channel === 'mercadolibre' && (

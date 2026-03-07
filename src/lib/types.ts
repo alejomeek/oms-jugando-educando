@@ -35,6 +35,7 @@ export interface Order {
   store_name?: string | null;     // Solo ML: Nombre de bodega de origen
   remision_tbc?: string | null;       // Solo ML: Número de remisión TBC asignado
   fecha_remision_tbc?: string | null; // Solo ML: Fecha de la remisión TBC (YYYY-MM-DD)
+  assigned_operator?: string | null;  // Manual: 'gggo' | 'juan' — asignación para FLEX Medellín
   // Presente solo en packs de ML agrupados (no viene de la DB)
   subOrders?: Order[];
 }

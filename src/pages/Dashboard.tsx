@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { MapPin } from 'lucide-react';
 import { useOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
 import { useOrderStats } from '@/hooks/useOrderStats';
 import { useSyncML } from '@/hooks/useSyncML';
@@ -16,12 +17,23 @@ import { OrdersTable } from '@/components/orders/OrdersTable';
 import { OrderDetailModal } from '@/components/orders/OrderDetailModal';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { OperatorDeliveryCards } from '@/components/dashboard/OperatorDeliveryCards';
+import type { Sede } from '@/hooks/useOperatorOrders';
 import type { Order, OrderFilters as OrderFiltersType, OrderStatus } from '@/lib/types';
+
+const SEDE_KEY = 'operatorCards_sede';
 
 export function Dashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [page, setPage] = useState(1);
   const pageSize = 50;
+  const [sede, setSede] = useState<Sede>(
+    () => (localStorage.getItem(SEDE_KEY) as Sede | null) ?? 'bulevar'
+  );
+
+  const handleSede = (s: Sede) => {
+    setSede(s);
+    localStorage.setItem(SEDE_KEY, s);
+  };
 
   const [filters, setFilters] = useState<OrderFiltersType>({
     search: '',
@@ -41,11 +53,11 @@ export function Dashboard() {
   const totalCount = ordersData?.count || 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  // Fetch stats filtered by the active channel/store/status
+  // Fetch stats filtered by sede + active filters
   const { data: stats, isLoading: isLoadingStats } = useOrderStats({
     channel: filters.channel,
-    store: filters.store,
     status: filters.status,
+    sede,
   });
 
   const { mutate: syncML, isPending: isSyncingML } = useSyncML();
@@ -174,15 +186,37 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* ── Fila 1: Resumen general + Historial de actividad ───────────── */}
+        {/* ── Fila 1: Entregas hoy + Historial de actividad ──────────────── */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
-          {/* Resumen general */}
+          {/* Entregas hoy */}
           <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl">Resumen general (hoy)</CardTitle>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl">Entregas hoy</CardTitle>
+                {/* Sede selector */}
+                <div className="inline-flex items-center gap-1 rounded-full bg-gray-100 p-0.5">
+                  {(['bulevar', 'cedi', 'medellin'] as Sede[]).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => handleSede(s)}
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors
+                        ${sede === s
+                          ? 'bg-white text-gray-800 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      <MapPin className="size-3" />
+                      {s === 'bulevar' ? 'Bulevar' : s === 'cedi' ? 'CEDI' : 'Medellín'}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              {/* 1. Cards de operadores (arriba) */}
+              <OperatorDeliveryCards sede={sede} onOrderClick={handleOrderClick} />
+              {/* 2. Stats (abajo) */}
               <OrderStats
+                sede={sede}
                 stats={stats || {
                   total: 0,
                   nuevo: 0,
@@ -195,7 +229,6 @@ export function Dashboard() {
                 }}
                 isLoading={isLoadingStats}
               />
-              <OperatorDeliveryCards onOrderClick={handleOrderClick} />
             </CardContent>
           </Card>
 

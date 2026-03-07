@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/services/supabase';
 import type { OrderFilters, OrderStats } from '@/lib/types';
+import type { Sede } from '@/hooks/useOperatorOrders';
 
-type StatsFilters = Pick<OrderFilters, 'channel' | 'store' | 'status'>;
+type StatsFilters = Pick<OrderFilters, 'channel' | 'store' | 'status'> & { sede?: Sede };
 
 export function useOrderStats(filters?: StatsFilters) {
     return useQuery({
@@ -19,7 +20,18 @@ export function useOrderStats(filters?: StatsFilters) {
                     .gte('order_date', todayISO);
 
                 if (filters?.channel) q = q.eq('channel', filters.channel);
-                if (filters?.store && filters.store.length > 0) q = q.in('store_name', filters.store);
+
+                // Sede filter takes precedence over store filter
+                if (filters?.sede === 'bulevar') {
+                    // Include all orders NOT from CEDI or MEDELLÍN (covers Wix/Falabella with null store_name)
+                    q = q.or('store_name.is.null,store_name.not.in.(CEDI,MEDELLÍN)');
+                } else if (filters?.sede === 'cedi') {
+                    q = q.eq('store_name', 'CEDI');
+                } else if (filters?.sede === 'medellin') {
+                    q = q.eq('store_name', 'MEDELLÍN');
+                } else if (filters?.store && filters.store.length > 0) {
+                    q = q.in('store_name', filters.store);
+                }
 
                 return q;
             };

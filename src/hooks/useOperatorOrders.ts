@@ -4,12 +4,14 @@ import { normalizeStr, BOGOTA_STATE_NORM, SANCHEZ_LOCALIDADES_NORM, GGGO_LOCALID
 import { groupPackOrders } from '@/hooks/useOrders';
 import type { Order } from '@/lib/types';
 
-export type Sede = 'bulevar' | 'cedi';
+export type Sede = 'bulevar' | 'cedi' | 'medellin';
 
 export interface OperatorOrders {
   sanchez: Order[];
   gggo: Order[];
   colecta: Order[];
+  juan: Order[];       // Medellín only
+  unassigned: Order[]; // Medellín FLEX sin asignar
 }
 
 // Bogotá = UTC-5
@@ -36,6 +38,7 @@ export function useOperatorOrders(sede: Sede) {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
+      // ── CEDI ──────────────────────────────────────────────────────────────
       if (sede === 'cedi') {
         const { data, error } = await supabase
           .from('orders')
@@ -47,9 +50,35 @@ export function useOperatorOrders(sede: Sede) {
           .not('status', 'eq', 'cancelado')
           .order('order_date', { ascending: false });
         if (error) throw new Error(error.message);
-        return { sanchez: [], gggo: [], colecta: groupPackOrders((data ?? []) as Order[]) };
+        return { sanchez: [], gggo: [], colecta: groupPackOrders((data ?? []) as Order[]), juan: [], unassigned: [] };
       }
 
+      // ── MEDELLÍN ──────────────────────────────────────────────────────────
+      if (sede === 'medellin') {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .gte('order_date', todayStart.toISOString())
+          .eq('channel', 'mercadolibre')
+          .eq('store_name', 'MEDELLÍN')
+          .not('status', 'eq', 'cancelado')
+          .order('order_date', { ascending: false });
+        if (error) throw new Error(error.message);
+
+        const all = (data ?? []) as Order[];
+        const flex = all.filter(o => o.logistic_type === 'self_service');
+        const cross = all.filter(o => o.logistic_type === 'cross_docking');
+
+        return {
+          sanchez: [],
+          gggo: groupPackOrders(flex.filter(o => o.assigned_operator === 'gggo')),
+          juan: groupPackOrders(flex.filter(o => o.assigned_operator === 'juan')),
+          unassigned: groupPackOrders(flex.filter(o => !o.assigned_operator)),
+          colecta: groupPackOrders(cross),
+        };
+      }
+
+      // ── BULEVAR (default) ─────────────────────────────────────────────────
       const sanchezWin = deliveryWindow(SANCHEZ_CUTOFF_UTC); // [ayer 21:00 UTC, hoy 21:00 UTC)
       const gggoWin    = deliveryWindow(GGGO_CUTOFF_UTC);    // [ayer 18:00 UTC, hoy 18:00 UTC)
       // Usamos la ventana más amplia (GG Go) como inicio de query
@@ -110,6 +139,8 @@ export function useOperatorOrders(sede: Sede) {
         sanchez: groupPackOrders(sanchezRaw),
         gggo: groupPackOrders(gggoRaw),
         colecta: groupPackOrders(colectaRaw),
+        juan: [],
+        unassigned: [],
       };
     },
     staleTime: 60 * 1000,
