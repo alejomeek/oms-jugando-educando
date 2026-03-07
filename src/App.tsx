@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Dashboard } from '@/pages/Dashboard';
 import { Analytics } from '@/pages/Analytics';
 import { Crm } from '@/pages/Crm';
+import { PinGate } from '@/components/ui/PinGate';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,8 +27,8 @@ function App() {
           <AppLayout>
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/crm" element={<Crm />} />
+              <Route path="/analytics" element={<PinGate label="Analytics"><Analytics /></PinGate>} />
+              <Route path="/crm" element={<PinGate label="CRM / Clientes"><Crm /></PinGate>} />
             </Routes>
           </AppLayout>
         </BrowserRouter>
