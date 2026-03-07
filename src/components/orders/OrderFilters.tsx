@@ -68,7 +68,7 @@ export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-      <div className="relative flex-1">
+      <div className="relative flex-1 sm:max-w-80">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={filters.search || ''}
@@ -95,7 +95,7 @@ export function OrderFilters({ filters, onFiltersChange }: OrderFiltersProps) {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="w-full justify-between sm:w-40 font-normal">
+          <Button variant="outline" className="w-full justify-between sm:w-48 font-normal">
             <span className="truncate">{storeLabel()}</span>
             <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
           </Button>
