@@ -1,7 +1,24 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Truck, MapPin } from 'lucide-react';
 import { useOperatorOrders, type Sede } from '@/hooks/useOperatorOrders';
+import { useColectaSchedule, type ColectaSlot } from '@/hooks/useColectaSchedule';
 import type { Order } from '@/lib/types';
+
+// ── Utilidades de Colecta ─────────────────────────────────────────────────
+
+function getTodayBogota(): string {
+  return new Date(Date.now() - 5 * 3600 * 1000).toISOString().split('T')[0];
+}
+
+/** Convierte "HH:mm" Bogotá → Date UTC para comparar con order_date */
+function cutoffToUTC(cutoff: string): Date {
+  const [hh, mm] = cutoff.split(':').map(Number);
+  const bogotaToday = new Date(Date.now() - 5 * 3600 * 1000);
+  const d = new Date();
+  d.setUTCFullYear(bogotaToday.getUTCFullYear(), bogotaToday.getUTCMonth(), bogotaToday.getUTCDate());
+  d.setUTCHours(hh + 5, mm, 0, 0); // Bogotá = UTC-5
+  return d;
+}
 
 const SEDE_KEY = 'operatorCards_sede';
 
@@ -89,6 +106,127 @@ function OperatorCard({ label, orders, fullWidth, colorClasses, onOrderClick }: 
   );
 }
 
+// ── ColectaCard ───────────────────────────────────────────────────────────
+
+interface ColectaCardProps {
+  orders: Order[];
+  slots: ColectaSlot[];
+  slotsLoading: boolean;
+  colorClasses: OperatorCardProps['colorClasses'];
+  onOrderClick: (order: Order) => void;
+}
+
+function ColectaCard({ orders, slots, slotsLoading, colorClasses, onOrderClick }: ColectaCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  const [selectedCutoff, setSelectedCutoff] = useState<string | null>(() => {
+    return localStorage.getItem(`colecta-cutoff-${getTodayBogota()}`);
+  });
+
+  const handleSelect = (cutoff: string) => {
+    const key = `colecta-cutoff-${getTodayBogota()}`;
+    if (selectedCutoff === cutoff) {
+      setSelectedCutoff(null);
+      localStorage.removeItem(key);
+    } else {
+      setSelectedCutoff(cutoff);
+      localStorage.setItem(key, cutoff);
+    }
+  };
+
+  const filteredOrders = selectedCutoff
+    ? orders.filter(o => new Date(o.order_date) < cutoffToUTC(selectedCutoff))
+    : orders;
+
+  return (
+    <div className={`rounded-lg border ${colorClasses.border} ${colorClasses.bg} overflow-hidden`}>
+      {/* Header */}
+      <button
+        className="w-full flex items-center justify-between px-4 py-3"
+        onClick={() => setExpanded(e => !e)}
+      >
+        <div className="flex items-center gap-2">
+          <span className={`size-2 rounded-full ${colorClasses.dot}`} />
+          <Truck className={`size-4 ${colorClasses.text}`} strokeWidth={1.5} />
+          <span className={`text-sm font-medium ${colorClasses.text}`}>Colecta</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`text-xl font-bold ${colorClasses.text}`}>{filteredOrders.length}</span>
+          {expanded
+            ? <ChevronUp className={`size-4 ${colorClasses.text}`} />
+            : <ChevronDown className={`size-4 ${colorClasses.text}`} />}
+        </div>
+      </button>
+
+      {/* Slot picker */}
+      <div className="flex gap-1.5 px-4 pb-3">
+        {slotsLoading ? (
+          <div className="h-5 w-32 animate-pulse rounded bg-amber-100" />
+        ) : slots.length === 0 ? null : (
+          slots.map(slot => (
+            <button
+              key={slot.cutoff}
+              onClick={() => handleSelect(slot.cutoff)}
+              title={`Pickup: ${slot.from}–${slot.to}`}
+              className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors border
+                ${selectedCutoff === slot.cutoff
+                  ? 'bg-amber-500 text-white border-amber-500'
+                  : `bg-white/70 ${colorClasses.text} ${colorClasses.border} hover:bg-amber-100`}`}
+            >
+              hasta {slot.cutoff}
+            </button>
+          ))
+        )}
+      </div>
+
+      {/* Lista de pedidos */}
+      {expanded && (
+        <div className={`border-t ${colorClasses.divider}`}>
+          {filteredOrders.length === 0 ? (
+            <p className="px-4 py-3 text-xs text-muted-foreground text-center">Sin pedidos pendientes</p>
+          ) : (
+            filteredOrders.map((order) => {
+              const name =
+                order.shipping_address?.receiverName ||
+                order.customer?.nickname ||
+                'Sin nombre';
+              return (
+                <button
+                  key={order.id}
+                  className={`w-full text-left px-4 py-2.5 border-b last:border-b-0 ${colorClasses.divider} ${colorClasses.rowHover} transition-colors`}
+                  onClick={() => onOrderClick(order)}
+                >
+                  <div className="min-w-0 w-full">
+                    <p className="text-xs font-medium text-gray-800 truncate">{name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      <span className="rounded px-1 py-0 text-[10px] font-medium shrink-0 bg-yellow-100 text-yellow-700">
+                        Meli
+                      </span>
+                      <span className={`rounded px-1 py-0 text-[10px] font-medium shrink-0
+                        ${order.status === 'nuevo' ? 'bg-blue-50 text-blue-700'
+                          : order.status === 'preparando' ? 'bg-yellow-50 text-yellow-700'
+                          : order.status === 'enviado' ? 'bg-gray-100 text-gray-500'
+                          : order.status === 'entregado' ? 'bg-green-50 text-green-700'
+                          : 'bg-gray-100 text-gray-400'}`}>
+                        {order.status === 'preparando' ? 'Prep.'
+                          : order.status === 'enviado' ? 'Enviado'
+                          : order.status === 'entregado' ? 'Entregado'
+                          : 'Nuevo'}
+                      </span>
+                      <p className="text-xs text-muted-foreground truncate">#{order.order_id}</p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+
 interface OperatorDeliveryCardsProps {
   onOrderClick: (order: Order) => void;
 }
@@ -99,6 +237,7 @@ export function OperatorDeliveryCards({ onOrderClick }: OperatorDeliveryCardsPro
   );
 
   const { data, isLoading } = useOperatorOrders(sede);
+  const { data: slots = [], isLoading: slotsLoading } = useColectaSchedule();
 
   const handleSede = (s: Sede) => {
     setSede(s);
@@ -173,9 +312,10 @@ export function OperatorDeliveryCards({ onOrderClick }: OperatorDeliveryCardsPro
               dot: 'bg-orange-500',
             }}
           />
-          <OperatorCard
-            label="Colecta"
+          <ColectaCard
             orders={colecta}
+            slots={slots}
+            slotsLoading={slotsLoading}
             onOrderClick={onOrderClick}
             colorClasses={{
               border: 'border-amber-200',
@@ -189,9 +329,10 @@ export function OperatorDeliveryCards({ onOrderClick }: OperatorDeliveryCardsPro
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3">
-          <OperatorCard
-            label="Colecta"
+          <ColectaCard
             orders={colecta}
+            slots={slots}
+            slotsLoading={slotsLoading}
             onOrderClick={onOrderClick}
             colorClasses={{
               border: 'border-amber-200',
