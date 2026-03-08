@@ -130,7 +130,7 @@ export function useOperatorOrders(sede: Sede) {
           supabase
             .from('orders')
             .select('*')
-            .gte('order_date', todayStart.toISOString())
+            .gte('order_date', cediWindowStart().toISOString()) // lookback 5 días para capturar cross_docking con cutoff futuro
             .eq('channel', 'mercadolibre')
             .eq('store_name', 'MEDELLÍN')
             .not('status', 'eq', 'cancelado')
@@ -150,8 +150,23 @@ export function useOperatorOrders(sede: Sede) {
         if (upcomingError) throw new Error(upcomingError.message);
 
         const all = (data ?? []) as Order[];
-        const flex = all.filter(o => o.logistic_type === 'self_service');
-        const cross = all.filter(o => o.logistic_type === 'cross_docking');
+        const todayMed = todayBogotaDate();
+        // Medianoche Bogotá de hoy en UTC (para filtrar flex en JS)
+        const bogotaTodayStartMed = new Date(Date.UTC(
+          bogotaNowMed.getUTCFullYear(), bogotaNowMed.getUTCMonth(), bogotaNowMed.getUTCDate(),
+        ) + 5 * 3600 * 1000);
+        // Flex: solo pedidos desde medianoche Bogotá de hoy
+        const flex = all.filter(o =>
+          o.logistic_type === 'self_service' && new Date(o.order_date) >= bogotaTodayStartMed
+        );
+        // Cross_docking: cutoff >= hoy (hoy + futuros para el datepicker)
+        const cross = all.filter(o =>
+          o.logistic_type === 'cross_docking' && (
+            o.cutoff
+              ? bogotaDateStr(new Date(o.cutoff)) >= todayMed
+              : new Date(o.order_date) >= bogotaTodayStartMed
+          )
+        );
         const upcoming = (upcomingData ?? []) as Order[];
 
         return {
