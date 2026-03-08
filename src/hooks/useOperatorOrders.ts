@@ -234,11 +234,19 @@ export function useOperatorOrders(sede: Sede) {
       if (wixError)      throw new Error(wixError.message);
       if (upcomingError) throw new Error(upcomingError.message);
 
-      // Wix → Sánchez: filtrar por ventana Sánchez en JS
+      // Wix → Sánchez: órdenes dentro de la ventana de hoy
       const sanchezRaw: Order[] = ((wixData ?? []) as Order[]).filter(o => {
         const d = new Date(o.order_date);
         return d >= sanchezWin.start && d < sanchezWin.end;
       });
+
+      // Wix upcoming: órdenes recibidas después del corte de 4 PM de hoy → entregan mañana
+      // Se asigna cutoff sintético = mañana 4 PM Bogotá (= sanchezWin.end + 24h) para que
+      // el DatePickerCard las agrupe en la tab correcta.
+      const tomorrowSanchezCutoff = new Date(sanchezWin.end.getTime() + 24 * 3600 * 1000);
+      const wixUpcoming: Order[] = ((wixData ?? []) as Order[])
+        .filter(o => new Date(o.order_date) >= sanchezWin.end)
+        .map(o => ({ ...o, cutoff: o.cutoff ?? tomorrowSanchezCutoff.toISOString() }));
       const gggoRaw: Order[] = [];
       const colectaRaw: Order[] = [];
 
@@ -277,7 +285,7 @@ export function useOperatorOrders(sede: Sede) {
       }
 
       // Distribuir pedidos próximos a Sánchez / GG Go según localidad
-      const sanchezUpcomingRaw: Order[] = [];
+      const sanchezUpcomingRaw: Order[] = [...wixUpcoming]; // Wix after-cutoff siempre van a Sánchez
       const gggoUpcomingRaw: Order[] = [];
       for (const order of (upcomingData ?? []) as Order[]) {
         const stateNorm = normalizeStr(order.shipping_address?.state ?? '');
