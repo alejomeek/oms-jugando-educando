@@ -234,10 +234,11 @@ export function useOperatorOrders(sede: Sede) {
         const orderDate = new Date(order.order_date);
 
         // cross_docking → Colecta
-        // Con cutoff: usar cutoff.date === hoy. Sin cutoff: order_date >= todayStart.
+        // Con cutoff: cutoff.date >= hoy (hoy + futuros para el datepicker).
+        // Sin cutoff: order_date >= todayStart.
         if (order.logistic_type === 'cross_docking') {
           const show = order.cutoff
-            ? bogotaDateStr(new Date(order.cutoff)) === today
+            ? bogotaDateStr(new Date(order.cutoff)) >= today
             : orderDate >= todayStart;
           if (show) colectaRaw.push(order);
           continue;
