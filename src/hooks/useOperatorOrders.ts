@@ -69,15 +69,22 @@ function cediWindowStart(): Date {
 /**
  * Ventana de entrega Flex — fallback para órdenes sin campo cutoff (Wix y datos legacy).
  * cutoffUtcHour: hora de corte en UTC (Bogotá = UTC-5; ej. 4 PM Bogotá = 21 UTC)
+ *
+ * Usa la fecha actual en Bogotá (no UTC) para evitar el bug de medianoche:
+ * después de las 7 PM Bogotá (= 00:00 UTC siguiente), getUTCDate() ya apunta
+ * al día siguiente, lo que desplazaría la ventana un día adelante.
  */
 function deliveryWindow(cutoffUtcHour: number): { start: Date; end: Date } {
-  const start = new Date();
-  start.setUTCDate(start.getUTCDate() - 1);
-  start.setUTCHours(cutoffUtcHour, 0, 0, 0);
-
-  const end = new Date();
-  end.setUTCHours(cutoffUtcHour, 0, 0, 0);
-
+  // Obtener la fecha actual en Bogotá desplazando 5h hacia atrás en UTC
+  const bogotaNow = new Date(Date.now() - 5 * 3600 * 1000);
+  // end = hoy en Bogotá a la hora de corte UTC
+  const end = new Date(Date.UTC(
+    bogotaNow.getUTCFullYear(),
+    bogotaNow.getUTCMonth(),
+    bogotaNow.getUTCDate(),
+  ) + cutoffUtcHour * 3600 * 1000);
+  // start = exactamente 24 h antes
+  const start = new Date(end.getTime() - 24 * 3600 * 1000);
   return { start, end };
 }
 
