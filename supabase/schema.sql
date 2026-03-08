@@ -146,6 +146,16 @@ CREATE POLICY "Allow all access to history"
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS assigned_operator TEXT;
 
 -- ============================================
+-- MIGRACIÓN: Campo cutoff (pay_before de ML)
+-- Ejecutar en Supabase SQL Editor si la DB ya existe
+-- ============================================
+
+-- Fecha/hora límite en que el vendedor debe entregar el paquete al transportista (ML pay_before)
+-- Solo ML: cross_docking y self_service. null = no disponible o canal no-ML.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS cutoff TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS idx_orders_cutoff ON orders(cutoff) WHERE cutoff IS NOT NULL;
+
+-- ============================================
 -- FIN DEL SCHEMA
 -- ============================================
 

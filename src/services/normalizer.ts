@@ -56,6 +56,7 @@ export function normalizeMLOrder(
     tags: mlOrder.tags || [],
     notes: null,
     logistic_type: null, // Se enriquece en sync-ml.js tras fetch a /shipments/{id}
+    cutoff: null,        // Se enriquece en sync-ml.js: pay_before del envío
   };
 }
 

@@ -293,7 +293,6 @@ export function OperatorDeliveryCards({ sede, onOrderClick }: OperatorDeliveryCa
   const { data, isLoading } = useOperatorOrders(sede);
   const { data: scheduleData, isLoading: slotsLoading } = useColectaSchedule();
   const slots = scheduleData?.slots ?? [];
-  const prevCutoffISO = scheduleData?.prevCutoffISO ?? null;
 
   const sanchez    = data?.sanchez    ?? [];
   const gggo       = data?.gggo       ?? [];
@@ -326,17 +325,13 @@ export function OperatorDeliveryCards({ sede, onOrderClick }: OperatorDeliveryCa
 
   // ── CEDI ─────────────────────────────────────────────────────────────────
   if (sede === 'cedi') {
-    // Filtrar por hora de corte real del día hábil anterior (datos del schedule ML)
-    const cediOrders = prevCutoffISO
-      ? colecta.filter(o => new Date(o.order_date) >= new Date(prevCutoffISO))
-      : colecta;
-
+    // Los pedidos ya vienen filtrados por cutoff desde useOperatorOrders
     const bogotaDay = new Date(Date.now() - 5 * 3600 * 1000).getUTCDay();
     const isWeekend = bogotaDay === 0 || bogotaDay === 6;
     const weekendNotice = isWeekend ? `Próxima Colecta: ${nextMondayLabel()}` : undefined;
     return (
       <div className="grid grid-cols-1 gap-3">
-        <ColectaCard orders={cediOrders} slots={slots} slotsLoading={slotsLoading} colorClasses={COLORS.colecta} onOrderClick={onOrderClick} weekendNotice={weekendNotice} />
+        <ColectaCard orders={colecta} slots={slots} slotsLoading={slotsLoading} colorClasses={COLORS.colecta} onOrderClick={onOrderClick} weekendNotice={weekendNotice} />
       </div>
     );
   }

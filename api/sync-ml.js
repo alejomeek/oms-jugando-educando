@@ -101,7 +101,7 @@ async function fetchMLShipmentData(accessToken, shipmentId) {
             `https://api.mercadolibre.com/shipments/${shipmentId}`,
             { headers: { Authorization: `Bearer ${accessToken}` } }
         );
-        if (!response.ok) return { address: null, logistic_type: null, shipment_status: null };
+        if (!response.ok) return { address: null, logistic_type: null, shipment_status: null, shipment_substatus: null, cutoff: null };
         const data = await response.json();
         const addr = data.receiver_address;
         const address = addr ? {
@@ -117,9 +117,10 @@ async function fetchMLShipmentData(accessToken, shipmentId) {
             latitude: addr.latitude || undefined,
             longitude: addr.longitude || undefined,
         } : null;
-        return { address, logistic_type: data.logistic_type || null, shipment_status: data.status || null, shipment_substatus: data.substatus || null };
+        const cutoff = data.shipping_option?.estimated_delivery_time?.pay_before ?? null;
+        return { address, logistic_type: data.logistic_type || null, shipment_status: data.status || null, shipment_substatus: data.substatus || null, cutoff };
     } catch {
-        return { address: null, logistic_type: null, shipment_status: null, shipment_substatus: null };
+        return { address: null, logistic_type: null, shipment_status: null, shipment_substatus: null, cutoff: null };
     }
 }
 
@@ -245,12 +246,13 @@ export default async function handler(req, res) {
             allOrders.map(async (order) => {
                 const normalized = normalizeMLOrder(order);
                 if (normalized.shipping_id) {
-                    const { address, logistic_type, shipment_status, shipment_substatus } = await fetchMLShipmentData(
+                    const { address, logistic_type, shipment_status, shipment_substatus, cutoff } = await fetchMLShipmentData(
                         accessToken,
                         normalized.shipping_id
                     );
                     normalized.shipping_address = address;
                     normalized.logistic_type = logistic_type;
+                    normalized.cutoff = cutoff;
                     normalized.status = mapMLStatus(normalized._mlOrderStatus, shipment_status, shipment_substatus);
                     // FULL: stock gestionado por ML, siempre sobreescribir sin importar store_id numérico
                     if (logistic_type === 'fulfillment') {

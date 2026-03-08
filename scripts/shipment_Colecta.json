@@ -1,0 +1,231 @@
+{
+  "substatus_history": [
+    {
+      "date": "2026-02-19T21:47:38.114-04:00",
+      "substatus": "ready_to_print",
+      "status": "ready_to_ship"
+    }
+  ],
+  "snapshot_packing": {
+    "snapshot_id": "a338d834-8336-4f19-99a8-b85f265e3303",
+    "pack_hash": "3"
+  },
+  "threshold_cancellation": null,
+  "receiver_id": 289962733,
+  "base_cost": 17400,
+  "status_history": {
+    "date_shipped": null,
+    "date_returned": null,
+    "date_delivered": null,
+    "date_first_visit": null,
+    "date_not_delivered": null,
+    "date_cancelled": null,
+    "date_handling": "2026-02-19T21:47:35.000-04:00",
+    "date_ready_to_ship": "2026-02-19T21:47:38.114-04:00"
+  },
+  "type": "forward",
+  "return_details": null,
+  "sender_id": 132688207,
+  "mode": "me2",
+  "order_cost": 70122,
+  "priority_class": {
+    "id": "20"
+  },
+  "service_id": 218897,
+  "shipping_items": [
+    {
+      "domain_id": null,
+      "item_ponderation": null,
+      "quantity": 1,
+      "measurable_picked_quantity": null,
+      "dimensions_source": {
+        "origin": "bmp",
+        "id": "MCO576317081__1"
+      },
+      "description": "Producto Nacional: Zoo Cards Naipes X10 Juegos",
+      "id": "MCO576317081",
+      "bundle": null,
+      "user_product_id": "MCOU2603072015",
+      "sender_id": 132688207,
+      "dimensions": "7.0x15.0x22.0,620.0"
+    }
+  ],
+  "tracking_number": "MEL46501165036FMXDF01",
+  "cost_components": {
+    "loyal_discount": 0,
+    "special_discount": 0,
+    "compensation": 0,
+    "gap_discount": 0,
+    "ratio": 20009.76
+  },
+  "id": 46501165036,
+  "tracking_method": "MEL Distribution",
+  "last_updated": "2026-02-20T02:41:22.510-04:00",
+  "items_types": [
+    "new"
+  ],
+  "comments": null,
+  "substatus": "ready_for_pickup",
+  "date_created": "2026-02-19T21:47:28.781-04:00",
+  "date_first_printed": "2026-02-20T02:41:21.609-04:00",
+  "created_by": "receiver",
+  "application_id": null,
+  "shipping_option": {
+    "processing_time": null,
+    "cost": 4590,
+    "estimated_schedule_limit": {
+      "date": null
+    },
+    "shipping_method_id": 508246,
+    "estimated_delivery_final": {
+      "date": "2026-02-21T00:00:00.000-05:00"
+    },
+    "buffering": {
+      "date": null
+    },
+    "desired_promised_delivery": {
+      "from": null
+    },
+    "pickup_promise": {
+      "from": null,
+      "to": null
+    },
+    "list_cost": 11790,
+    "estimated_delivery_limit": {
+      "date": "2026-02-21T00:00:00.000-05:00"
+    },
+    "priority_class": {
+      "id": "20"
+    },
+    "delivery_promise": "estimated",
+    "delivery_type": "estimated",
+    "estimated_delivery_time": {
+      "date": "2026-02-21T00:00:00.000-05:00",
+      "pay_before": "2026-02-20T04:50:00.000-05:00",
+      "schedule": null,
+      "unit": "hour",
+      "offset": {
+        "date": null,
+        "shipping": null
+      },
+      "shipping": 24,
+      "time_frame": {
+        "from": null,
+        "to": null
+      },
+      "handling": 24,
+      "type": "known"
+    },
+    "name": "Prioritario a domicilio",
+    "id": 3173224408,
+    "estimated_delivery_extended": {
+      "date": "2026-02-21T00:00:00.000-05:00"
+    },
+    "currency_id": "COP"
+  },
+  "tags": [],
+  "sender_address": {
+    "country": {
+      "id": "CO",
+      "name": "Colombia"
+    },
+    "address_line": "XXXXXXX",
+    "types": [],
+    "scoring": 1,
+    "agency": null,
+    "city": {
+      "id": "TUNPQ1VTQTY3MTQ1",
+      "name": "Usaquén"
+    },
+    "geolocation_type": "ROOFTOP",
+    "latitude": 0,
+    "municipality": {
+      "id": null,
+      "name": null
+    },
+    "version": "CO-03e3b28b4384c77038490aaf33dd8d20",
+    "location_id": null,
+    "street_name": "XXXXXXX",
+    "zip_code": "XXXXXXX",
+    "geolocation_source": "geolocation-visits",
+    "node": {
+      "node_id": "COP1326882073"
+    },
+    "intersection": null,
+    "street_number": "XXXXXXX",
+    "comment": null,
+    "id": 1531161427,
+    "state": {
+      "id": "CO-DC",
+      "name": "Bogotá D.C."
+    },
+    "neighborhood": {
+      "id": null,
+      "name": null
+    },
+    "geolocation_last_updated": "2025-11-11T20:52:05.38Z",
+    "longitude": 0
+  },
+  "sibling": {
+    "reason": null,
+    "sibling_id": null,
+    "description": null,
+    "source": null,
+    "date_created": null,
+    "last_updated": null
+  },
+  "return_tracking_number": null,
+  "site_id": "MCO",
+  "carrier_info": null,
+  "market_place": "MELI",
+  "receiver_address": {
+    "country": {
+      "id": "CO",
+      "name": "Colombia"
+    },
+    "city": {
+      "id": "TUNPQ1JJQzVmOWRi",
+      "name": "Ricaurte"
+    },
+    "geolocation_type": "ROOFTOP",
+    "latitude": 4.288645,
+    "municipality": {
+      "id": null,
+      "name": null
+    },
+    "location_id": null,
+    "street_name": "Calle 12",
+    "zip_code": "252410",
+    "intersection": null,
+    "receiver_name": "Aura Maria Rodriguez Burgos",
+    "id": 1490812328,
+    "state": {
+      "id": "CO-CUN",
+      "name": "Cundinamarca"
+    },
+    "longitude": -74.773221,
+    "address_line": "Calle 12 13-01",
+    "types": [
+      "default_buying_address"
+    ],
+    "scoring": 0,
+    "agency": null,
+    "version": "CO-24f420a42bc923b9bf323be63fd0b7fb",
+    "geolocation_source": "geolocation-visits",
+    "delivery_preference": "residential",
+    "node": null,
+    "street_number": "13-01",
+    "comment": "Torre 3 Apto 608 Referencia: Cariota, Las Palmas",
+    "neighborhood": {
+      "id": null,
+      "name": "El Peñón"
+    },
+    "geolocation_last_updated": "2026-02-19T17:02:23.855Z",
+    "receiver_phone": "XXXXXXX"
+  },
+  "customer_id": null,
+  "order_id": 2000015217315898,
+  "quotation": null,
+  "status": "ready_to_ship",
+  "logistic_type": "cross_docking"
+}

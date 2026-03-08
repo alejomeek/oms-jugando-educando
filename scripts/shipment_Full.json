@@ -1,0 +1,254 @@
+{
+  "substatus_history": [
+    {
+      "date": "2026-02-19T21:00:34.000-04:00",
+      "substatus": "in_warehouse",
+      "status": "ready_to_ship"
+    },
+    {
+      "date": "2026-02-19T22:28:10.926-04:00",
+      "substatus": "ready_to_pack",
+      "status": "ready_to_ship"
+    },
+    {
+      "date": "2026-02-20T01:27:11.976-04:00",
+      "substatus": "packed",
+      "status": "ready_to_ship"
+    },
+    {
+      "date": "2026-02-20T01:41:48.000-04:00",
+      "substatus": "in_packing_list",
+      "status": "ready_to_ship"
+    }
+  ],
+  "snapshot_packing": {
+    "snapshot_id": null,
+    "pack_hash": "3"
+  },
+  "threshold_cancellation": null,
+  "receiver_id": 97884980,
+  "base_cost": 17900,
+  "status_history": {
+    "date_shipped": "2026-02-20T03:55:07.264-04:00",
+    "date_returned": null,
+    "date_delivered": null,
+    "date_first_visit": null,
+    "date_not_delivered": null,
+    "date_cancelled": null,
+    "date_handling": "2026-02-19T21:00:34.000-04:00",
+    "date_ready_to_ship": "2026-02-19T21:00:34.000-04:00"
+  },
+  "type": "forward",
+  "return_details": null,
+  "sender_id": 132688207,
+  "mode": "me2",
+  "order_cost": 286905,
+  "priority_class": {
+    "id": "10"
+  },
+  "service_id": 218897,
+  "shipping_items": [
+    {
+      "item_ponderation": null,
+      "quantity": 1,
+      "measurable_picked_quantity": null,
+      "dimensions_source": {
+        "origin": "fd",
+        "id": "MCO2771785200__1"
+      },
+      "description": "Juego Set Instrumentos Musicales 4 En 1 Madera Para Niños Azul",
+      "id": "MCO2771785200",
+      "bundle": null,
+      "user_product_id": "MCOU2900679888",
+      "sender_id": 132688207,
+      "dimensions": "9.0x37.0x54.0,1210.0"
+    }
+  ],
+  "tracking_number": "3bf8ff2a-bd21-5d0b-b5b0-f5f249fb51ac",
+  "cost_components": {
+    "loyal_discount": 0,
+    "special_discount": 0,
+    "compensation": 0,
+    "gap_discount": 0,
+    "ratio": 8950
+  },
+  "id": 46500592783,
+  "tracking_method": "MEL Distribution",
+  "last_updated": "2026-02-20T08:58:47.551-04:00",
+  "items_types": [
+    "new",
+    "non_conveyable"
+  ],
+  "comments": null,
+  "substatus": "out_for_delivery",
+  "date_created": "2026-02-19T21:00:32.510-04:00",
+  "date_first_printed": "2026-02-20T01:26:58.899-04:00",
+  "created_by": "receiver",
+  "application_id": null,
+  "shipping_option": {
+    "processing_time": null,
+    "cost": 0,
+    "estimated_schedule_limit": {
+      "date": null
+    },
+    "shipping_method_id": 508245,
+    "estimated_delivery_final": {
+      "date": "2026-02-20T00:00:00.000-05:00"
+    },
+    "buffering": {
+      "date": null
+    },
+    "desired_promised_delivery": {
+      "from": null
+    },
+    "pickup_promise": {
+      "from": null,
+      "to": null
+    },
+    "list_cost": 8950,
+    "estimated_delivery_limit": {
+      "date": "2026-02-20T00:00:00.000-05:00"
+    },
+    "priority_class": {
+      "id": "10"
+    },
+    "delivery_promise": "estimated",
+    "delivery_type": "estimated",
+    "estimated_delivery_time": {
+      "date": "2026-02-20T00:00:00.000-05:00",
+      "pay_before": "2026-02-20T13:00:00.000-05:00",
+      "schedule": null,
+      "unit": "hour",
+      "offset": {
+        "date": null,
+        "shipping": null
+      },
+      "shipping": 24,
+      "time_frame": {
+        "from": null,
+        "to": null
+      },
+      "handling": 0,
+      "type": "known"
+    },
+    "name": "Prioritario a domicilio",
+    "id": 3519662961,
+    "estimated_delivery_extended": {
+      "date": "2026-02-20T00:00:00.000-05:00"
+    },
+    "currency_id": "COP"
+  },
+  "tags": [
+    "source_pack_split"
+  ],
+  "sender_address": {
+    "country": {
+      "id": "CO",
+      "name": "Colombia"
+    },
+    "address_line": "XXXXXXX",
+    "types": [
+      "logistic_center_COCU02",
+      "warehouse"
+    ],
+    "scoring": null,
+    "agency": null,
+    "city": {
+      "id": "TUNPQ0ZVTjMxMDQy",
+      "name": "Funza"
+    },
+    "geolocation_type": null,
+    "latitude": 0,
+    "municipality": {
+      "id": null,
+      "name": null
+    },
+    "version": null,
+    "location_id": null,
+    "street_name": "XXXXXXX",
+    "zip_code": "XXXXXXX",
+    "geolocation_source": null,
+    "node": {
+      "logistic_center_id": "COCU02",
+      "node_id": "COCU02"
+    },
+    "intersection": null,
+    "street_number": "XXXXXXX",
+    "comment": null,
+    "id": null,
+    "state": {
+      "id": "CO-CUN",
+      "name": "Cundinamarca"
+    },
+    "neighborhood": {
+      "id": null,
+      "name": "Funza"
+    },
+    "geolocation_last_updated": null,
+    "longitude": 0
+  },
+  "sibling": {
+    "reason": "MULTIPLE_ZONES",
+    "sibling_id": 46500477009,
+    "description": null,
+    "source": "split",
+    "date_created": "2026-02-20T01:00:32.526Z",
+    "last_updated": "2026-02-20T01:00:32.526Z"
+  },
+  "return_tracking_number": null,
+  "site_id": "MCO",
+  "carrier_info": null,
+  "market_place": "MELI",
+  "receiver_address": {
+    "country": {
+      "id": "CO",
+      "name": "Colombia"
+    },
+    "city": {
+      "id": "TUNPQ0NPVGFiYzZm",
+      "name": "Cota"
+    },
+    "geolocation_type": "ROOFTOP",
+    "latitude": 4.812596,
+    "municipality": {
+      "id": null,
+      "name": null
+    },
+    "location_id": 18441020,
+    "street_name": "Carrera 9",
+    "zip_code": "250010",
+    "intersection": "11",
+    "receiver_name": "Alberto Castillo",
+    "id": 1445655236,
+    "state": {
+      "id": "CO-CUN",
+      "name": "Cundinamarca"
+    },
+    "longitude": -74.105012,
+    "address_line": "Carrera 9 #11-38",
+    "types": [
+      "default_buying_address",
+      "default_return_address",
+      "shipping"
+    ],
+    "scoring": 1,
+    "agency": null,
+    "version": "CO-02494fbf39a5b012497e802320673a0a",
+    "geolocation_source": "geolocation-visits",
+    "delivery_preference": "residential",
+    "node": null,
+    "street_number": "#11-38",
+    "comment": "Referencia: Casa 3 pisos ladrillo",
+    "neighborhood": {
+      "id": null,
+      "name": "cota"
+    },
+    "geolocation_last_updated": "2026-01-31T00:52:18.212Z",
+    "receiver_phone": "XXXXXXX"
+  },
+  "customer_id": null,
+  "order_id": 2000015216704200,
+  "quotation": null,
+  "status": "shipped",
+  "logistic_type": "fulfillment"
+}

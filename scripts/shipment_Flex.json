@@ -1,0 +1,229 @@
+{
+  "substatus_history": [],
+  "snapshot_packing": {
+    "snapshot_id": "5a11a19b-91ed-4ae5-85ce-2efe87fc23a7",
+    "pack_hash": "4"
+  },
+  "threshold_cancellation": null,
+  "receiver_id": 811123387,
+  "base_cost": 12500,
+  "status_history": {
+    "date_shipped": null,
+    "date_returned": null,
+    "date_delivered": null,
+    "date_first_visit": null,
+    "date_not_delivered": null,
+    "date_cancelled": null,
+    "date_handling": "2026-02-20T09:33:32.000-04:00",
+    "date_ready_to_ship": "2026-02-20T09:33:35.005-04:00"
+  },
+  "type": "forward",
+  "return_details": null,
+  "sender_id": 132688207,
+  "mode": "me2",
+  "order_cost": 97811,
+  "priority_class": {
+    "id": "20"
+  },
+  "service_id": 4644816,
+  "shipping_items": [
+    {
+      "domain_id": null,
+      "item_ponderation": null,
+      "quantity": 1,
+      "measurable_picked_quantity": null,
+      "dimensions_source": {
+        "origin": "dimensions_bmp",
+        "id": "MCO2536677138__1"
+      },
+      "description": "Juego De Mesa Trivia Sabelotodo Edición Pixar Para Niños",
+      "id": "MCO2536677138",
+      "bundle": null,
+      "user_product_id": "MCOU2541202495",
+      "sender_id": 132688207,
+      "dimensions": "9.0x29.0x33.0,742.0"
+    }
+  ],
+  "tracking_number": "46503088406",
+  "cost_components": {
+    "loyal_discount": 0,
+    "special_discount": 0,
+    "compensation": 0,
+    "gap_discount": 0,
+    "ratio": 23125
+  },
+  "id": 46503088406,
+  "tracking_method": null,
+  "last_updated": "2026-02-20T09:34:38.896-04:00",
+  "items_types": [
+    "new"
+  ],
+  "comments": null,
+  "substatus": "printed",
+  "date_created": "2026-02-20T09:32:34.268-04:00",
+  "date_first_printed": "2026-02-20T09:34:36.796-04:00",
+  "created_by": "receiver",
+  "application_id": null,
+  "shipping_option": {
+    "processing_time": null,
+    "cost": 0,
+    "estimated_schedule_limit": {
+      "date": null
+    },
+    "shipping_method_id": 512845,
+    "estimated_delivery_final": {
+      "date": "2026-02-20T00:00:00.000-05:00"
+    },
+    "buffering": {
+      "date": null
+    },
+    "desired_promised_delivery": {
+      "from": null
+    },
+    "pickup_promise": {
+      "from": null,
+      "to": null
+    },
+    "list_cost": 10625,
+    "estimated_delivery_limit": {
+      "date": "2026-02-20T00:00:00.000-05:00"
+    },
+    "priority_class": {
+      "id": "20"
+    },
+    "delivery_promise": "estimated",
+    "delivery_type": "estimated",
+    "estimated_delivery_time": {
+      "date": "2026-02-20T00:00:00.000-05:00",
+      "pay_before": "2026-02-20T12:00:00.000-05:00",
+      "schedule": null,
+      "unit": "hour",
+      "offset": {
+        "date": null,
+        "shipping": null
+      },
+      "shipping": 0,
+      "time_frame": {
+        "from": null,
+        "to": null
+      },
+      "handling": 0,
+      "type": "known"
+    },
+    "name": "Prioritario a domicilio",
+    "id": 3991062616,
+    "estimated_delivery_extended": {
+      "date": "2026-02-20T00:00:00.000-05:00"
+    },
+    "currency_id": "COP"
+  },
+  "tags": [],
+  "sender_address": {
+    "country": {
+      "id": "CO",
+      "name": "Colombia"
+    },
+    "address_line": "XXXXXXX",
+    "types": [
+      "logistic_center_COP1326882072",
+      "self_service_partner"
+    ],
+    "scoring": null,
+    "agency": null,
+    "city": {
+      "id": "TUNPQ1NVQjUzNzQ4",
+      "name": "Suba"
+    },
+    "geolocation_type": "ROOFTOP",
+    "latitude": 0,
+    "municipality": {
+      "id": null,
+      "name": null
+    },
+    "version": null,
+    "location_id": null,
+    "street_name": "XXXXXXX",
+    "zip_code": "XXXXXXX",
+    "geolocation_source": null,
+    "node": {
+      "logistic_center_id": "COP1326882072",
+      "node_id": "COP1326882072"
+    },
+    "intersection": null,
+    "street_number": "XXXXXXX",
+    "comment": "XXXXXXX",
+    "id": null,
+    "state": {
+      "id": "CO-DC",
+      "name": "Bogotá D.C."
+    },
+    "neighborhood": {
+      "id": null,
+      "name": "Niza"
+    },
+    "geolocation_last_updated": null,
+    "longitude": 0
+  },
+  "sibling": {
+    "reason": null,
+    "sibling_id": null,
+    "description": null,
+    "source": null,
+    "date_created": null,
+    "last_updated": null
+  },
+  "return_tracking_number": null,
+  "site_id": "MCO",
+  "carrier_info": null,
+  "market_place": "MELI",
+  "receiver_address": {
+    "country": {
+      "id": "CO",
+      "name": "Colombia"
+    },
+    "city": {
+      "id": "TUNPQ0tFTjQyODYy",
+      "name": "Kennedy"
+    },
+    "geolocation_type": "ROOFTOP",
+    "latitude": 4.646557,
+    "municipality": {
+      "id": null,
+      "name": null
+    },
+    "location_id": null,
+    "street_name": "Calle 11c",
+    "zip_code": "110821",
+    "intersection": null,
+    "receiver_name": "Sara Maria Camargo Benitez",
+    "id": 1532369742,
+    "state": {
+      "id": "CO-DC",
+      "name": "Bogotá D.C."
+    },
+    "longitude": -74.135363,
+    "address_line": "Calle 11c 73-88",
+    "types": [
+      "default_buying_address"
+    ],
+    "scoring": 0,
+    "agency": null,
+    "version": "CO-b6be555e59caa2fa7f53d03c025758f9",
+    "geolocation_source": "geolocation-visits",
+    "delivery_preference": "residential",
+    "node": null,
+    "street_number": "73-88",
+    "comment": "Torre 5 apartamento Referencia: Avisar por teléfono o WhatsApp que llegó (3223928933)",
+    "neighborhood": {
+      "id": null,
+      "name": "Villa Alsacia II"
+    },
+    "geolocation_last_updated": "2025-10-18T15:08:53.937Z",
+    "receiver_phone": "XXXXXXX"
+  },
+  "customer_id": null,
+  "order_id": 2000015221452636,
+  "quotation": null,
+  "status": "ready_to_ship",
+  "logistic_type": "self_service"
+}

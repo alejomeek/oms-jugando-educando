@@ -1,0 +1,159 @@
+{
+  "id": 2000015221452636,
+  "date_created": "2026-02-20T09:32:34.000-04:00",
+  "last_updated": "2026-02-20T09:34:05.000-04:00",
+  "date_closed": "2026-02-20T09:33:29.000-04:00",
+  "pack_id": null,
+  "fulfilled": null,
+  "buying_mode": "buy_equals_pay",
+  "shipping_cost": null,
+  "mediations": [],
+  "total_amount": 97811,
+  "paid_amount": 97811,
+  "order_items": [
+    {
+      "item": {
+        "id": "MCO2536677138",
+        "title": "Juego De Mesa Trivia Sabelotodo Edición Pixar Para Niños",
+        "category_id": "MCO1161",
+        "variation_id": null,
+        "seller_custom_field": null,
+        "variation_attributes": [],
+        "warranty": "Garantía de fábrica: 1 meses",
+        "condition": "new",
+        "seller_sku": "21823",
+        "global_price": null,
+        "net_weight": null,
+        "user_product_id": "MCOU2541202495",
+        "release_date": null,
+        "attributes": [
+          {
+            "id": "ITEM_CONDITION",
+            "values": [
+              {
+                "id": "2230284"
+              }
+            ]
+          }
+        ]
+      },
+      "quantity": 1,
+      "requested_quantity": {
+        "measure": "unit",
+        "value": 1
+      },
+      "picked_quantity": null,
+      "unit_price": 97811,
+      "full_unit_price": 109900,
+      "full_unit_price_currency_id": "COP",
+      "currency_id": "COP",
+      "manufacturing_days": null,
+      "sale_fee": 12471,
+      "listing_type_id": "gold_special",
+      "base_exchange_rate": null,
+      "base_currency_id": null,
+      "element_id": null,
+      "discounts": null,
+      "bundle": null,
+      "compat_id": null,
+      "stock": {
+        "store_id": "71348291",
+        "node_id": "COP1326882072"
+      },
+      "kit_instance_id": null,
+      "gross_price": 109900
+    }
+  ],
+  "currency_id": "COP",
+  "payments": [
+    {
+      "id": 146332530761,
+      "order_id": 2000015221452636,
+      "payer_id": 811123387,
+      "collector": {
+        "id": 132688207
+      },
+      "card_id": null,
+      "reason": "Juego De Mesa Trivia Sabelotodo Edición Pixar Para Niños",
+      "site_id": "MCO",
+      "payment_method_id": "pse",
+      "currency_id": "COP",
+      "installments": 1,
+      "issuer_id": "1037",
+      "atm_transfer_reference": {
+        "transaction_id": null,
+        "company_id": "1507"
+      },
+      "coupon_id": null,
+      "activation_uri": "https://www.mercadolibre.com.co/checkout/finisher/update_purchase?session_id=a606e67804424724ada0b95845ba1644",
+      "operation_type": "regular_payment",
+      "payment_type": "bank_transfer",
+      "available_actions": [
+        "refund"
+      ],
+      "status": "approved",
+      "status_code": null,
+      "status_detail": "accredited",
+      "transaction_amount": 97811,
+      "transaction_amount_refunded": 0,
+      "taxes_amount": 0,
+      "shipping_cost": 0,
+      "coupon_amount": 0,
+      "overpaid_amount": 0,
+      "total_paid_amount": 97811,
+      "installment_amount": null,
+      "deferred_period": null,
+      "date_approved": "2026-02-20T09:33:28.000-04:00",
+      "transaction_order_id": null,
+      "date_created": "2026-02-20T09:32:34.000-04:00",
+      "date_last_modified": "2026-02-20T09:33:28.000-04:00",
+      "marketplace_fee": 12471,
+      "reference_id": null,
+      "authorization_code": null
+    }
+  ],
+  "shipping": {
+    "id": 46503088406
+  },
+  "status": "paid",
+  "status_detail": null,
+  "tags": [
+    "order_has_discount",
+    "paid",
+    "not_delivered"
+  ],
+  "static_tags": [],
+  "feedback": {
+    "seller": null,
+    "buyer": null
+  },
+  "context": {
+    "channel": "marketplace",
+    "site": "MCO",
+    "flows": []
+  },
+  "seller": {
+    "id": 132688207
+  },
+  "buyer": {
+    "id": 811123387,
+    "nickname": "CASA7752231",
+    "first_name": "Maria",
+    "last_name": "Camargo Benitez",
+    "billing_info": {
+      "id": "812678003916856652"
+    }
+  },
+  "taxes": {
+    "amount": null,
+    "currency_id": null,
+    "id": null
+  },
+  "cancel_detail": null,
+  "manufacturing_ending_date": null,
+  "order_request": {
+    "change": null,
+    "return": null
+  },
+  "related_orders": null
+}

@@ -30,6 +30,7 @@ export interface Order {
   tags?: string[];
   notes?: string | null;
   logistic_type?: string | null;  // Solo ML: 'fulfillment' | 'self_service' | 'cross_docking'
+  cutoff?: string | null;         // Solo ML: pay_before ISO — fecha/hora límite de entrega al transportista
   halcon_serial?: number | null;  // Serial asignado en Halcon al migrar; null = no migrado
   store_id?: string | null;       // Solo ML: ID de bodega de origen
   store_name?: string | null;     // Solo ML: Nombre de bodega de origen
