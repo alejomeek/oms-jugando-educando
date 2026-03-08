@@ -215,7 +215,6 @@ export function useOperatorOrders(sede: Sede) {
           .select('*')
           .gte('order_date', sanchezWin.start.toISOString())
           .eq('channel', 'wix')
-          .not('halcon_serial', 'is', null)
           .not('status', 'eq', 'cancelado')
           .order('order_date', { ascending: false }),
         // Pedidos ML self_service con cutoff mañana → hoy+5 días
