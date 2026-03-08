@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { MapPin } from 'lucide-react';
 import { useOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
-import { useOrderStats } from '@/hooks/useOrderStats';
 import { useSyncML } from '@/hooks/useSyncML';
 import { useSyncWix } from '@/hooks/useSyncWix';
 import { useSyncFalabella } from '@/hooks/useSyncFalabella';
@@ -11,7 +10,6 @@ import { useAutoSyncSettings } from '@/hooks/useAutoSyncSettings';
 import { TopBar } from '@/components/layout/TopBar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { OrderStats } from '@/components/orders/OrderStats';
 import { OrderFilters } from '@/components/orders/OrderFilters';
 import { OrdersTable } from '@/components/orders/OrdersTable';
 import { OrderDetailModal } from '@/components/orders/OrderDetailModal';
@@ -52,13 +50,6 @@ export function Dashboard() {
   const orders = ordersData?.data || [];
   const totalCount = ordersData?.count || 0;
   const totalPages = Math.ceil(totalCount / pageSize);
-
-  // Fetch stats filtered by sede + active filters
-  const { data: stats, isLoading: isLoadingStats } = useOrderStats({
-    channel: filters.channel,
-    status: filters.status,
-    sede,
-  });
 
   const { mutate: syncML, isPending: isSyncingML } = useSyncML();
   const { mutate: syncWix, isPending: isSyncingWix } = useSyncWix();
@@ -186,13 +177,13 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* ── Fila 1: Entregas hoy + Historial de actividad ──────────────── */}
+        {/* ── Fila 1: Entregas + Historial de actividad ──────────────────── */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
-          {/* Entregas hoy */}
+          {/* Entregas hoy y Próximos días */}
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xl">Entregas hoy</CardTitle>
+                <CardTitle className="text-xl">Entregas hoy y Próximos días</CardTitle>
                 {/* Sede selector */}
                 <div className="inline-flex items-center gap-1 rounded-full bg-gray-100 p-0.5">
                   {(['bulevar', 'cedi', 'medellin'] as Sede[]).map((s) => (
@@ -211,24 +202,8 @@ export function Dashboard() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* 1. Cards de operadores (arriba) */}
+            <CardContent>
               <OperatorDeliveryCards sede={sede} onOrderClick={handleOrderClick} />
-              {/* 2. Stats (abajo) */}
-              <OrderStats
-                sede={sede}
-                stats={stats || {
-                  total: 0,
-                  nuevo: 0,
-                  preparando: 0,
-                  entregado: 0,
-                  enviado: 0,
-                  mercadolibre: 0,
-                  wix: 0,
-                  falabella: 0,
-                }}
-                isLoading={isLoadingStats}
-              />
             </CardContent>
           </Card>
 
