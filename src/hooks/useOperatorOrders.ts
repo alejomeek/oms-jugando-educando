@@ -9,6 +9,10 @@ export type Sede = 'bulevar' | 'cedi' | 'medellin';
 export interface OperatorOrders {
   sanchez: Order[];
   gggo: Order[];
+  sanchezUpcoming:    Order[]; // Bulevar Sánchez: cutoff > hoy (próximos 5 días)
+  gggoUpcoming:       Order[]; // Bulevar/Medellín GG Go: cutoff > hoy
+  juanUpcoming:       Order[]; // Medellín Juan: cutoff > hoy
+  unassignedUpcoming: Order[]; // Medellín sin asignar: cutoff > hoy
   colecta: Order[];
   juan: Order[];       // Medellín only
   unassigned: Order[]; // Medellín FLEX sin asignar
@@ -24,21 +28,6 @@ function bogotaDateStr(d: Date): string {
 /** Fecha de hoy en Bogotá como YYYY-MM-DD */
 function todayBogotaDate(): string {
   return bogotaDateStr(new Date());
-}
-
-/**
- * Próxima fecha de Colecta en Bogotá:
- *   - Lun–Vie: hoy
- *   - Sáb:     próximo lunes (+2 días)
- *   - Dom:     próximo lunes (+1 día)
- * Así el CEDI muestra en fin de semana los pedidos que van el lunes.
- */
-function nextColectaDate(): string {
-  const now = new Date();
-  const bogotaDay = new Date(now.getTime() - 5 * 3600 * 1000).getUTCDay();
-  const daysAdd = bogotaDay === 6 ? 2 : bogotaDay === 0 ? 1 : 0;
-  if (daysAdd > 0) now.setDate(now.getDate() + daysAdd);
-  return bogotaDateStr(now);
 }
 
 /**
@@ -112,37 +101,66 @@ export function useOperatorOrders(sede: Sede) {
           .order('order_date', { ascending: false });
         if (error) throw new Error(error.message);
 
-        // Filtrar: cutoff.date === próxima fecha de Colecta (lunes si es fin de semana)
-        // Fallback para órdenes sin cutoff: order_date >= medianoche del día hábil anterior
-        const target = nextColectaDate();
+        // Filtrar: cutoff.date >= hoy (todos los pendientes y próximos, datepicker ve cada fecha).
+        // Fallback para órdenes sin cutoff: order_date >= medianoche del día hábil anterior.
+        const today = todayBogotaDate();
         const fallback = prevBusinessDayMidnightISO();
         const colecta = ((data ?? []) as Order[]).filter(o =>
           o.cutoff
-            ? bogotaDateStr(new Date(o.cutoff)) === target
+            ? bogotaDateStr(new Date(o.cutoff)) >= today
             : new Date(o.order_date) >= new Date(fallback)
         );
-        return { sanchez: [], gggo: [], colecta: groupPackOrders(colecta), juan: [], unassigned: [] };
+        return { sanchez: [], gggo: [], sanchezUpcoming: [], gggoUpcoming: [], juanUpcoming: [], unassignedUpcoming: [], colecta: groupPackOrders(colecta), juan: [], unassigned: [] };
       }
 
       // ── MEDELLÍN ──────────────────────────────────────────────────────────
       if (sede === 'medellin') {
-        const { data, error } = await supabase
-          .from('orders')
-          .select('*')
-          .gte('order_date', todayStart.toISOString())
-          .eq('channel', 'mercadolibre')
-          .eq('store_name', 'MEDELLÍN')
-          .not('status', 'eq', 'cancelado')
-          .order('order_date', { ascending: false });
+        const bogotaNowMed = new Date(Date.now() - 5 * 3600 * 1000);
+        const tomorrowMed = new Date(Date.UTC(
+          bogotaNowMed.getUTCFullYear(), bogotaNowMed.getUTCMonth(), bogotaNowMed.getUTCDate() + 1,
+        ) + 5 * 3600 * 1000);
+        const horizonMed = new Date(Date.UTC(
+          bogotaNowMed.getUTCFullYear(), bogotaNowMed.getUTCMonth(), bogotaNowMed.getUTCDate() + 6,
+        ) + 5 * 3600 * 1000);
+
+        const [
+          { data, error },
+          { data: upcomingData, error: upcomingError },
+        ] = await Promise.all([
+          supabase
+            .from('orders')
+            .select('*')
+            .gte('order_date', todayStart.toISOString())
+            .eq('channel', 'mercadolibre')
+            .eq('store_name', 'MEDELLÍN')
+            .not('status', 'eq', 'cancelado')
+            .order('order_date', { ascending: false }),
+          supabase
+            .from('orders')
+            .select('*')
+            .gte('cutoff', tomorrowMed.toISOString())
+            .lt('cutoff', horizonMed.toISOString())
+            .eq('channel', 'mercadolibre')
+            .eq('store_name', 'MEDELLÍN')
+            .eq('logistic_type', 'self_service')
+            .not('status', 'eq', 'cancelado')
+            .order('cutoff', { ascending: true }),
+        ]);
         if (error) throw new Error(error.message);
+        if (upcomingError) throw new Error(upcomingError.message);
 
         const all = (data ?? []) as Order[];
         const flex = all.filter(o => o.logistic_type === 'self_service');
         const cross = all.filter(o => o.logistic_type === 'cross_docking');
+        const upcoming = (upcomingData ?? []) as Order[];
 
         return {
           sanchez: [],
           gggo: groupPackOrders(flex.filter(o => o.assigned_operator === 'gggo')),
+          sanchezUpcoming: [],
+          gggoUpcoming: groupPackOrders(upcoming.filter(o => o.assigned_operator === 'gggo')),
+          juanUpcoming: groupPackOrders(upcoming.filter(o => o.assigned_operator === 'juan')),
+          unassignedUpcoming: groupPackOrders(upcoming.filter(o => !o.assigned_operator)),
           juan: groupPackOrders(flex.filter(o => o.assigned_operator === 'juan')),
           unassigned: groupPackOrders(flex.filter(o => !o.assigned_operator)),
           colecta: groupPackOrders(cross),
@@ -155,7 +173,20 @@ export function useOperatorOrders(sede: Sede) {
       // Usamos la ventana más amplia (GG Go) como inicio de query
       const queryStart = gggoWin.start;
 
-      const [{ data: mlData, error: mlError }, { data: wixData, error: wixError }] = await Promise.all([
+      // Horizonte para pedidos próximos (mañana → 5 días)
+      const bogotaNow = new Date(Date.now() - 5 * 3600 * 1000);
+      const tomorrowUTC = new Date(Date.UTC(
+        bogotaNow.getUTCFullYear(), bogotaNow.getUTCMonth(), bogotaNow.getUTCDate() + 1,
+      ) + 5 * 3600 * 1000); // medianoche Bogotá de mañana en UTC
+      const horizonUTC = new Date(Date.UTC(
+        bogotaNow.getUTCFullYear(), bogotaNow.getUTCMonth(), bogotaNow.getUTCDate() + 6,
+      ) + 5 * 3600 * 1000); // medianoche Bogotá de hoy+5 días en UTC
+
+      const [
+        { data: mlData,       error: mlError },
+        { data: wixData,      error: wixError },
+        { data: upcomingData, error: upcomingError },
+      ] = await Promise.all([
         supabase
           .from('orders')
           .select('*')
@@ -172,10 +203,22 @@ export function useOperatorOrders(sede: Sede) {
           .not('halcon_serial', 'is', null)
           .not('status', 'eq', 'cancelado')
           .order('order_date', { ascending: false }),
+        // Pedidos ML self_service con cutoff mañana → hoy+5 días
+        supabase
+          .from('orders')
+          .select('*')
+          .gte('cutoff', tomorrowUTC.toISOString())
+          .lt('cutoff', horizonUTC.toISOString())
+          .eq('channel', 'mercadolibre')
+          .in('store_name', ['BULEVAR', 'AVENIDA 19'])
+          .eq('logistic_type', 'self_service')
+          .not('status', 'eq', 'cancelado')
+          .order('cutoff', { ascending: true }),
       ]);
 
-      if (mlError) throw new Error(mlError.message);
-      if (wixError) throw new Error(wixError.message);
+      if (mlError)       throw new Error(mlError.message);
+      if (wixError)      throw new Error(wixError.message);
+      if (upcomingError) throw new Error(upcomingError.message);
 
       // Wix → Sánchez: filtrar por ventana Sánchez en JS
       const sanchezRaw: Order[] = ((wixData ?? []) as Order[]).filter(o => {
@@ -218,9 +261,27 @@ export function useOperatorOrders(sede: Sede) {
         }
       }
 
+      // Distribuir pedidos próximos a Sánchez / GG Go según localidad
+      const sanchezUpcomingRaw: Order[] = [];
+      const gggoUpcomingRaw: Order[] = [];
+      for (const order of (upcomingData ?? []) as Order[]) {
+        const stateNorm = normalizeStr(order.shipping_address?.state ?? '');
+        if (stateNorm !== BOGOTA_STATE_NORM) continue;
+        const cityNorm = normalizeStr(order.shipping_address?.city ?? '');
+        if (SANCHEZ_LOCALIDADES_NORM.has(cityNorm)) {
+          sanchezUpcomingRaw.push(order);
+        } else if (GGGO_LOCALIDADES_NORM.has(cityNorm)) {
+          gggoUpcomingRaw.push(order);
+        }
+      }
+
       return {
         sanchez: groupPackOrders(sanchezRaw),
         gggo: groupPackOrders(gggoRaw),
+        sanchezUpcoming: groupPackOrders(sanchezUpcomingRaw),
+        gggoUpcoming: groupPackOrders(gggoUpcomingRaw),
+        juanUpcoming: [],
+        unassignedUpcoming: [],
         colecta: groupPackOrders(colectaRaw),
         juan: [],
         unassigned: [],
