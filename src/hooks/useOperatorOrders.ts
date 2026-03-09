@@ -185,8 +185,6 @@ export function useOperatorOrders(sede: Sede) {
       // ── BULEVAR (default) ─────────────────────────────────────────────────
       const sanchezWin = deliveryWindow(SANCHEZ_CUTOFF_UTC); // [ayer 21:00 UTC, hoy 21:00 UTC)
       const gggoWin    = deliveryWindow(GGGO_CUTOFF_UTC);    // [ayer 18:00 UTC, hoy 18:00 UTC)
-      // Usamos la ventana más amplia (GG Go) como inicio de query
-      const queryStart = gggoWin.start;
 
       // Horizonte para pedidos próximos (mañana → 5 días)
       const bogotaNow = new Date(Date.now() - 5 * 3600 * 1000);
@@ -205,7 +203,7 @@ export function useOperatorOrders(sede: Sede) {
         supabase
           .from('orders')
           .select('*')
-          .gte('order_date', queryStart.toISOString())
+          .gte('order_date', cediWindowStart().toISOString()) // 5 días atrás: captura cross_docking con order_date nocturno/anterior
           .eq('channel', 'mercadolibre')
           .in('store_name', ['BULEVAR', 'AVENIDA 19'])
           .not('status', 'eq', 'cancelado')
