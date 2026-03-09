@@ -111,19 +111,27 @@ export function OrderDetailModal({
   const isBogotaState = normalizeStr(order.shipping_address?.state ?? '') === BOGOTA_STATE_NORM;
   const cityNorm = normalizeStr(order.shipping_address?.city ?? '');
 
-  const isHalconEligible =
+  const baseIsHalconEligible =
     order.channel === 'wix' ||
     (order.channel === 'mercadolibre' && order.logistic_type === 'self_service' &&
       isBogotaState && SANCHEZ_LOCALIDADES_NORM.has(cityNorm));
 
-  const isGGGo =
+  const baseIsGGGo =
     order.channel === 'mercadolibre' && order.logistic_type === 'self_service' &&
     isBogotaState && GGGO_LOCALIDADES_NORM.has(cityNorm);
+
+  const isManuallySanchez = assignedOperator === 'sanchez';
+  const isManuallyGGGo = assignedOperator === 'gggo';
+
+  const isHalconEligible = isManuallySanchez || (baseIsHalconEligible && !isManuallyGGGo);
+  const isGGGo = isManuallyGGGo || (baseIsGGGo && !isManuallySanchez);
 
   const isMedellinFlex =
     order.channel === 'mercadolibre' &&
     order.logistic_type === 'self_service' &&
     order.store_name === 'MEDELLÍN';
+
+
 
   const handleAssignOperator = async (operator: string | null) => {
     if (operator === assignedOperator) return;
@@ -138,7 +146,8 @@ export function OrderDetailModal({
         queryClient.invalidateQueries({ queryKey: ['orders'] }),
         queryClient.invalidateQueries({ queryKey: ['operator-orders-today'] }),
       ]);
-      toast.success(operator ? `Asignado a ${operator === 'gggo' ? 'GG Go' : 'Juan'}` : 'Asignación removida');
+      const labelMap: Record<string, string> = { gggo: 'GG Go', juan: 'Juan', sanchez: 'Sánchez' };
+      toast.success(operator ? `Asignado a ${labelMap[operator] || operator}` : 'Asignación removida');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error al asignar operador');
     } finally {
@@ -484,14 +493,40 @@ export function OrderDetailModal({
               )
             )}
             {isGGGo && (
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-xs font-medium text-orange-700">
-                Pedido para GG Go
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-md border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-xs font-medium text-orange-700">
+                  Pedido para GG Go
+                </span>
+                {baseIsGGGo && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    key="btn-change-sanchez"
+                    disabled={savingOperator}
+                    onClick={() => void handleAssignOperator('sanchez')}
+                    className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <ArrowRightLeft className="size-3 mr-1.5" />
+                    Cambiar a Sánchez
+                  </Button>
+                )}
+              </div>
             )}
             {isHalconEligible && (
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-medium text-violet-700">
-                Pedido para Sánchez
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-medium text-violet-700">
+                  Pedido para Sánchez
+                </span>
+                {baseIsGGGo && isManuallySanchez && (
+                  <button
+                    onClick={() => void handleAssignOperator(null)}
+                    disabled={savingOperator}
+                    className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2 ml-1"
+                  >
+                    Revertir al original
+                  </button>
+                )}
+              </div>
             )}
             {falabellaLabelUrl && (
               <Button variant="outline" size="sm" asChild>
@@ -502,18 +537,18 @@ export function OrderDetailModal({
               </Button>
             )}
             {order.channel === 'falabella' &&
-             order.logistic_type === 'dropshipping' &&
-             order.status === 'nuevo' && (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={markingReadyToShip}
-                onClick={() => void handleMarkReadyToShip()}
-              >
-                <CheckCircle2 className="size-4 mr-2" />
-                {markingReadyToShip ? 'Marcando...' : 'Listo para Envío'}
-              </Button>
-            )}
+              order.logistic_type === 'dropshipping' &&
+              order.status === 'nuevo' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={markingReadyToShip}
+                  onClick={() => void handleMarkReadyToShip()}
+                >
+                  <CheckCircle2 className="size-4 mr-2" />
+                  {markingReadyToShip ? 'Marcando...' : 'Listo para Envío'}
+                </Button>
+              )}
           </div>
 
           <Separator />
@@ -539,6 +574,8 @@ export function OrderDetailModal({
               </SelectContent>
             </Select>
           </section>
+
+
 
           {/* Operador de entrega — solo FLEX Medellín */}
           {isMedellinFlex && (

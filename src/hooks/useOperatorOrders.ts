@@ -9,9 +9,9 @@ export type Sede = 'bulevar' | 'cedi' | 'medellin';
 export interface OperatorOrders {
   sanchez: Order[];
   gggo: Order[];
-  sanchezUpcoming:    Order[]; // Bulevar Sánchez: cutoff > hoy (próximos 5 días)
-  gggoUpcoming:       Order[]; // Bulevar/Medellín GG Go: cutoff > hoy
-  juanUpcoming:       Order[]; // Medellín Juan: cutoff > hoy
+  sanchezUpcoming: Order[]; // Bulevar Sánchez: cutoff > hoy (próximos 5 días)
+  gggoUpcoming: Order[]; // Bulevar/Medellín GG Go: cutoff > hoy
+  juanUpcoming: Order[]; // Medellín Juan: cutoff > hoy
   unassignedUpcoming: Order[]; // Medellín sin asignar: cutoff > hoy
   colecta: Order[];
   juan: Order[];       // Medellín only
@@ -79,7 +79,7 @@ function deliveryWindow(cutoffUtcHour: number): { start: Date; end: Date } {
 
 // Fallback UTC hours (solo para órdenes SIN campo cutoff)
 const SANCHEZ_CUTOFF_UTC = 21; // 4 PM Bogotá
-const GGGO_CUTOFF_UTC    = 18; // 1 PM Bogotá
+const GGGO_CUTOFF_UTC = 18; // 1 PM Bogotá
 
 export function useOperatorOrders(sede: Sede) {
   return useQuery({
@@ -187,7 +187,7 @@ export function useOperatorOrders(sede: Sede) {
 
       // ── BULEVAR (default) ─────────────────────────────────────────────────
       const sanchezWin = deliveryWindow(SANCHEZ_CUTOFF_UTC); // [ayer 21:00 UTC, hoy 21:00 UTC)
-      const gggoWin    = deliveryWindow(GGGO_CUTOFF_UTC);    // [ayer 18:00 UTC, hoy 18:00 UTC)
+      const gggoWin = deliveryWindow(GGGO_CUTOFF_UTC);    // [ayer 18:00 UTC, hoy 18:00 UTC)
 
       // Horizonte para pedidos próximos (mañana → 5 días)
       const bogotaNow = new Date(Date.now() - 5 * 3600 * 1000);
@@ -199,8 +199,8 @@ export function useOperatorOrders(sede: Sede) {
       ) + 5 * 3600 * 1000); // medianoche Bogotá de hoy+5 días en UTC
 
       const [
-        { data: mlData,       error: mlError },
-        { data: wixData,      error: wixError },
+        { data: mlData, error: mlError },
+        { data: wixData, error: wixError },
         { data: upcomingData, error: upcomingError },
       ] = await Promise.all([
         supabase
@@ -231,8 +231,8 @@ export function useOperatorOrders(sede: Sede) {
           .order('cutoff', { ascending: true }),
       ]);
 
-      if (mlError)       throw new Error(mlError.message);
-      if (wixError)      throw new Error(wixError.message);
+      if (mlError) throw new Error(mlError.message);
+      if (wixError) throw new Error(wixError.message);
       if (upcomingError) throw new Error(upcomingError.message);
 
       // Wix → Sánchez: órdenes dentro de la ventana de hoy
@@ -272,12 +272,17 @@ export function useOperatorOrders(sede: Sede) {
         if (stateNorm !== BOGOTA_STATE_NORM) continue;
         const cityNorm = normalizeStr(order.shipping_address?.city ?? '');
 
-        if (SANCHEZ_LOCALIDADES_NORM.has(cityNorm)) {
+        const isAssignedSanchez = order.assigned_operator === 'sanchez' ||
+          (!order.assigned_operator && SANCHEZ_LOCALIDADES_NORM.has(cityNorm));
+        const isAssignedGggo = order.assigned_operator === 'gggo' ||
+          (!order.assigned_operator && GGGO_LOCALIDADES_NORM.has(cityNorm));
+
+        if (isAssignedSanchez) {
           const show = order.cutoff
             ? bogotaDateStr(new Date(order.cutoff)) === today
             : (orderDate >= sanchezWin.start && orderDate < sanchezWin.end);
           if (show) sanchezRaw.push(order);
-        } else if (GGGO_LOCALIDADES_NORM.has(cityNorm)) {
+        } else if (isAssignedGggo) {
           const show = order.cutoff
             ? bogotaDateStr(new Date(order.cutoff)) === today
             : (orderDate >= gggoWin.start && orderDate < gggoWin.end);
@@ -292,9 +297,14 @@ export function useOperatorOrders(sede: Sede) {
         const stateNorm = normalizeStr(order.shipping_address?.state ?? '');
         if (stateNorm !== BOGOTA_STATE_NORM) continue;
         const cityNorm = normalizeStr(order.shipping_address?.city ?? '');
-        if (SANCHEZ_LOCALIDADES_NORM.has(cityNorm)) {
+        const isAssignedSanchez = order.assigned_operator === 'sanchez' ||
+          (!order.assigned_operator && SANCHEZ_LOCALIDADES_NORM.has(cityNorm));
+        const isAssignedGggo = order.assigned_operator === 'gggo' ||
+          (!order.assigned_operator && GGGO_LOCALIDADES_NORM.has(cityNorm));
+
+        if (isAssignedSanchez) {
           sanchezUpcomingRaw.push(order);
-        } else if (GGGO_LOCALIDADES_NORM.has(cityNorm)) {
+        } else if (isAssignedGggo) {
           gggoUpcomingRaw.push(order);
         }
       }
