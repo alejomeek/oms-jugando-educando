@@ -155,10 +155,13 @@ export function useOperatorOrders(sede: Sede) {
         const bogotaTodayStartMed = new Date(Date.UTC(
           bogotaNowMed.getUTCFullYear(), bogotaNowMed.getUTCMonth(), bogotaNowMed.getUTCDate(),
         ) + 5 * 3600 * 1000);
-        // Flex: solo pedidos desde medianoche Bogotá de hoy
-        const flex = all.filter(o =>
-          o.logistic_type === 'self_service' && new Date(o.order_date) >= bogotaTodayStartMed
-        );
+        // Flex: cutoff === hoy (consistente con Bulevar). Fallback sin cutoff: order_date >= medianoche Bogotá.
+        const flex = all.filter(o => {
+          if (o.logistic_type !== 'self_service') return false;
+          return o.cutoff
+            ? bogotaDateStr(new Date(o.cutoff)) === todayMed
+            : new Date(o.order_date) >= bogotaTodayStartMed;
+        });
         // Cross_docking: cutoff >= hoy (hoy + futuros para el datepicker)
         const cross = all.filter(o =>
           o.logistic_type === 'cross_docking' && (
