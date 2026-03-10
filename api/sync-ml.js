@@ -25,16 +25,16 @@ function mapMLStatus(mlOrderStatus, shipmentStatus, shipmentSubstatus) {
     if (mlOrderStatus === 'cancelled') return 'cancelado';
 
     switch (shipmentStatus) {
-        case 'delivered':    return 'entregado';
-        case 'shipped':      return 'enviado';
+        case 'delivered': return 'entregado';
+        case 'shipped': return 'enviado';
         case 'cancelled':
-        case 'returned':     return 'cancelado';
-        case 'handling':     return 'preparando';
+        case 'returned': return 'cancelado';
+        case 'handling': return 'preparando';
         case 'ready_to_ship':
             // ready_to_print = sin imprimir aún, no se ha hecho nada → nuevo
             // cualquier otro substatus = ya hubo acción (impreso, empacado, courier asignado…) → preparando
             return shipmentSubstatus === 'ready_to_print' ? 'nuevo' : 'preparando';
-        default:             return 'nuevo';
+        default: return 'nuevo';
     }
 }
 
@@ -132,8 +132,8 @@ async function fetchMLOrders(accessToken, sellerId, limit, offset, dateFrom, dat
         offset: String(offset),
     });
 
-    if (dateFrom) params.append('order.date_created.from', dateFrom);
-    if (dateTo) params.append('order.date_created.to', dateTo);
+    if (dateFrom) params.append('order.date_last_updated.from', dateFrom);
+    if (dateTo) params.append('order.date_last_updated.to', dateTo);
 
     const response = await fetch(
         `https://api.mercadolibre.com/orders/search?${params}`,
