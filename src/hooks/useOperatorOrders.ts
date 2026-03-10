@@ -269,7 +269,7 @@ export function useOperatorOrders(sede: Sede) {
 
         // self_service → clasificar por localidad de Bogotá
         const stateNorm = normalizeStr(order.shipping_address?.state ?? '');
-        if (stateNorm !== BOGOTA_STATE_NORM) continue;
+        if (!BOGOTA_STATE_NORM.has(stateNorm)) continue;
         const cityNorm = normalizeStr(order.shipping_address?.city ?? '');
 
         const isAssignedSanchez = order.assigned_operator === 'sanchez' ||
@@ -295,7 +295,7 @@ export function useOperatorOrders(sede: Sede) {
       const gggoUpcomingRaw: Order[] = [];
       for (const order of (upcomingData ?? []) as Order[]) {
         const stateNorm = normalizeStr(order.shipping_address?.state ?? '');
-        if (stateNorm !== BOGOTA_STATE_NORM) continue;
+        if (!BOGOTA_STATE_NORM.has(stateNorm)) continue;
         const cityNorm = normalizeStr(order.shipping_address?.city ?? '');
         const isAssignedSanchez = order.assigned_operator === 'sanchez' ||
           (!order.assigned_operator && SANCHEZ_LOCALIDADES_NORM.has(cityNorm));

@@ -108,7 +108,7 @@ export function OrderDetailModal({
     ? `/api/download-ml-label?shipment_id=${order.shipping_id}`
     : null;
 
-  const isBogotaState = normalizeStr(order.shipping_address?.state ?? '') === BOGOTA_STATE_NORM;
+  const isBogotaState = BOGOTA_STATE_NORM.has(normalizeStr(order.shipping_address?.state ?? ''));
   const cityNorm = normalizeStr(order.shipping_address?.city ?? '');
 
   const baseIsHalconEligible =

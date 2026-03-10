@@ -7,7 +7,7 @@ import type { OrderStatus, OrderChannel } from './types';
 export const normalizeStr = (s: string) =>
   s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
-export const BOGOTA_STATE_NORM = normalizeStr('Bogotá D.C.');
+export const BOGOTA_STATE_NORM = new Set(['bogota d.c.', 'cundinamarca'].map(normalizeStr));
 
 export const SANCHEZ_LOCALIDADES_NORM = new Set(
   ['Suba', 'Usaquén', 'Fontibón', 'Engativá', 'Barrios Unidos', 'Teusaquillo', 'Chapinero'].map(normalizeStr)
@@ -15,7 +15,7 @@ export const SANCHEZ_LOCALIDADES_NORM = new Set(
 
 export const GGGO_LOCALIDADES_NORM = new Set(
   ['Santa Fe', 'San Cristóbal', 'La Candelaria', 'Kennedy', 'Tunjuelito', 'Los Mártires',
-   'Bosa', 'Antonio Nariño', 'Rafael Uribe Uribe', 'Puente Aranda', 'Soacha', 'Ciudad Bolívar', 'Usme'].map(normalizeStr)
+    'Bosa', 'Antonio Nariño', 'Rafael Uribe Uribe', 'Puente Aranda', 'Soacha', 'Ciudad Bolívar', 'Usme'].map(normalizeStr)
 );
 
 // ============================================
