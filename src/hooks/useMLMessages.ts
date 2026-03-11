@@ -1,20 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
 import type { MLMessage, Order } from '@/lib/types';
 
+const ML_CREDS = () => ({
+  accessToken: import.meta.env.VITE_ML_ACCESS_TOKEN,
+  refreshToken: import.meta.env.VITE_ML_REFRESH_TOKEN,
+  clientId: import.meta.env.VITE_ML_CLIENT_ID,
+  clientSecret: import.meta.env.VITE_ML_CLIENT_SECRET,
+});
+
 export function useMLMessages(order: Order | null) {
   const packId = order?.pack_id || order?.order_id;
 
   return useQuery<MLMessage[]>({
     queryKey: ['ml-messages', packId],
     queryFn: async () => {
-      const response = await fetch('/api/ml-messages', {
+      const response = await fetch('/api/ml-messaging', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          accessToken: import.meta.env.VITE_ML_ACCESS_TOKEN,
-          refreshToken: import.meta.env.VITE_ML_REFRESH_TOKEN,
-          clientId: import.meta.env.VITE_ML_CLIENT_ID,
-          clientSecret: import.meta.env.VITE_ML_CLIENT_SECRET,
+          action: 'messages',
+          ...ML_CREDS(),
           packId,
           sellerId: import.meta.env.VITE_ML_SELLER_ID,
         }),
@@ -32,14 +37,12 @@ export function useMLUnreadMessages() {
   return useQuery<Record<string, number>>({
     queryKey: ['ml-unread-messages'],
     queryFn: async () => {
-      const response = await fetch('/api/ml-unread', {
+      const response = await fetch('/api/ml-messaging', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          accessToken: import.meta.env.VITE_ML_ACCESS_TOKEN,
-          refreshToken: import.meta.env.VITE_ML_REFRESH_TOKEN,
-          clientId: import.meta.env.VITE_ML_CLIENT_ID,
-          clientSecret: import.meta.env.VITE_ML_CLIENT_SECRET,
+          action: 'unread',
+          ...ML_CREDS(),
           sellerId: import.meta.env.VITE_ML_SELLER_ID,
         }),
       });
