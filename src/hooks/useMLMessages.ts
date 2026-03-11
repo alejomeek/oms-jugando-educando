@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { markPackHasMessages } from '@/lib/messageCache';
 import type { MLMessage, Order } from '@/lib/types';
 
 const ML_CREDS = () => ({
@@ -26,7 +27,9 @@ export function useMLMessages(order: Order | null) {
       });
       const data = await response.json();
       if (!data.success) throw new Error(data.error || 'Error al cargar mensajes');
-      return data.messages || [];
+      const messages: MLMessage[] = data.messages || [];
+      if (messages.length > 0 && packId) markPackHasMessages(packId);
+      return messages;
     },
     enabled: !!order && order.channel === 'mercadolibre' && !!packId,
     staleTime: 60_000,
@@ -48,7 +51,12 @@ export function useMLUnreadMessages() {
       });
       const data = await response.json();
       if (!data.success) throw new Error(data.error || 'Error al cargar mensajes no leídos');
-      return data.unreadMap || {};
+      const unreadMap: Record<string, number> = data.unreadMap || {};
+      // Persistir en localStorage los packs con mensajes no leídos
+      for (const packId of Object.keys(unreadMap)) {
+        markPackHasMessages(packId);
+      }
+      return unreadMap;
     },
     staleTime: 60_000,
     refetchInterval: 2 * 60_000,

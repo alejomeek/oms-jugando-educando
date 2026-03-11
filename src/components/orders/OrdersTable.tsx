@@ -12,9 +12,10 @@ import { OrderStatusBadge } from './OrderStatusBadge';
 import { ChannelBadge } from './ChannelBadge';
 import { LogisticTypeBadge } from './LogisticTypeBadge';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { useMLUnreadMessages } from '@/hooks/useMLMessages';
-import type { MLMessage, Order } from '@/lib/types';
+import { getPacksWithMessages } from '@/lib/messageCache';
+import type { Order } from '@/lib/types';
 
 export interface OrdersTableProps {
   orders: Order[];
@@ -40,7 +41,8 @@ export function OrdersTable({
   isLoading = false,
 }: OrdersTableProps) {
   const { data: unreadMap = {} } = useMLUnreadMessages();
-  const queryClient = useQueryClient();
+  // Lee del localStorage: se recalcula cuando unreadMap cambia (cada 2 min o al cargar)
+  const packsWithMessages = useMemo(() => getPacksWithMessages(), [unreadMap]);
 
   if (isLoading) {
     return (
@@ -103,10 +105,8 @@ export function OrdersTable({
           const unreadCount = order.channel === 'mercadolibre'
             ? (unreadMap[order.pack_id ?? ''] ?? unreadMap[order.order_id] ?? 0)
             : 0;
-          const cachedMessages = order.channel === 'mercadolibre'
-            ? queryClient.getQueryData<MLMessage[]>(['ml-messages', packId])
-            : undefined;
-          const hasMessages = unreadCount > 0 || (cachedMessages !== undefined && cachedMessages.length > 0);
+          const hasMessages = order.channel === 'mercadolibre' &&
+            (unreadCount > 0 || packsWithMessages.has(packId ?? ''));
 
           return (
             <TableRow
