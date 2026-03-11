@@ -26,6 +26,8 @@ import { LogisticTypeBadge } from './LogisticTypeBadge';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { printWixLabel } from '@/services/labelPrinter';
 import { useAssignRemision } from '@/hooks/useAssignRemision';
+import { useMLMessages } from '@/hooks/useMLMessages';
+import { OrderMessages } from './OrderMessages';
 import type { Order, OrderStatus } from '@/lib/types';
 
 export interface OrderDetailModalProps {
@@ -56,6 +58,7 @@ export function OrderDetailModal({
   const assignRemision = useAssignRemision();
 
   const queryClient = useQueryClient();
+  const { data: messages = [], isLoading: isLoadingMessages } = useMLMessages(order);
 
   useEffect(() => {
     if (order) {
@@ -714,6 +717,18 @@ export function OrderDetailModal({
                   </div>
                 )}
               </section>
+            </>
+          )}
+
+          {/* Mensajes — solo órdenes ML */}
+          {order.channel === 'mercadolibre' && (
+            <>
+              <Separator />
+              <OrderMessages
+                messages={messages}
+                sellerId={import.meta.env.VITE_ML_SELLER_ID}
+                isLoading={isLoadingMessages}
+              />
             </>
           )}
         </div>

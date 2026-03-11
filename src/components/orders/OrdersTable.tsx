@@ -1,4 +1,4 @@
-import { Eye, PackageSearch } from 'lucide-react';
+import { Eye, PackageSearch, MessageCircle } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -12,6 +12,7 @@ import { OrderStatusBadge } from './OrderStatusBadge';
 import { ChannelBadge } from './ChannelBadge';
 import { LogisticTypeBadge } from './LogisticTypeBadge';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { useMLUnreadMessages } from '@/hooks/useMLMessages';
 import type { Order } from '@/lib/types';
 
 export interface OrdersTableProps {
@@ -37,6 +38,8 @@ export function OrdersTable({
   onOrderClick,
   isLoading = false,
 }: OrdersTableProps) {
+  const { data: unreadMap = {} } = useMLUnreadMessages();
+
   if (isLoading) {
     return (
       <Table>
@@ -94,6 +97,10 @@ export function OrdersTable({
               ? (order.shipping_address?.receiverName || order.customer.nickname)
               : (`${order.customer.firstName ?? ''} ${order.customer.lastName ?? ''}`.trim() || order.customer.email);
 
+          const unreadCount = order.channel === 'mercadolibre'
+            ? (unreadMap[order.pack_id ?? ''] ?? unreadMap[order.order_id] ?? 0)
+            : 0;
+
           return (
             <TableRow
               key={order.id}
@@ -105,8 +112,16 @@ export function OrdersTable({
                   ? (order.pack_id ?? order.order_id ?? (order as any).external_id)
                   : (order.order_id ?? (order as any).external_id)}
               </TableCell>
-              <TableCell className="max-w-[180px] truncate font-medium">
-                {customerName}
+              <TableCell className="max-w-[180px] font-medium">
+                <div className="flex items-center gap-1.5 truncate">
+                  <span className="truncate">{customerName}</span>
+                  {unreadCount > 0 && (
+                    <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                      <MessageCircle className="size-3" />
+                      {unreadCount}
+                    </span>
+                  )}
+                </div>
               </TableCell>
               <TableCell>
                 <div className="flex flex-wrap items-center gap-1.5">

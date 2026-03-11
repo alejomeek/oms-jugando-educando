@@ -154,6 +154,23 @@ export interface OrderStats {
 }
 
 // ============================================
+// MENSAJES ML
+// ============================================
+
+export interface MLMessage {
+  id: string;
+  from: { user_id: number };
+  to: { user_id: number };
+  text: string;
+  status: string;
+  message_date: {
+    received: string;
+    read: string | null;
+    created: string;
+  };
+}
+
+// ============================================
 // API RESPONSES (RAW)
 // ============================================
 
