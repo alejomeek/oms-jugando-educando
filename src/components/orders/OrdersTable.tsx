@@ -12,8 +12,9 @@ import { OrderStatusBadge } from './OrderStatusBadge';
 import { ChannelBadge } from './ChannelBadge';
 import { LogisticTypeBadge } from './LogisticTypeBadge';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { useQueryClient } from '@tanstack/react-query';
 import { useMLUnreadMessages } from '@/hooks/useMLMessages';
-import type { Order } from '@/lib/types';
+import type { MLMessage, Order } from '@/lib/types';
 
 export interface OrdersTableProps {
   orders: Order[];
@@ -39,6 +40,7 @@ export function OrdersTable({
   isLoading = false,
 }: OrdersTableProps) {
   const { data: unreadMap = {} } = useMLUnreadMessages();
+  const queryClient = useQueryClient();
 
   if (isLoading) {
     return (
@@ -97,9 +99,14 @@ export function OrdersTable({
               ? (order.shipping_address?.receiverName || order.customer.nickname)
               : (`${order.customer.firstName ?? ''} ${order.customer.lastName ?? ''}`.trim() || order.customer.email);
 
+          const packId = order.pack_id ?? order.order_id;
           const unreadCount = order.channel === 'mercadolibre'
             ? (unreadMap[order.pack_id ?? ''] ?? unreadMap[order.order_id] ?? 0)
             : 0;
+          const cachedMessages = order.channel === 'mercadolibre'
+            ? queryClient.getQueryData<MLMessage[]>(['ml-messages', packId])
+            : undefined;
+          const hasMessages = unreadCount > 0 || (cachedMessages !== undefined && cachedMessages.length > 0);
 
           return (
             <TableRow
@@ -115,10 +122,14 @@ export function OrdersTable({
               <TableCell className="max-w-[180px] font-medium">
                 <div className="flex items-center gap-1.5 truncate">
                   <span className="truncate">{customerName}</span>
-                  {unreadCount > 0 && (
-                    <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                  {hasMessages && (
+                    <span className={`flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none ${
+                      unreadCount > 0
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
                       <MessageCircle className="size-3" />
-                      {unreadCount}
+                      {unreadCount > 0 && unreadCount}
                     </span>
                   )}
                 </div>
