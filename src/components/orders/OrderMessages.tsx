@@ -33,7 +33,7 @@ export function OrderMessages({ messages, sellerId, isLoading }: OrderMessagesPr
         <p className="text-sm text-muted-foreground">No hay mensajes en esta conversación.</p>
       ) : (
         <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
-          {messages.map((msg) => {
+          {[...messages].reverse().map((msg) => {
             const isSeller = String(msg.from.user_id) === sellerId;
             const isUnread = !isSeller && msg.message_date.read === null;
 
